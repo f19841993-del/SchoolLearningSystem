@@ -3,6 +3,9 @@ using SchoolLearningSystem.API.Responses;
 using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
 using SchoolLearningSystem.Applicationf.DTOs.Exercise;
 using SchoolLearningSystem.Applicationf.DTOs.Lesson;
+using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
+using SchoolLearningSystem.Applicationf.DTOs.Question;
+using SchoolLearningSystem.Applicationf.DTOs.Result;
 using SchoolLearningSystem.Applicationf.Interfaces;
 
 namespace SchoolLearningSystem.API.Controllers

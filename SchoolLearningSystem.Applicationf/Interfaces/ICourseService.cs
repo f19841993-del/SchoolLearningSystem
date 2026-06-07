@@ -1,4 +1,7 @@
 ﻿using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
+using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
+using SchoolLearningSystem.Applicationf.DTOs.Lesson;
+using SchoolLearningSystem.Applicationf.DTOs.Student;
 
 namespace SchoolLearningSystem.Applicationf.Interfaces
 {

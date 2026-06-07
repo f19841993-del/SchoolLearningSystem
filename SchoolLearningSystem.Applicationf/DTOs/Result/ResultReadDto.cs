@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace SchoolLearningSystem.Applicationf.DTOs
+namespace SchoolLearningSystem.Applicationf.DTOs.Result
 {
-    public class ResultDto
+    public class ResultReadDto
     {
         public int Id { get; set; }
 
@@ -27,5 +27,4 @@ namespace SchoolLearningSystem.Applicationf.DTOs
         // تاريخ التقييم
         public DateTime Date { get; set; }
     }
-
 }

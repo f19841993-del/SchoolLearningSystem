@@ -1,9 +1,14 @@
 ﻿using AutoMapper;
-using SchoolLearningSystem.Applicationf.DTOs;
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
+using SchoolLearningSystem.Applicationf.DTOs.Result;
+using SchoolLearningSystem.Applicationf.DTOs.Student;
 using SchoolLearningSystem.Applicationf.Interfaces;
 using SchoolLearningSystem.Domain.Entities;
+using SchoolLearningSystem.Domain.Interfaces; // نفترض عندك IStudentRepository
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using WebApiTemplate.Domain.Interfaces;
 
 namespace SchoolLearningSystem.Applicationf.Services
@@ -19,29 +24,37 @@ namespace SchoolLearningSystem.Applicationf.Services
             _mapper = mapper;
         }
 
-        // العمليات الأساسية
-        public async Task<IEnumerable<StudentDto>> GetAllStudentsAsync()
+        // 🔹 العمليات الأساسية
+        public async Task<IEnumerable<StudentReadDto>> GetAllStudentsAsync()
         {
             var students = await _studentRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<StudentDto>>(students);
+            return _mapper.Map<IEnumerable<StudentReadDto>>(students);
         }
 
-        public async Task<StudentDto?> GetStudentByIdAsync(int id)
+        public async Task<StudentReadDto?> GetStudentByIdAsync(int id)
         {
             var student = await _studentRepository.GetByIdAsync(id);
-            return _mapper.Map<StudentDto?>(student);
+            return _mapper.Map<StudentReadDto?>(student);
         }
 
-        public async Task AddStudentAsync(StudentDto dto)
+        public async Task AddStudentAsync(StudentCreateDto dto)
         {
             var entity = _mapper.Map<Student>(dto);
             await _studentRepository.AddAsync(entity);
         }
 
-        public async Task UpdateStudentAsync(StudentDto dto)
+        public async Task UpdateStudentAsync(int id, StudentUpdateDto dto)
         {
-            var entity = _mapper.Map<Student>(dto);
-            await _studentRepository.UpdateAsync(entity);
+            var existing = await _studentRepository.GetByIdAsync(id);
+            if (existing != null)
+            {
+                _mapper.Map(dto, existing);
+                await _studentRepository.UpdateAsync(existing);
+            }
+            else
+            {
+                throw new KeyNotFoundException("Student not found");
+            }
         }
 
         public async Task DeleteStudentAsync(int id)
@@ -49,34 +62,33 @@ namespace SchoolLearningSystem.Applicationf.Services
             await _studentRepository.DeleteAsync(id);
         }
 
-        // علاقات إضافية
+        // 🔹 علاقات إضافية
         public async Task<IEnumerable<CourseDto>> GetCoursesByStudentIdAsync(int studentId)
         {
             var student = await _studentRepository.GetByIdAsync(studentId);
             if (student == null) return Enumerable.Empty<CourseDto>();
 
-            // تحويل CourseStudents إلى CourseDto
             var courses = student.CourseStudents.Select(cs => cs.Course).ToList();
             return _mapper.Map<IEnumerable<CourseDto>>(courses);
         }
 
-        public async Task<IEnumerable<ResultDto>> GetResultsByStudentIdAsync(int studentId)
+        public async Task<IEnumerable<ResultReadDto>> GetResultsByStudentIdAsync(int studentId)
         {
             var student = await _studentRepository.GetByIdAsync(studentId);
-            if (student == null) return Enumerable.Empty<ResultDto>();
+            if (student == null) return Enumerable.Empty<ResultReadDto>();
 
-            return _mapper.Map<IEnumerable<ResultDto>>(student.Results);
+            return _mapper.Map<IEnumerable<ResultReadDto>>(student.Results);
         }
 
-        public async Task<IEnumerable<MemorizeSessionDto>> GetMemorizeSessionsByStudentIdAsync(int studentId)
+        public async Task<IEnumerable<MemorizeSessionReadDto>> GetMemorizeSessionsByStudentIdAsync(int studentId)
         {
             var student = await _studentRepository.GetByIdAsync(studentId);
-            if (student == null) return Enumerable.Empty<MemorizeSessionDto>();
+            if (student == null) return Enumerable.Empty<MemorizeSessionReadDto>();
 
-            return _mapper.Map<IEnumerable<MemorizeSessionDto>>(student.MemorizeSessions);
+            return _mapper.Map<IEnumerable<MemorizeSessionReadDto>>(student.MemorizeSessions);
         }
 
-        // إحصائيات
+        // 🔹 إحصائيات
         public async Task<double> GetAverageScoreByStudentIdAsync(int studentId)
         {
             var student = await _studentRepository.GetByIdAsync(studentId);

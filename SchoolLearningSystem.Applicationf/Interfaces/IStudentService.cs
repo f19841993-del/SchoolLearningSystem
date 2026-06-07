@@ -1,6 +1,7 @@
-﻿using SchoolLearningSystem.Applicationf.DTOs;
-using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
+﻿using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
+using SchoolLearningSystem.Applicationf.DTOs.Result;
+using SchoolLearningSystem.Applicationf.DTOs.Student;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -9,16 +10,16 @@ namespace SchoolLearningSystem.Applicationf.Interfaces
     public interface IStudentService
     {
         // العمليات الأساسية
-        Task<IEnumerable<StudentDto>> GetAllStudentsAsync();
-        Task<StudentDto?> GetStudentByIdAsync(int id);
-        Task AddStudentAsync(StudentDto dto);
-        Task UpdateStudentAsync(StudentDto dto);
+        Task<IEnumerable<StudentReadDto>> GetAllStudentsAsync();
+        Task<StudentReadDto?> GetStudentByIdAsync(int id);
+        Task AddStudentAsync(StudentCreateDto dto);
+        Task UpdateStudentAsync(int id, StudentUpdateDto dto);
         Task DeleteStudentAsync(int id);
 
         // علاقات إضافية
         Task<IEnumerable<CourseDto>> GetCoursesByStudentIdAsync(int studentId);
-        Task<IEnumerable<ResultDto>> GetResultsByStudentIdAsync(int studentId);
-        Task<IEnumerable<MemorizeSessionDto>> GetMemorizeSessionsByStudentIdAsync(int studentId);
+        Task<IEnumerable<ResultReadDto>> GetResultsByStudentIdAsync(int studentId);
+        Task<IEnumerable<MemorizeSessionReadDto>> GetMemorizeSessionsByStudentIdAsync(int studentId);
 
         // إحصائيات
         Task<double> GetAverageScoreByStudentIdAsync(int studentId);

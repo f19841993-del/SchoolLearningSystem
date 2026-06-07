@@ -1,6 +1,7 @@
 ﻿using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
+using SchoolLearningSystem.Applicationf.DTOs.Result;
 
-namespace SchoolLearningSystem.Applicationf.DTOs
+namespace SchoolLearningSystem.Applicationf.DTOs.Student
 {
     public class StudentDto
     {

@@ -10,7 +10,7 @@ public class MemorizeSessionProfile : Profile
         CreateMap<MemorizeSession, MemorizeSessionReadDto>()
             .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student.Name))
             .ForMember(dest => dest.LessonTitle, opt => opt.MapFrom(src => src.Lesson.Title))
-            .ForMember(dest => dest.ExerciseTitle, opt => opt.MapFrom(src => src.Exercise.Title));
+            .ForMember(dest => dest.ExerciseTitle, opt => opt.MapFrom(src => src.Exercise.Question));
 
         // من الإنشاء → للكيان
         CreateMap<MemorizeSessionCreateDto, MemorizeSession>();

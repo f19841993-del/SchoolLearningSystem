@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SchoolLearningSystem.Applicationf.Interfaces;
-using SchoolLearningSystem.Applicationf.DTOs;
+using SchoolLearningSystem.Applicationf.DTOs.Teacher;
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Applicationf.DTOs.Lesson;
+using SchoolLearningSystem.API.Responses;
 
 namespace SchoolLearningSystem.API.Controllers
 {
@@ -18,105 +19,119 @@ namespace SchoolLearningSystem.API.Controllers
         }
 
         // 🔹 CRUD الأساسي
+
         /// <summary>
-        /// يرجع كل المدرسين المسجلين بالنظام
+        /// يرجع كل المدرسين
         /// </summary>
         [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<TeacherDto>>> GetAllTeachers()
+        public async Task<IActionResult> GetAllTeachers()
         {
             var teachers = await _teacherService.GetAllTeachersAsync();
-            return Ok(teachers);
+            return Ok(new ApiResponse<IEnumerable<TeacherReadDto>>(200, "Teachers retrieved successfully", teachers));
         }
 
         /// <summary>
         /// يرجع بيانات مدرس محدد حسب الـ Id
         /// </summary>
         [HttpGet("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<TeacherDto>> GetTeacherById(int id)
+        public async Task<IActionResult> GetTeacherById(int id)
         {
             var teacher = await _teacherService.GetTeacherByIdAsync(id);
-            if (teacher == null) return NotFound();
-            return Ok(teacher);
+            if (teacher == null)
+                return NotFound(new ApiResponse<string>(404, "Teacher not found"));
+
+            return Ok(new ApiResponse<TeacherReadDto>(200, "Teacher retrieved successfully", teacher));
         }
 
         /// <summary>
-        /// إضافة مدرس جديد للنظام
+        /// إضافة مدرس جديد
         /// </summary>
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        public async Task<ActionResult> AddTeacher(TeacherDto dto)
+        public async Task<IActionResult> AddTeacher(TeacherCreateDto dto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(new ApiResponse<string>(400, "Invalid input data"));
+
             await _teacherService.AddTeacherAsync(dto);
-            return CreatedAtAction(nameof(GetTeacherById), new { id = dto.Id }, dto);
+            return StatusCode(201, new ApiResponse<string>(201, "Teacher created successfully"));
         }
 
         /// <summary>
         /// تحديث بيانات مدرس موجود
         /// </summary>
         [HttpPut("{id}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult> UpdateTeacher(int id, TeacherDto dto)
+        public async Task<IActionResult> UpdateTeacher(int id, TeacherUpdateDto dto)
         {
-            if (id != dto.Id) return BadRequest();
-            await _teacherService.UpdateTeacherAsync(dto);
-            return NoContent();
+            try
+            {
+                await _teacherService.UpdateTeacherAsync(id, dto);
+                return Ok(new ApiResponse<string>(200, "Teacher updated successfully"));
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new ApiResponse<string>(404, "Teacher not found"));
+            }
         }
 
         /// <summary>
-        /// حذف مدرس من النظام
+        /// حذف مدرس
         /// </summary>
         [HttpDelete("{id}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<ActionResult> DeleteTeacher(int id)
+        public async Task<IActionResult> DeleteTeacher(int id)
         {
-            await _teacherService.DeleteTeacherAsync(id);
-            return NoContent();
+            try
+            {
+                await _teacherService.DeleteTeacherAsync(id);
+                return Ok(new ApiResponse<string>(200, "Teacher deleted successfully"));
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new ApiResponse<string>(404, "Teacher not found"));
+            }
         }
 
         // 🔹 علاقات إضافية
+
         /// <summary>
         /// يرجع الكورسات المرتبطة بالمدرس
         /// </summary>
-        [HttpGet("{id}/courses")]
-        public async Task<ActionResult<IEnumerable<CourseDto>>> GetCoursesByTeacherId(int id)
+        [HttpGet("{teacherId}/courses")]
+        public async Task<IActionResult> GetCoursesByTeacherId(int teacherId)
         {
-            var courses = await _teacherService.GetCoursesByTeacherIdAsync(id);
-            return Ok(courses);
+            var courses = await _teacherService.GetCoursesByTeacherIdAsync(teacherId);
+            return Ok(new ApiResponse<IEnumerable<CourseReadDto>>(200, "Courses retrieved successfully", courses));
         }
 
         /// <summary>
         /// يرجع الدروس المرتبطة بالمدرس
         /// </summary>
-        [HttpGet("{id}/lessons")]
-        public async Task<ActionResult<IEnumerable<LessonDto>>> GetLessonsByTeacherId(int id)
+        [HttpGet("{teacherId}/lessons")]
+        public async Task<IActionResult> GetLessonsByTeacherId(int teacherId)
         {
-            var lessons = await _teacherService.GetLessonsByTeacherIdAsync(id);
-            return Ok(lessons);
+            var lessons = await _teacherService.GetLessonsByTeacherIdAsync(teacherId);
+            return Ok(new ApiResponse<IEnumerable<LessonReadDto>>(200, "Lessons retrieved successfully", lessons));
         }
 
         // 🔹 إحصائيات
+
         /// <summary>
         /// يرجع عدد الكورسات اللي يدرّسها المدرس
         /// </summary>
-        [HttpGet("{id}/total-courses")]
-        public async Task<ActionResult<int>> GetTotalCoursesByTeacherId(int id)
+        [HttpGet("{teacherId}/total-courses")]
+        public async Task<IActionResult> GetTotalCoursesByTeacherId(int teacherId)
         {
-            var total = await _teacherService.GetTotalCoursesByTeacherIdAsync(id);
-            return Ok(total);
+            var total = await _teacherService.GetTotalCoursesByTeacherIdAsync(teacherId);
+            return Ok(new ApiResponse<int>(200, "Total courses retrieved successfully", total));
         }
 
         /// <summary>
         /// يرجع عدد الدروس اللي يدرّسها المدرس
         /// </summary>
-        [HttpGet("{id}/total-lessons")]
-        public async Task<ActionResult<int>> GetTotalLessonsByTeacherId(int id)
+        [HttpGet("{teacherId}/total-lessons")]
+        public async Task<IActionResult> GetTotalLessonsByTeacherId(int teacherId)
         {
-            var total = await _teacherService.GetTotalLessonsByTeacherIdAsync(id);
-            return Ok(total);
+            var total = await _teacherService.GetTotalLessonsByTeacherIdAsync(teacherId);
+            return Ok(new ApiResponse<int>(200, "Total lessons retrieved successfully", total));
         }
     }
 }

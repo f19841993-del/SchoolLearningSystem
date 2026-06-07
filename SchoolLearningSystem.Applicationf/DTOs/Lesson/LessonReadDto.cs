@@ -1,5 +1,8 @@
 ﻿using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
 using SchoolLearningSystem.Applicationf.DTOs.Exercise;
+using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
+using SchoolLearningSystem.Applicationf.DTOs.Question;
+using SchoolLearningSystem.Applicationf.DTOs.Result;
 
 namespace SchoolLearningSystem.Applicationf.DTOs.Lesson
 {

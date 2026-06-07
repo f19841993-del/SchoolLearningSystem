@@ -15,6 +15,8 @@ namespace SchoolLearningSystem.Domain.Entities
         public int? ExamId { get; set; }   // ✅ جديد
         public Exam? Exam { get; set; }
 
+        // ✅ جديد: نوع النتيجة (Homework, Quiz, Midterm, Final)
+        public string ResultType { get; set; } = "Homework";
         public double Score { get; set; }
         public DateTime Date { get; set; }
     }

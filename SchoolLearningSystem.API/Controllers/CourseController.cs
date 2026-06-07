@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SchoolLearningSystem.API.Responses;
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
+using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
+using SchoolLearningSystem.Applicationf.DTOs.Lesson;
+using SchoolLearningSystem.Applicationf.DTOs.Student;
 using SchoolLearningSystem.Applicationf.Interfaces;
 
 namespace SchoolLearningSystem.API.Controllers

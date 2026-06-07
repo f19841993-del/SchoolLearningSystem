@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using SchoolLearningSystem.Applicationf.DTOs.Course;
+using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Domain.Entities;
 
 public class CourseProfile : Profile

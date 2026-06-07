@@ -1,4 +1,7 @@
-﻿namespace SchoolLearningSystem.Applicationf.DTOs.ExamDto
+﻿using SchoolLearningSystem.Applicationf.DTOs.Question;
+using SchoolLearningSystem.Applicationf.DTOs.Result;
+
+namespace SchoolLearningSystem.Applicationf.DTOs.ExamDto
 {
     public class ExamReadDto
     {

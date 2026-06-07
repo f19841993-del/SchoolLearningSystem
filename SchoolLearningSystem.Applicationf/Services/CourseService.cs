@@ -1,6 +1,9 @@
 ﻿using AutoMapper;
 using SchoolLearningSystem.Applicationf.DTOs;
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
+using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
+using SchoolLearningSystem.Applicationf.DTOs.Lesson;
+using SchoolLearningSystem.Applicationf.DTOs.Student;
 using SchoolLearningSystem.Applicationf.Interfaces;
 using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Interfaces;

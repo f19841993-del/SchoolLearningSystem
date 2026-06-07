@@ -1,4 +1,5 @@
-﻿using SchoolLearningSystem.Applicationf.DTOs.Lesson;
+﻿using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
+using SchoolLearningSystem.Applicationf.DTOs.Lesson;
 
 namespace SchoolLearningSystem.Applicationf.DTOs.CourseDto
 {
@@ -11,6 +12,6 @@ namespace SchoolLearningSystem.Applicationf.DTOs.CourseDto
         public string CurriculumTitle { get; set; } = string.Empty;
         public List<int> StudentIds { get; set; } = new();
         public List<LessonDto> Lessons { get; set; } = new();
-        public List<ExamDto> Exams { get; set; } = new();
+        public List<ExamReadDto> Exams { get; set; } = new();
     }
 }

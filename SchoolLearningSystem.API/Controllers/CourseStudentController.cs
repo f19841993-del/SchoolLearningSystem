@@ -2,6 +2,7 @@
 using SchoolLearningSystem.API.Responses;
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Applicationf.DTOs.CourseStudent;
+using SchoolLearningSystem.Applicationf.DTOs.Student;
 using SchoolLearningSystem.Applicationf.Interfaces;
 
 namespace SchoolLearningSystem.API.Controllers

@@ -1,6 +1,6 @@
-﻿using SchoolLearningSystem.Applicationf.DTOs;
-using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
+﻿using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Applicationf.DTOs.Lesson;
+using SchoolLearningSystem.Applicationf.DTOs.Teacher;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -9,15 +9,15 @@ namespace SchoolLearningSystem.Applicationf.Interfaces
     public interface ITeacherService
     {
         // العمليات الأساسية
-        Task<IEnumerable<TeacherDto>> GetAllTeachersAsync();
-        Task<TeacherDto?> GetTeacherByIdAsync(int id);
-        Task AddTeacherAsync(TeacherDto dto);
-        Task UpdateTeacherAsync(TeacherDto dto);
+        Task<IEnumerable<TeacherReadDto>> GetAllTeachersAsync();
+        Task<TeacherReadDto?> GetTeacherByIdAsync(int id);
+        Task AddTeacherAsync(TeacherCreateDto dto);
+        Task UpdateTeacherAsync(int id, TeacherUpdateDto dto);
         Task DeleteTeacherAsync(int id);
 
         // علاقات إضافية
-        Task<IEnumerable<CourseDto>> GetCoursesByTeacherIdAsync(int teacherId);
-        Task<IEnumerable<LessonDto>> GetLessonsByTeacherIdAsync(int teacherId);
+        Task<IEnumerable<CourseReadDto>> GetCoursesByTeacherIdAsync(int teacherId);
+        Task<IEnumerable<LessonReadDto>> GetLessonsByTeacherIdAsync(int teacherId);
 
         // إحصائيات
         Task<int> GetTotalCoursesByTeacherIdAsync(int teacherId);

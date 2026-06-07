@@ -1,10 +1,13 @@
 ﻿using AutoMapper;
-using SchoolLearningSystem.Applicationf.DTOs;
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Applicationf.DTOs.Lesson;
+using SchoolLearningSystem.Applicationf.DTOs.Teacher;
 using SchoolLearningSystem.Applicationf.Interfaces;
 using SchoolLearningSystem.Domain.Entities;
-using SchoolLearningSystem.Domain.Interfaces;
+using SchoolLearningSystem.Domain.Interfaces; // نفترض عندك ITeacherRepository
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SchoolLearningSystem.Applicationf.Services
 {
@@ -19,29 +22,51 @@ namespace SchoolLearningSystem.Applicationf.Services
             _mapper = mapper;
         }
 
-        // العمليات الأساسية
-        public async Task<IEnumerable<TeacherDto>> GetAllTeachersAsync()
+        // 🔹 العمليات الأساسية
+        public async Task<IEnumerable<TeacherReadDto>> GetAllTeachersAsync()
         {
             var teachers = await _teacherRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<TeacherDto>>(teachers);
+            return _mapper.Map<IEnumerable<TeacherReadDto>>(teachers);
         }
 
-        public async Task<TeacherDto?> GetTeacherByIdAsync(int id)
+        public async Task<TeacherReadDto?> GetTeacherByIdAsync(int id)
         {
             var teacher = await _teacherRepository.GetByIdAsync(id);
-            return _mapper.Map<TeacherDto?>(teacher);
+            return _mapper.Map<TeacherReadDto?>(teacher);
         }
 
-        public async Task AddTeacherAsync(TeacherDto dto)
+        public async Task AddTeacherAsync(TeacherCreateDto dto)
         {
             var entity = _mapper.Map<Teacher>(dto);
+
+            // ربط الكورسات بالمدرس إذا CourseIds موجودة
+            if (dto.CourseIds.Any())
+            {
+                entity.Courses = dto.CourseIds.Select(id => new Course { Id = id }).ToList();
+            }
+
             await _teacherRepository.AddAsync(entity);
         }
 
-        public async Task UpdateTeacherAsync(TeacherDto dto)
+        public async Task UpdateTeacherAsync(int id, TeacherUpdateDto dto)
         {
-            var entity = _mapper.Map<Teacher>(dto);
-            await _teacherRepository.UpdateAsync(entity);
+            var existing = await _teacherRepository.GetByIdAsync(id);
+            if (existing != null)
+            {
+                _mapper.Map(dto, existing);
+
+                // تحديث الكورسات المرتبطة
+                if (dto.CourseIds.Any())
+                {
+                    existing.Courses = dto.CourseIds.Select(id => new Course { Id = id }).ToList();
+                }
+
+                await _teacherRepository.UpdateAsync(existing);
+            }
+            else
+            {
+                throw new KeyNotFoundException("Teacher not found");
+            }
         }
 
         public async Task DeleteTeacherAsync(int id)
@@ -49,26 +74,26 @@ namespace SchoolLearningSystem.Applicationf.Services
             await _teacherRepository.DeleteAsync(id);
         }
 
-        // علاقات إضافية
-        public async Task<IEnumerable<CourseDto>> GetCoursesByTeacherIdAsync(int teacherId)
+        // 🔹 علاقات إضافية
+        public async Task<IEnumerable<CourseReadDto>> GetCoursesByTeacherIdAsync(int teacherId)
         {
             var teacher = await _teacherRepository.GetByIdAsync(teacherId);
-            if (teacher == null) return Enumerable.Empty<CourseDto>();
+            if (teacher == null) return Enumerable.Empty<CourseReadDto>();
 
-            return _mapper.Map<IEnumerable<CourseDto>>(teacher.Courses);
+            return _mapper.Map<IEnumerable<CourseReadDto>>(teacher.Courses);
         }
 
-        public async Task<IEnumerable<LessonDto>> GetLessonsByTeacherIdAsync(int teacherId)
+        public async Task<IEnumerable<LessonReadDto>> GetLessonsByTeacherIdAsync(int teacherId)
         {
             var teacher = await _teacherRepository.GetByIdAsync(teacherId);
-            if (teacher == null) return Enumerable.Empty<LessonDto>();
+            if (teacher == null) return Enumerable.Empty<LessonReadDto>();
 
-            // جلب الدروس من الكورسات المرتبطة بالمدرس
+            // نفترض أن كل كورس يحتوي دروس
             var lessons = teacher.Courses.SelectMany(c => c.Lessons).ToList();
-            return _mapper.Map<IEnumerable<LessonDto>>(lessons);
+            return _mapper.Map<IEnumerable<LessonReadDto>>(lessons);
         }
 
-        // إحصائيات
+        // 🔹 إحصائيات
         public async Task<int> GetTotalCoursesByTeacherIdAsync(int teacherId)
         {
             var teacher = await _teacherRepository.GetByIdAsync(teacherId);
