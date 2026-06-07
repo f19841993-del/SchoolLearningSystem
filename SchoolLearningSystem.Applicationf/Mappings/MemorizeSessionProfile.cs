@@ -1,22 +1,21 @@
 ﻿using AutoMapper;
-using SchoolLearningSystem.Applicationf.DTOs;
 using SchoolLearningSystem.Domain.Entities;
+using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
 
 public class MemorizeSessionProfile : Profile
 {
     public MemorizeSessionProfile()
     {
-        // من MemorizeSession → MemorizeSessionDto
-        CreateMap<MemorizeSession, MemorizeSessionDto>()
-            .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student != null ? src.Student.Name : string.Empty))
-            .ForMember(dest => dest.LessonTitle, opt => opt.MapFrom(src => src.Lesson != null ? src.Lesson.Title : string.Empty))
-            .ForMember(dest => dest.ExerciseTitle, opt => opt.MapFrom(src => src.Exercise != null ? src.Exercise.Question : string.Empty))
-            .ForMember(dest => dest.ExerciseId, opt => opt.MapFrom(src => src.ExerciseId.HasValue ? src.ExerciseId.Value : 0));
+        // من الكيان → للعرض
+        CreateMap<MemorizeSession, MemorizeSessionReadDto>()
+            .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student.Name))
+            .ForMember(dest => dest.LessonTitle, opt => opt.MapFrom(src => src.Lesson.Title))
+            .ForMember(dest => dest.ExerciseTitle, opt => opt.MapFrom(src => src.Exercise.Title));
 
-        // من MemorizeSessionDto → MemorizeSession
-        CreateMap<MemorizeSessionDto, MemorizeSession>()
-            .ForMember(dest => dest.Student, opt => opt.Ignore())   // StudentName ما يتحول مباشرة
-            .ForMember(dest => dest.Lesson, opt => opt.Ignore())    // LessonTitle ما يتحول مباشرة
-            .ForMember(dest => dest.Exercise, opt => opt.Ignore()); // ExerciseTitle ما يتحول مباشرة
+        // من الإنشاء → للكيان
+        CreateMap<MemorizeSessionCreateDto, MemorizeSession>();
+
+        // من التعديل → للكيان
+        CreateMap<MemorizeSessionUpdateDto, MemorizeSession>();
     }
 }

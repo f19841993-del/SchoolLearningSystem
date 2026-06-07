@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
-using SchoolLearningSystem.Applicationf.DTOs;
+using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
+using SchoolLearningSystem.Applicationf.DTOs.CourseStudent;
+using SchoolLearningSystem.Applicationf.DTOs.Student;
 using SchoolLearningSystem.Applicationf.Interfaces;
 using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Interfaces;
@@ -27,55 +29,59 @@ namespace SchoolLearningSystem.Applicationf.Services
         }
 
         // العمليات الأساسية
-        public async Task<IEnumerable<CourseStudentDto>> GetAllCourseStudentsAsync()
+        public async Task<IEnumerable<CourseStudentReadDto>> GetAllCourseStudentsAsync()
         {
             var entities = await _courseStudentRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<CourseStudentDto>>(entities);
+            return _mapper.Map<IEnumerable<CourseStudentReadDto>>(entities);
         }
 
-        public async Task<CourseStudentDto?> GetCourseStudentByIdAsync(int courseId, int studentId)
+        public async Task<CourseStudentReadDto?> GetCourseStudentByIdAsync(int courseId, int studentId)
         {
             var entity = await _courseStudentRepository.GetByIdAsync(courseId, studentId);
-            return _mapper.Map<CourseStudentDto?>(entity);
+            return _mapper.Map<CourseStudentReadDto?>(entity);
         }
 
-        public async Task AddCourseStudentAsync(CourseStudentDto dto)
+        public async Task AddCourseStudentAsync(CourseStudentCreateDto dto)
         {
-            var entity = _mapper.Map<CourseStudent>(dto);
-
-            entity.Course = await _courseRepository.GetByIdAsync(dto.CourseId)
+            var course = await _courseRepository.GetByIdAsync(dto.CourseId)
                 ?? throw new Exception("Course not found");
-            entity.Student = await _studentRepository.GetByIdAsync(dto.StudentId)
+            var student = await _studentRepository.GetByIdAsync(dto.StudentId)
                 ?? throw new Exception("Student not found");
+
+            var entity = _mapper.Map<CourseStudent>(dto);
+            entity.Course = course;
+            entity.Student = student;
 
             await _courseStudentRepository.AddAsync(entity);
         }
 
-        public async Task UpdateCourseStudentAsync(CourseStudentDto dto)
+        public async Task UpdateCourseStudentAsync(int courseId, int studentId, CourseStudentUpdateDto dto)
         {
-            var entity = _mapper.Map<CourseStudent>(dto);
+            var entity = await _courseStudentRepository.GetByIdAsync(courseId, studentId)
+                ?? throw new Exception("Relation not found");
+
+            _mapper.Map(dto, entity);
             await _courseStudentRepository.UpdateAsync(entity);
         }
+
         public async Task DeleteCourseStudentAsync(int courseId, int studentId)
         {
             await _courseStudentRepository.DeleteAsync(courseId, studentId);
         }
 
-
-
         // علاقات إضافية
-        public async Task<IEnumerable<StudentDto>> GetStudentsByCourseIdAsync(int courseId)
+        public async Task<IEnumerable<StudentReadDto>> GetStudentsByCourseIdAsync(int courseId)
         {
             var relations = await _courseStudentRepository.GetByCourseIdAsync(courseId);
             var students = relations.Select(cs => cs.Student);
-            return _mapper.Map<IEnumerable<StudentDto>>(students);
+            return _mapper.Map<IEnumerable<StudentReadDto>>(students);
         }
 
-        public async Task<IEnumerable<CourseDto>> GetCoursesByStudentIdAsync(int studentId)
+        public async Task<IEnumerable<CourseReadDto>> GetCoursesByStudentIdAsync(int studentId)
         {
             var relations = await _courseStudentRepository.GetByStudentIdAsync(studentId);
             var courses = relations.Select(cs => cs.Course);
-            return _mapper.Map<IEnumerable<CourseDto>>(courses);
+            return _mapper.Map<IEnumerable<CourseReadDto>>(courses);
         }
 
         // عمليات التسجيل والإزالة
@@ -105,6 +111,10 @@ namespace SchoolLearningSystem.Applicationf.Services
             if (relation != null)
             {
                 await _courseStudentRepository.DeleteAsync(courseId, studentId);
+            }
+            else
+            {
+                throw new Exception("Relation not found");
             }
         }
 

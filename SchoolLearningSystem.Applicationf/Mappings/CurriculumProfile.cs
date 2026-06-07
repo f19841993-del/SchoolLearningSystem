@@ -1,30 +1,28 @@
 ﻿using AutoMapper;
-using SchoolLearningSystem.Applicationf.DTOs;
+using SchoolLearningSystem.Applicationf.DTOs.Curriculum;
 using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Enums;
 
 public class CurriculumProfile : Profile
 {
-
-    // دالة خاصة للتحويل
-    private GradeLevel ParseGradeLevel(string gradeLevelString)
-    {
-        return Enum.TryParse<GradeLevel>(gradeLevelString, true, out var grade)
-            ? grade
-            : GradeLevel.Third; // نخلي Unknown كقيمة افتراضية إذا النص غلط
-    }
     public CurriculumProfile()
     {
-        // من Curriculum → CurriculumDto
-        CreateMap<Curriculum, CurriculumDto>()
+        // من الكيان → للعرض
+        CreateMap<Curriculum, CurriculumReadDto>()
             .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Name))
             .ForMember(dest => dest.GradeLevel, opt => opt.MapFrom(src => src.GradeLevel.ToString()))
             .ForMember(dest => dest.Courses, opt => opt.MapFrom(src => src.Courses));
 
-        // من CurriculumDto → Curriculum
-        CreateMap<CurriculumDto, Curriculum>()
+        // من الإنشاء → للكيان
+        CreateMap<CurriculumCreateDto, Curriculum>()
             .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Title))
-            .ForMember(dest => dest.GradeLevel, opt => opt.MapFrom(src => ParseGradeLevel(src.GradeLevel)))
-            .ForMember(dest => dest.Courses, opt => opt.Ignore()); // الكورسات تنربط لاحقاً بالـ DbContext
+            .ForMember(dest => dest.GradeLevel, opt => opt.MapFrom(src => Enum.Parse<GradeLevel>(src.GradeLevel)))
+            .ForMember(dest => dest.Courses, opt => opt.Ignore());
+
+        // من التعديل → للكيان
+        CreateMap<CurriculumUpdateDto, Curriculum>()
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Title))
+            .ForMember(dest => dest.GradeLevel, opt => opt.MapFrom(src => Enum.Parse<GradeLevel>(src.GradeLevel)))
+            .ForMember(dest => dest.Courses, opt => opt.Ignore());
     }
 }

@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using SchoolLearningSystem.Applicationf.DTOs;
+using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
 using SchoolLearningSystem.Applicationf.Interfaces;
 using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Interfaces;
@@ -17,28 +17,31 @@ namespace SchoolLearningSystem.Applicationf.Services
             _mapper = mapper;
         }
 
-        // العمليات الأساسية
-        public async Task<IEnumerable<MemorizeSessionDto>> GetAllSessionsAsync()
+        // 🔹 العمليات الأساسية
+        public async Task<IEnumerable<MemorizeSessionReadDto>> GetAllSessionsAsync()
         {
             var sessions = await _memorizeRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<MemorizeSessionDto>>(sessions);
+            return _mapper.Map<IEnumerable<MemorizeSessionReadDto>>(sessions);
         }
 
-        public async Task<MemorizeSessionDto?> GetSessionByIdAsync(int id)
+        public async Task<MemorizeSessionReadDto?> GetSessionByIdAsync(int id)
         {
             var session = await _memorizeRepository.GetByIdAsync(id);
-            return _mapper.Map<MemorizeSessionDto?>(session);
+            return _mapper.Map<MemorizeSessionReadDto?>(session);
         }
 
-        public async Task AddSessionAsync(MemorizeSessionDto dto)
+        public async Task AddSessionAsync(MemorizeSessionCreateDto dto)
         {
             var entity = _mapper.Map<MemorizeSession>(dto);
             await _memorizeRepository.AddAsync(entity);
         }
 
-        public async Task UpdateSessionAsync(MemorizeSessionDto dto)
+        public async Task UpdateSessionAsync(int id, MemorizeSessionUpdateDto dto)
         {
-            var entity = _mapper.Map<MemorizeSession>(dto);
+            var entity = await _memorizeRepository.GetByIdAsync(id)
+                ?? throw new Exception("Session not found");
+
+            _mapper.Map(dto, entity);
             await _memorizeRepository.UpdateAsync(entity);
         }
 
@@ -47,45 +50,48 @@ namespace SchoolLearningSystem.Applicationf.Services
             await _memorizeRepository.DeleteAsync(id);
         }
 
-
-
-
-        public async Task<IEnumerable<MemorizeSessionDto>> GetSessionsByStudentIdAsync(int studentId)
+        // 🔹 علاقات إضافية
+        public async Task<IEnumerable<MemorizeSessionReadDto>> GetSessionsByStudentIdAsync(int studentId)
         {
             var sessions = await _memorizeRepository.GetByStudentIdAsync(studentId);
-            return _mapper.Map<IEnumerable<MemorizeSessionDto>>(sessions);
+            return _mapper.Map<IEnumerable<MemorizeSessionReadDto>>(sessions);
         }
 
-        public async Task<IEnumerable<MemorizeSessionDto>> GetSessionsByLessonIdAsync(int lessonId)
+        public async Task<IEnumerable<MemorizeSessionReadDto>> GetSessionsByLessonIdAsync(int lessonId)
         {
             var sessions = await _memorizeRepository.GetByLessonIdAsync(lessonId);
-            return _mapper.Map<IEnumerable<MemorizeSessionDto>>(sessions);
+            return _mapper.Map<IEnumerable<MemorizeSessionReadDto>>(sessions);
         }
 
-        public async Task<IEnumerable<MemorizeSessionDto>> GetSessionsByExerciseIdAsync(int exerciseId)
+        public async Task<IEnumerable<MemorizeSessionReadDto>> GetSessionsByExerciseIdAsync(int exerciseId)
         {
             var sessions = await _memorizeRepository.GetByExerciseIdAsync(exerciseId);
-            return _mapper.Map<IEnumerable<MemorizeSessionDto>>(sessions);
+            return _mapper.Map<IEnumerable<MemorizeSessionReadDto>>(sessions);
         }
 
-
-        // علاقات إضافية
         public async Task<string> GetStudentNameBySessionIdAsync(int sessionId)
         {
-            var session = await _memorizeRepository.GetByIdAsync(sessionId);
-            return session?.Student?.Name ?? string.Empty;
+            var session = await _memorizeRepository.GetByIdAsync(sessionId)
+                ?? throw new Exception("Session not found");
+
+            return session.Student?.Name ?? string.Empty;
         }
 
         public async Task<string> GetLessonTitleBySessionIdAsync(int sessionId)
         {
-            var session = await _memorizeRepository.GetByIdAsync(sessionId);
-            return session?.Lesson?.Title ?? string.Empty;
+            var session = await _memorizeRepository.GetByIdAsync(sessionId)
+                ?? throw new Exception("Session not found");
+
+            return session.Lesson?.Title ?? string.Empty;
         }
 
-        public async Task<string> GetExerciseTitleBySessionIdAsync(int sessionId)
+        public async Task<string> GetExerciseQuestionBySessionIdAsync(int sessionId)
         {
-            var session = await _memorizeRepository.GetByIdAsync(sessionId);
-            return session?.Exercise?.Question ?? string.Empty;
+            var session = await _memorizeRepository.GetByIdAsync(sessionId)
+                ?? throw new Exception("Session not found");
+
+            return session.Exercise?.Question ?? "No Exercise Linked";
         }
+
     }
 }

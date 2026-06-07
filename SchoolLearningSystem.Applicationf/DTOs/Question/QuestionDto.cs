@@ -1,4 +1,4 @@
-﻿namespace SchoolLearningSystem.Applicationf.DTOs
+﻿namespace SchoolLearningSystem.Applicationf.DTOs.Question
 {
     public class QuestionDto
     {

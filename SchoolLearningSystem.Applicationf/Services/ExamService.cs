@@ -1,5 +1,8 @@
 ﻿using AutoMapper;
-using SchoolLearningSystem.Applicationf.DTOs;
+using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
+using SchoolLearningSystem.Applicationf.DTOs.Lesson;
+using SchoolLearningSystem.Applicationf.DTOs.Question;
+using SchoolLearningSystem.Applicationf.DTOs.Result;
 using SchoolLearningSystem.Applicationf.Interfaces;
 using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Interfaces;
@@ -9,38 +12,55 @@ namespace SchoolLearningSystem.Applicationf.Services
     public class ExamService : IExamService
     {
         private readonly IExamRepository _examRepository;
+        private readonly ICourseRepository _courseRepository;
         private readonly ILessonRepository _lessonRepository;
         private readonly IMapper _mapper;
 
-        public ExamService(IExamRepository examRepository, ILessonRepository lessonRepository, IMapper mapper)
+        public ExamService(
+            IExamRepository examRepository,
+            ICourseRepository courseRepository,
+            ILessonRepository lessonRepository,
+            IMapper mapper)
         {
             _examRepository = examRepository;
+            _courseRepository = courseRepository;
             _lessonRepository = lessonRepository;
             _mapper = mapper;
         }
 
-        // العمليات الأساسية
-        public async Task<IEnumerable<ExamDto>> GetAllExamsAsync()
+        // 🔹 العمليات الأساسية
+        public async Task<IEnumerable<ExamReadDto>> GetAllExamsAsync()
         {
-            var exams = await _examRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<ExamDto>>(exams);
+            var entities = await _examRepository.GetAllAsync();
+            return _mapper.Map<IEnumerable<ExamReadDto>>(entities);
         }
 
-        public async Task<ExamDto?> GetExamByIdAsync(int id)
+        public async Task<ExamReadDto?> GetExamByIdAsync(int id)
         {
-            var exam = await _examRepository.GetByIdAsync(id);
-            return _mapper.Map<ExamDto?>(exam);
+            var entity = await _examRepository.GetByIdAsync(id);
+            return _mapper.Map<ExamReadDto?>(entity);
         }
 
-        public async Task AddExamAsync(ExamDto dto)
+        public async Task AddExamAsync(ExamCreateDto dto)
         {
+            var course = await _courseRepository.GetByIdAsync(dto.CourseId)
+                ?? throw new Exception("Course not found");
+            var lesson = await _lessonRepository.GetByIdAsync(dto.LessonId)
+                ?? throw new Exception("Lesson not found");
+
             var entity = _mapper.Map<Exam>(dto);
+            entity.Course = course;
+            entity.Lesson = lesson;
+
             await _examRepository.AddAsync(entity);
         }
 
-        public async Task UpdateExamAsync(ExamDto dto)
+        public async Task UpdateExamAsync(int id, ExamUpdateDto dto)
         {
-            var entity = _mapper.Map<Exam>(dto);
+            var entity = await _examRepository.GetByIdAsync(id)
+                ?? throw new Exception("Exam not found");
+
+            _mapper.Map(dto, entity);
             await _examRepository.UpdateAsync(entity);
         }
 
@@ -49,33 +69,29 @@ namespace SchoolLearningSystem.Applicationf.Services
             await _examRepository.DeleteAsync(id);
         }
 
-        // علاقات إضافية
-        public async Task<IEnumerable<QuestionDto>> GetQuestionsByExamIdAsync(int examId)
+        // 🔹 علاقات إضافية
+        public async Task<IEnumerable<QuestionReadDto>> GetQuestionsByExamIdAsync(int examId)
         {
-            var exam = await _examRepository.GetByIdAsync(examId);
-            if (exam == null) return Enumerable.Empty<QuestionDto>();
+            var exam = await _examRepository.GetByIdAsync(examId)
+                ?? throw new Exception("Exam not found");
 
-            return _mapper.Map<IEnumerable<QuestionDto>>(exam.Questions);
+            return _mapper.Map<IEnumerable<QuestionReadDto>>(exam.Questions);
         }
 
-        public async Task<IEnumerable<ResultDto>> GetResultsByExamIdAsync(int examId)
+        public async Task<IEnumerable<ResultReadDto>> GetResultsByExamIdAsync(int examId)
         {
-            var exam = await _examRepository.GetByIdAsync(examId);
-            if (exam == null) return Enumerable.Empty<ResultDto>();
+            var exam = await _examRepository.GetByIdAsync(examId)
+                ?? throw new Exception("Exam not found");
 
-            return _mapper.Map<IEnumerable<ResultDto>>(exam.Results);
+            return _mapper.Map<IEnumerable<ResultReadDto>>(exam.Results);
         }
 
-        // ربط الامتحان بالدرس
-        public async Task<IEnumerable<LessonDto>> GetLessonsByExamIdAsync(int examId)
+        public async Task<IEnumerable<LessonReadDto>> GetLessonsByExamIdAsync(int examId)
         {
-            var exam = await _examRepository.GetByIdAsync(examId);
-            if (exam == null) return Enumerable.Empty<LessonDto>();
+            var exam = await _examRepository.GetByIdAsync(examId)
+                ?? throw new Exception("Exam not found");
 
-            var lesson = await _lessonRepository.GetByIdAsync(exam.LessonId);
-            if (lesson == null) return Enumerable.Empty<LessonDto>();
-
-            return new List<LessonDto> { _mapper.Map<LessonDto>(lesson) };
+            return _mapper.Map<IEnumerable<LessonReadDto>>(new List<Lesson> { exam.Lesson });
         }
     }
 }

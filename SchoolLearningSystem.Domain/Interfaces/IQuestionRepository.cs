@@ -4,12 +4,19 @@ namespace SchoolLearningSystem.Domain.Interfaces
 {
     public interface IQuestionRepository
     {
-        Task<Question> GetByIdAsync(int id);
+        // 🔹 CRUD الأساسي
+        Task<Question?> GetByIdAsync(int id);
         Task<IEnumerable<Question>> GetAllAsync();
         Task AddAsync(Question question);
         Task UpdateAsync(Question question);
-        Task DeleteAsync(int id);
-        Task<IEnumerable<Question>> GetQuestionsByLessonIdAsync(int lessonId);
+        Task DeleteAsync(Question question);
 
+        // 🔹 علاقات إضافية
+        Task<IEnumerable<Question>> GetByExamIdAsync(int examId);
+        Task<IEnumerable<Question>> GetByLessonIdAsync(int lessonId);
+
+        // 🔹 إحصائيات إضافية
+        Task<int> CountByExamIdAsync(int examId);
+        Task<int> CountByDifficultyAsync(string difficultyLevel);
     }
 }

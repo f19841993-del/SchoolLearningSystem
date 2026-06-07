@@ -1,4 +1,4 @@
-﻿namespace SchoolLearningSystem.Applicationf.DTOs
+﻿namespace SchoolLearningSystem.Applicationf.DTOs.CurriculumDto
 {
     public class CurriculumDto
     {

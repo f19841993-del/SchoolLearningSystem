@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
-using SchoolLearningSystem.Applicationf.DTOs;
+using SchoolLearningSystem.Applicationf.DTOs.Exercise;
+using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
+using SchoolLearningSystem.Applicationf.DTOs.Lesson;
 using SchoolLearningSystem.Applicationf.Interfaces;
 using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Interfaces;
@@ -19,28 +21,36 @@ namespace SchoolLearningSystem.Applicationf.Services
             _mapper = mapper;
         }
 
-        // العمليات الأساسية
-        public async Task<IEnumerable<ExerciseDto>> GetAllExercisesAsync()
+        // 🔹 CRUD الأساسي
+        public async Task<IEnumerable<ExerciseReadDto>> GetAllExercisesAsync()
         {
-            var exercises = await _exerciseRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<ExerciseDto>>(exercises);
+            var entities = await _exerciseRepository.GetAllAsync();
+            return _mapper.Map<IEnumerable<ExerciseReadDto>>(entities);
         }
 
-        public async Task<ExerciseDto?> GetExerciseByIdAsync(int id)
+        public async Task<ExerciseReadDto?> GetExerciseByIdAsync(int id)
         {
-            var exercise = await _exerciseRepository.GetByIdAsync(id);
-            return _mapper.Map<ExerciseDto?>(exercise);
+            var entity = await _exerciseRepository.GetByIdAsync(id);
+            return _mapper.Map<ExerciseReadDto?>(entity);
         }
 
-        public async Task AddExerciseAsync(ExerciseDto dto)
+        public async Task AddExerciseAsync(ExerciseCreateDto dto)
         {
+            var lesson = await _lessonRepository.GetByIdAsync(dto.LessonId)
+                ?? throw new Exception("Lesson not found");
+
             var entity = _mapper.Map<Exercise>(dto);
+            entity.Lesson = lesson;
+
             await _exerciseRepository.AddAsync(entity);
         }
 
-        public async Task UpdateExerciseAsync(ExerciseDto dto)
+        public async Task UpdateExerciseAsync(int id, ExerciseUpdateDto dto)
         {
-            var entity = _mapper.Map<Exercise>(dto);
+            var entity = await _exerciseRepository.GetByIdAsync(id)
+                ?? throw new Exception("Exercise not found");
+
+            _mapper.Map(dto, entity);
             await _exerciseRepository.UpdateAsync(entity);
         }
 
@@ -49,28 +59,27 @@ namespace SchoolLearningSystem.Applicationf.Services
             await _exerciseRepository.DeleteAsync(id);
         }
 
-        // علاقات إضافية
-        public async Task<IEnumerable<ExerciseDto>> GetExercisesByLessonIdAsync(int lessonId)
+        // 🔹 علاقات إضافية
+        public async Task<IEnumerable<ExerciseReadDto>> GetExercisesByLessonIdAsync(int lessonId)
         {
             var exercises = await _exerciseRepository.GetByLessonIdAsync(lessonId);
-            return _mapper.Map<IEnumerable<ExerciseDto>>(exercises);
+            return _mapper.Map<IEnumerable<ExerciseReadDto>>(exercises);
         }
 
-        public async Task<IEnumerable<MemorizeSessionDto>> GetMemorizeSessionsByExerciseIdAsync(int exerciseId)
+        public async Task<IEnumerable<MemorizeSessionReadDto>> GetMemorizeSessionsByExerciseIdAsync(int exerciseId)
         {
-            var exercise = await _exerciseRepository.GetByIdAsync(exerciseId);
-            if (exercise == null) return Enumerable.Empty<MemorizeSessionDto>();
+            var exercise = await _exerciseRepository.GetByIdAsync(exerciseId)
+                ?? throw new Exception("Exercise not found");
 
-            return _mapper.Map<IEnumerable<MemorizeSessionDto>>(exercise.MemorizeSessions);
+            return _mapper.Map<IEnumerable<MemorizeSessionReadDto>>(exercise.MemorizeSessions);
         }
 
-        public async Task<LessonDto?> GetLessonByExerciseIdAsync(int exerciseId)
+        public async Task<LessonReadDto?> GetLessonByExerciseIdAsync(int exerciseId)
         {
-            var exercise = await _exerciseRepository.GetByIdAsync(exerciseId);
-            if (exercise == null) return null;
+            var exercise = await _exerciseRepository.GetByIdAsync(exerciseId)
+                ?? throw new Exception("Exercise not found");
 
-            var lesson = await _lessonRepository.GetByIdAsync(exercise.LessonId);
-            return _mapper.Map<LessonDto?>(lesson);
+            return _mapper.Map<LessonReadDto?>(exercise.Lesson);
         }
     }
 }

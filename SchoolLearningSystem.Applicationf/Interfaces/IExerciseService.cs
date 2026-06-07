@@ -1,4 +1,6 @@
-﻿using SchoolLearningSystem.Applicationf.DTOs;
+﻿using SchoolLearningSystem.Applicationf.DTOs.Exercise;
+using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
+using SchoolLearningSystem.Applicationf.DTOs.Lesson;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -7,15 +9,15 @@ namespace SchoolLearningSystem.Applicationf.Interfaces
     public interface IExerciseService
     {
         // العمليات الأساسية
-        Task<IEnumerable<ExerciseDto>> GetAllExercisesAsync();
-        Task<ExerciseDto?> GetExerciseByIdAsync(int id);
-        Task AddExerciseAsync(ExerciseDto dto);
-        Task UpdateExerciseAsync(ExerciseDto dto);
+        Task<IEnumerable<ExerciseReadDto>> GetAllExercisesAsync();
+        Task<ExerciseReadDto?> GetExerciseByIdAsync(int id);
+        Task AddExerciseAsync(ExerciseCreateDto dto);
+        Task UpdateExerciseAsync(int id, ExerciseUpdateDto dto);
         Task DeleteExerciseAsync(int id);
 
         // علاقات إضافية
-        Task<IEnumerable<ExerciseDto>> GetExercisesByLessonIdAsync(int lessonId);
-        Task<IEnumerable<MemorizeSessionDto>> GetMemorizeSessionsByExerciseIdAsync(int exerciseId);
-        Task<LessonDto?> GetLessonByExerciseIdAsync(int exerciseId);
+        Task<IEnumerable<ExerciseReadDto>> GetExercisesByLessonIdAsync(int lessonId);
+        Task<IEnumerable<MemorizeSessionReadDto>> GetMemorizeSessionsByExerciseIdAsync(int exerciseId);
+        Task<LessonReadDto?> GetLessonByExerciseIdAsync(int exerciseId);
     }
 }

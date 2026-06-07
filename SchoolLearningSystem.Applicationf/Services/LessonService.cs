@@ -1,8 +1,13 @@
-﻿using SchoolLearningSystem.Applicationf.DTOs;
+﻿using AutoMapper;
+using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
+using SchoolLearningSystem.Applicationf.DTOs.Exercise;
+using SchoolLearningSystem.Applicationf.DTOs.Lesson;
+using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
+using SchoolLearningSystem.Applicationf.DTOs.Question;
+using SchoolLearningSystem.Applicationf.DTOs.Result;
 using SchoolLearningSystem.Applicationf.Interfaces;
-using SchoolLearningSystem.Domain.Interfaces;
 using SchoolLearningSystem.Domain.Entities;
-using AutoMapper;
+using SchoolLearningSystem.Domain.Interfaces;
 
 namespace SchoolLearningSystem.Applicationf.Services
 {
@@ -17,29 +22,32 @@ namespace SchoolLearningSystem.Applicationf.Services
             _mapper = mapper;
         }
 
-        // 🔹 العمليات الأساسية
-        public async Task<IEnumerable<LessonDto>> GetAllLessonsAsync()
+        // 🔹 CRUD الأساسي
+        public async Task<IEnumerable<LessonReadDto>> GetAllLessonsAsync()
         {
             var lessons = await _lessonRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<LessonDto>>(lessons);
+            return _mapper.Map<IEnumerable<LessonReadDto>>(lessons);
         }
 
-        public async Task<LessonDto?> GetLessonByIdAsync(int id)
+        public async Task<LessonReadDto?> GetLessonByIdAsync(int id)
         {
             var lesson = await _lessonRepository.GetByIdAsync(id);
-            return _mapper.Map<LessonDto?>(lesson);
+            return _mapper.Map<LessonReadDto?>(lesson);
         }
 
-        public async Task AddLessonAsync(LessonDto dto)
+        public async Task AddLessonAsync(LessonCreateDto dto)
         {
-            var lesson = _mapper.Map<Lesson>(dto);
-            await _lessonRepository.AddAsync(lesson);
+            var entity = _mapper.Map<Lesson>(dto);
+            await _lessonRepository.AddAsync(entity);
         }
 
-        public async Task UpdateLessonAsync(LessonDto dto)
+        public async Task UpdateLessonAsync(int id, LessonUpdateDto dto)
         {
-            var lesson = _mapper.Map<Lesson>(dto);
-            await _lessonRepository.UpdateAsync(lesson);
+            var entity = await _lessonRepository.GetByIdAsync(id)
+                ?? throw new Exception("Lesson not found");
+
+            _mapper.Map(dto, entity);
+            await _lessonRepository.UpdateAsync(entity);
         }
 
         public async Task DeleteLessonAsync(int id)
@@ -48,46 +56,61 @@ namespace SchoolLearningSystem.Applicationf.Services
         }
 
         // 🔹 علاقات إضافية
-        public async Task<IEnumerable<ExamDto>> GetExamsByLessonIdAsync(int lessonId)
+        public async Task<IEnumerable<ExamReadDto>> GetExamsByLessonIdAsync(int lessonId)
         {
-            var lesson = await _lessonRepository.GetByIdAsync(lessonId);
-            return _mapper.Map<IEnumerable<ExamDto>>(lesson?.Exams);
+            var lesson = await _lessonRepository.GetByIdAsync(lessonId)
+                ?? throw new Exception("Lesson not found");
+
+            return _mapper.Map<IEnumerable<ExamReadDto>>(lesson.Exams);
         }
 
-        public async Task<IEnumerable<ExerciseDto>> GetExercisesByLessonIdAsync(int lessonId)
+        public async Task<IEnumerable<ExerciseReadDto>> GetExercisesByLessonIdAsync(int lessonId)
         {
-            var lesson = await _lessonRepository.GetByIdAsync(lessonId);
-            return _mapper.Map<IEnumerable<ExerciseDto>>(lesson?.Exercises);
+            var lesson = await _lessonRepository.GetByIdAsync(lessonId)
+                ?? throw new Exception("Lesson not found");
+
+            return _mapper.Map<IEnumerable<ExerciseReadDto>>(lesson.Exercises);
         }
 
-        public async Task<IEnumerable<ResultDto>> GetResultsByLessonIdAsync(int lessonId)
+        public async Task<IEnumerable<ResultReadDto>> GetResultsByLessonIdAsync(int lessonId)
         {
-            var lesson = await _lessonRepository.GetByIdAsync(lessonId);
-            return _mapper.Map<IEnumerable<ResultDto>>(lesson?.Results);
+            var lesson = await _lessonRepository.GetByIdAsync(lessonId)
+                ?? throw new Exception("Lesson not found");
+
+            return _mapper.Map<IEnumerable<ResultReadDto>>(lesson.Results);
         }
 
-        public async Task<IEnumerable<MemorizeSessionDto>> GetMemorizeSessionsByLessonIdAsync(int lessonId)
+        public async Task<IEnumerable<MemorizeSessionReadDto>> GetMemorizeSessionsByLessonIdAsync(int lessonId)
         {
-            var lesson = await _lessonRepository.GetByIdAsync(lessonId);
-            return _mapper.Map<IEnumerable<MemorizeSessionDto>>(lesson?.MemorizeSessions);
+            var lesson = await _lessonRepository.GetByIdAsync(lessonId)
+                ?? throw new Exception("Lesson not found");
+
+            return _mapper.Map<IEnumerable<MemorizeSessionReadDto>>(lesson.MemorizeSessions);
         }
 
-        // 🔹 علاقات جديدة
-        public async Task<IEnumerable<QuestionDto>> GetQuestionsByLessonIdAsync(int lessonId)
+        public async Task<IEnumerable<QuestionReadDto>> GetQuestionsByLessonIdAsync(int lessonId)
         {
-            var questions = await _lessonRepository.GetQuestionsByLessonIdAsync(lessonId);
-            return _mapper.Map<IEnumerable<QuestionDto>>(questions);
+            var lesson = await _lessonRepository.GetByIdAsync(lessonId)
+                ?? throw new Exception("Lesson not found");
+
+            return _mapper.Map<IEnumerable<QuestionReadDto>>(lesson.Questions);
         }
 
         // 🔹 إحصائيات
         public async Task<int> GetTotalQuestionsByLessonIdAsync(int lessonId)
         {
-            return await _lessonRepository.GetTotalQuestionsByLessonIdAsync(lessonId);
+            var lesson = await _lessonRepository.GetByIdAsync(lessonId)
+                ?? throw new Exception("Lesson not found");
+
+            return lesson.Questions.Count;
         }
 
         public async Task<int> GetTotalExamsByLessonIdAsync(int lessonId)
         {
-            return await _lessonRepository.GetTotalExamsByLessonIdAsync(lessonId);
+            var lesson = await _lessonRepository.GetByIdAsync(lessonId)
+                ?? throw new Exception("Lesson not found");
+
+            return lesson.Exams.Count;
         }
     }
 }

@@ -1,4 +1,8 @@
-﻿namespace SchoolLearningSystem.Applicationf.DTOs
+﻿using SchoolLearningSystem.Applicationf.DTOs.Exercise;
+using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
+using SchoolLearningSystem.Applicationf.DTOs.Question;
+
+namespace SchoolLearningSystem.Applicationf.DTOs.Lesson
 {
     public class LessonDto
     {

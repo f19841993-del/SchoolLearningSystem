@@ -1,4 +1,6 @@
-﻿namespace SchoolLearningSystem.Applicationf.DTOs
+﻿using SchoolLearningSystem.Applicationf.DTOs.Question;
+
+namespace SchoolLearningSystem.Applicationf. DTOs.ExamDto
 {
     public class ExamDto
     {

@@ -1,5 +1,6 @@
-﻿
-namespace SchoolLearningSystem.Applicationf.DTOs
+﻿using SchoolLearningSystem.Applicationf.DTOs.Lesson;
+
+namespace SchoolLearningSystem.Applicationf.DTOs.CourseDto
 {
     public class CourseDto
     {

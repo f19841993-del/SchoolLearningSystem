@@ -1,4 +1,6 @@
-﻿namespace SchoolLearningSystem.Applicationf.DTOs
+﻿using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
+
+namespace SchoolLearningSystem.Applicationf.DTOs
 {
     public class StudentDto
     {

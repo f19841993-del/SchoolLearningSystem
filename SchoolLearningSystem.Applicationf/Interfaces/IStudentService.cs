@@ -1,4 +1,6 @@
 ﻿using SchoolLearningSystem.Applicationf.DTOs;
+using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
+using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

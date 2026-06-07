@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SchoolLearningSystem.Applicationf.DTOs
+namespace SchoolLearningSystem.Applicationf.DTOs.MemorizeSession
 {
     public class MemorizeSessionDto
     {

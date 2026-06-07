@@ -50,6 +50,14 @@ namespace SchoolLearningSystem.Infrastructure.Infrastructure
                 await _context.SaveChangesAsync();
             }
         }
+
+        // 🔹 الدالة الجديدة
+        public async Task<Curriculum?> GetByGradeLevelAsync(string gradeLevel)
+        {
+            return await _context.Curriculums
+                .Include(c => c.Courses)
+                .FirstOrDefaultAsync(c => c.GradeLevel.ToString() == gradeLevel);
+        }
     }
 
 }

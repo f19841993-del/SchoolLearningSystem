@@ -14,6 +14,8 @@ namespace SchoolLearningSystem.Domain.Interfaces
         Task AddAsync(Curriculum curriculum);
         Task UpdateAsync(Curriculum curriculum);
         Task DeleteAsync(int id);
+        // 🔹 الدالة الجديدة للبحث حسب المرحلة الدراسية
+        Task<Curriculum?> GetByGradeLevelAsync(string gradeLevel);
     }
 
 }

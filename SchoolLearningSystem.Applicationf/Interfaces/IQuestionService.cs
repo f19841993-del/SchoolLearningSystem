@@ -1,4 +1,4 @@
-﻿using SchoolLearningSystem.Applicationf.DTOs;
+﻿using SchoolLearningSystem.Applicationf.DTOs.Question;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -6,15 +6,19 @@ namespace SchoolLearningSystem.Applicationf.Interfaces
 {
     public interface IQuestionService
     {
-        // العمليات الأساسية
-        Task<IEnumerable<QuestionDto>> GetAllQuestionsAsync();
-        Task<QuestionDto?> GetQuestionByIdAsync(int id);
-        Task AddQuestionAsync(QuestionDto dto);
-        Task UpdateQuestionAsync(QuestionDto dto);
+        // 🔹 العمليات الأساسية
+        Task<IEnumerable<QuestionReadDto>> GetAllQuestionsAsync();
+        Task<QuestionReadDto?> GetQuestionByIdAsync(int id);
+        Task AddQuestionAsync(QuestionCreateDto dto);
+        Task UpdateQuestionAsync(int id, QuestionUpdateDto dto);
         Task DeleteQuestionAsync(int id);
 
-        // علاقات إضافية
-        Task<IEnumerable<QuestionDto>> GetQuestionsByExamIdAsync(int examId);
-        Task<IEnumerable<QuestionDto>> GetQuestionsByLessonIdAsync(int lessonId);
+        // 🔹 علاقات إضافية
+        Task<IEnumerable<QuestionReadDto>> GetQuestionsByExamIdAsync(int examId);
+        Task<IEnumerable<QuestionReadDto>> GetQuestionsByLessonIdAsync(int lessonId);
+
+        // 🔹 إحصائيات إضافية (اختياري)
+        Task<int> GetQuestionCountByExamIdAsync(int examId);
+        Task<int> GetQuestionCountByDifficultyAsync(string difficultyLevel);
     }
 }

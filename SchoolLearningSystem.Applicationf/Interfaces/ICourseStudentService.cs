@@ -1,4 +1,7 @@
-﻿using SchoolLearningSystem.Applicationf.DTOs;
+﻿
+using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
+using SchoolLearningSystem.Applicationf.DTOs.CourseStudent;
+using SchoolLearningSystem.Applicationf.DTOs.Student;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -7,17 +10,17 @@ namespace SchoolLearningSystem.Applicationf.Interfaces
     public interface ICourseStudentService
     {
         // العمليات الأساسية
-        Task<IEnumerable<CourseStudentDto>> GetAllCourseStudentsAsync();
-        Task<CourseStudentDto?> GetCourseStudentByIdAsync(int courseId, int studentId);
-        Task AddCourseStudentAsync(CourseStudentDto dto);
-        Task UpdateCourseStudentAsync(CourseStudentDto dto);
+        Task<IEnumerable<CourseStudentReadDto>> GetAllCourseStudentsAsync();
+        Task<CourseStudentReadDto?> GetCourseStudentByIdAsync(int courseId, int studentId);
+        Task AddCourseStudentAsync(CourseStudentCreateDto dto);
+        Task UpdateCourseStudentAsync(int courseId, int studentId, CourseStudentUpdateDto dto);
         Task DeleteCourseStudentAsync(int courseId, int studentId);
 
         // علاقات إضافية
-        Task<IEnumerable<StudentDto>> GetStudentsByCourseIdAsync(int courseId);
-        Task<IEnumerable<CourseDto>> GetCoursesByStudentIdAsync(int studentId);
+        Task<IEnumerable<StudentReadDto>> GetStudentsByCourseIdAsync(int courseId);
+        Task<IEnumerable<CourseReadDto>> GetCoursesByStudentIdAsync(int studentId);
 
-        // عمليات التسجيل والإزالة
+        // عمليات التسجيل والإزالة (اختصار للإنشاء والحذف)
         Task EnrollStudentAsync(int courseId, int studentId);
         Task RemoveStudentAsync(int courseId, int studentId);
 

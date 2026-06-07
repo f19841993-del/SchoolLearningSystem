@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using SchoolLearningSystem.Applicationf.DTOs;
+using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Applicationf.Interfaces;
 using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Interfaces;
@@ -30,29 +31,31 @@ namespace SchoolLearningSystem.Applicationf.Services
         }
 
         // العمليات الأساسية
-        public async Task<IEnumerable<CourseDto>> GetAllCoursesAsync()
+        public async Task<IEnumerable<CourseReadDto>> GetAllCoursesAsync()
         {
             var courses = await _courseRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<CourseDto>>(courses);
+            return _mapper.Map<IEnumerable<CourseReadDto>>(courses);
         }
 
-        public async Task<CourseDto?> GetCourseByIdAsync(int id)
+        public async Task<CourseReadDto?> GetCourseByIdAsync(int id)
         {
             var course = await _courseRepository.GetByIdAsync(id);
-            return _mapper.Map<CourseDto?>(course);
+            return _mapper.Map<CourseReadDto?>(course);
         }
 
-        public async Task AddCourseAsync(CourseDto dto, int teacherId)
+        public async Task AddCourseAsync(CourseCreateDto dto)
         {
             var entity = _mapper.Map<Course>(dto);
-            entity.TeacherId = teacherId;
             await _courseRepository.AddAsync(entity);
         }
 
-        public async Task UpdateCourseAsync(CourseDto dto)
+        public async Task UpdateCourseAsync(int id, CourseUpdateDto dto)
         {
-            var entity = _mapper.Map<Course>(dto);
-            await _courseRepository.UpdateAsync(entity);
+            var course = await _courseRepository.GetByIdAsync(id);
+            if (course == null) throw new Exception("Course not found");
+
+            _mapper.Map(dto, course); // يطبق التعديلات على الكورس الموجود
+            await _courseRepository.UpdateAsync(course);
         }
 
         public async Task DeleteCourseAsync(int id)
@@ -61,25 +64,25 @@ namespace SchoolLearningSystem.Applicationf.Services
         }
 
         // علاقات إضافية
-        public async Task<IEnumerable<StudentDto>> GetStudentsByCourseIdAsync(int courseId)
+        public async Task<IEnumerable<StudentReadDto>> GetStudentsByCourseIdAsync(int courseId)
         {
             var course = await _courseRepository.GetByIdAsync(courseId);
-            if (course == null) return Enumerable.Empty<StudentDto>();
+            if (course == null) return Enumerable.Empty<StudentReadDto>();
 
             var students = course.CourseStudents.Select(cs => cs.Student);
-            return _mapper.Map<IEnumerable<StudentDto>>(students);
+            return _mapper.Map<IEnumerable<StudentReadDto>>(students);
         }
 
-        public async Task<IEnumerable<LessonDto>> GetLessonsByCourseIdAsync(int courseId)
+        public async Task<IEnumerable<LessonReadDto>> GetLessonsByCourseIdAsync(int courseId)
         {
             var lessons = await _lessonRepository.GetByCourseIdAsync(courseId);
-            return _mapper.Map<IEnumerable<LessonDto>>(lessons);
+            return _mapper.Map<IEnumerable<LessonReadDto>>(lessons);
         }
 
-        public async Task<IEnumerable<ExamDto>> GetExamsByCourseIdAsync(int courseId)
+        public async Task<IEnumerable<ExamReadDto>> GetExamsByCourseIdAsync(int courseId)
         {
             var exams = await _examRepository.GetByCourseIdAsync(courseId);
-            return _mapper.Map<IEnumerable<ExamDto>>(exams);
+            return _mapper.Map<IEnumerable<ExamReadDto>>(exams);
         }
 
         // ربط طالب بالكورس
