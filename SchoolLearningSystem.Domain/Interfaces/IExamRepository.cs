@@ -1,15 +1,16 @@
 ﻿using SchoolLearningSystem.Domain.Entities;
+using SchoolLearningSystem.Domain.Interfaces.Base;
+using SchoolLearningSystem.Domain.Enums; // نحتاجها لدعم الـ AI
 
 namespace SchoolLearningSystem.Domain.Interfaces
 {
-    public interface IExamRepository
+    public interface IExamRepository : IGenericRepository<Exam>
     {
-        Task<Exam> GetByIdAsync(int id);
-        Task<IEnumerable<Exam>> GetAllAsync();
-        Task AddAsync(Exam exam);
-        Task UpdateAsync(Exam exam);
-        Task DeleteAsync(int id);
+        // استعلام مخصص لجلب امتحانات الكورس
         Task<IEnumerable<Exam>> GetByCourseIdAsync(int courseId);
 
+        // 💡 إضافة ذكية للذكاء الاصطناعي:
+        // تمكن الـ Service من جلب امتحانات ذات مستوى صعوبة محدد ليقوم الـ AI بتخصيص التقييم للطالب
+        Task<IEnumerable<Exam>> GetExamsByDifficultyAsync(DifficultyLevel difficulty);
     }
 }

@@ -1,19 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using SchoolLearningSystem.Domain.Enums;
 
-    namespace SchoolLearningSystem.Applicationf.DTOs.Question
+namespace SchoolLearningSystem.Applicationf.DTOs.Question
+{
+    public class QuestionReadDto
     {
-        public class QuestionReadDto
-        {
-            public int Id { get; set; }
-            public string Text { get; set; } = string.Empty;
-            public string Answer { get; set; } = string.Empty;
-            public string DifficultyLevel { get; set; } = string.Empty;
-            public int ExamId { get; set; }
-            public string ExamTitle { get; set; } = string.Empty;
-            public int QuestionNumber { get; set; }
-        }
+        public int Id { get; set; }
+        public string Text { get; set; } = string.Empty;
+        public string Answer { get; set; } = string.Empty;
+        public DifficultyLevel DifficultyLevel { get; set; }
+        public int LessonId { get; set; }
+        public string LessonTitle { get; set; } = string.Empty;
     }
-
-
+}

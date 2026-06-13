@@ -1,14 +1,22 @@
-﻿namespace SchoolLearningSystem.Applicationf.DTOs.Student
+﻿using System.ComponentModel.DataAnnotations;
+using SchoolLearningSystem.Domain.Enums;
+
+namespace SchoolLearningSystem.Applicationf.DTOs.Student
 {
     public class StudentCreateDto
     {
+        [Required(ErrorMessage = "Name is required")]
         public string Name { get; set; } = string.Empty;
+
+        [Required]
+        public string Username { get; set; } = string.Empty;
+
+        [Required, EmailAddress]
         public string Email { get; set; } = string.Empty;
 
-        // المرحلة الدراسية
-        public string GradeLevel { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
 
-        // الكورسات المشترك بها الطالب
-        public List<int> CourseIds { get; set; } = new List<int>();
+        [Required]
+        public GradeLevel GradeLevel { get; set; }
     }
 }

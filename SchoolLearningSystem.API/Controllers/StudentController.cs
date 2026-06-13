@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SchoolLearningSystem.Applicationf.Interfaces;
-using SchoolLearningSystem.Applicationf.DTOs.Student;
 using SchoolLearningSystem.API.Responses;
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
-using SchoolLearningSystem.Applicationf.DTOs.Result;
 using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
+using SchoolLearningSystem.Applicationf.DTOs.Result;
+using SchoolLearningSystem.Applicationf.DTOs.Student;
+using SchoolLearningSystem.Applicationf.Interfaces;
 
 namespace SchoolLearningSystem.API.Controllers
 {
@@ -21,137 +21,112 @@ namespace SchoolLearningSystem.API.Controllers
 
         // 🔹 CRUD الأساسي
 
-        /// <summary>
-        /// يرجع كل الطلاب الموجودين بالنظام
-        /// </summary>
-        /// <response code="200">تم جلب الطلاب بنجاح</response>
         [HttpGet]
-        public async Task<IActionResult> GetAllStudents()
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<StudentReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<StudentReadDto>>>> GetAll()
         {
-            var students = await _studentService.GetAllStudentsAsync();
+            var students = await _studentService.GetAllAsync();
             return Ok(new ApiResponse<IEnumerable<StudentReadDto>>(200, "Students retrieved successfully", students));
         }
 
-        /// <summary>
-        /// يرجع بيانات طالب محدد حسب الـ Id
-        /// </summary>
-        /// <response code="200">تم جلب الطالب بنجاح</response>
-        /// <response code="404">الطالب غير موجود</response>
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetStudentById(int id)
+        [ProducesResponseType(typeof(ApiResponse<StudentReadDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<StudentReadDto>>> GetById(int id)
         {
-            var student = await _studentService.GetStudentByIdAsync(id);
+            var student = await _studentService.GetByIdAsync(id);
             if (student == null)
                 return NotFound(new ApiResponse<string>(404, "Student not found"));
 
             return Ok(new ApiResponse<StudentReadDto>(200, "Student retrieved successfully", student));
         }
 
-        /// <summary>
-        /// إضافة طالب جديد
-        /// </summary>
-        /// <response code="201">تم إنشاء الطالب بنجاح</response>
-        /// <response code="400">خطأ في البيانات المدخلة</response>
         [HttpPost]
-        public async Task<IActionResult> AddStudent(StudentCreateDto dto)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<ApiResponse<string>>> Add(StudentCreateDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(new ApiResponse<string>(400, "Invalid input data"));
 
-            await _studentService.AddStudentAsync(dto);
+            await _studentService.CreateAsync(dto);
             return StatusCode(201, new ApiResponse<string>(201, "Student created successfully"));
         }
 
-        /// <summary>
-        /// تحديث بيانات طالب موجود
-        /// </summary>
-        /// <response code="200">تم تحديث الطالب بنجاح</response>
-        /// <response code="404">الطالب غير موجود</response>
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateStudent(int id, StudentUpdateDto dto)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<string>>> Update(int id, StudentUpdateDto dto)
         {
             try
             {
-                await _studentService.UpdateStudentAsync(id, dto);
+                await _studentService.UpdateAsync(id, dto);
                 return Ok(new ApiResponse<string>(200, "Student updated successfully"));
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound(new ApiResponse<string>(404, "Student not found"));
+                return NotFound(new ApiResponse<string>(404, ex.Message));
             }
         }
 
-        /// <summary>
-        /// حذف طالب
-        /// </summary>
-        /// <response code="200">تم حذف الطالب بنجاح</response>
-        /// <response code="404">الطالب غير موجود</response>
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteStudent(int id)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<string>>> Delete(int id)
         {
             try
             {
-                await _studentService.DeleteStudentAsync(id);
+                await _studentService.DeleteAsync(id);
                 return Ok(new ApiResponse<string>(200, "Student deleted successfully"));
             }
-            catch (KeyNotFoundException)
+            catch (Exception ex)
             {
-                return NotFound(new ApiResponse<string>(404, "Student not found"));
+                return NotFound(new ApiResponse<string>(404, ex.Message));
             }
         }
 
-        // 🔹 علاقات إضافية
+        // 🔹 علاقات إضافية (Custom Business Logic)
 
-        /// <summary>
-        /// يرجع الكورسات المرتبطة بالطالب
-        /// </summary>
-        [HttpGet("{studentId}/courses")]
-        public async Task<IActionResult> GetCoursesByStudentId(int studentId)
+        [HttpGet("{id}/courses")]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<CourseReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<CourseReadDto>>>> GetCourses(int id)
         {
-            var courses = await _studentService.GetCoursesByStudentIdAsync(studentId);
-            return Ok(new ApiResponse<IEnumerable<CourseDto>>(200, "Courses retrieved successfully", courses));
+            var courses = await _studentService.GetCoursesByStudentIdAsync(id);
+            return Ok(new ApiResponse<IEnumerable<CourseReadDto>>(200, "Courses retrieved successfully", courses));
         }
 
-        /// <summary>
-        /// يرجع نتائج الطالب
-        /// </summary>
-        [HttpGet("{studentId}/results")]
-        public async Task<IActionResult> GetResultsByStudentId(int studentId)
+        [HttpGet("{id}/results")]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<ResultReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<ResultReadDto>>>> GetResults(int id)
         {
-            var results = await _studentService.GetResultsByStudentIdAsync(studentId);
+            var results = await _studentService.GetResultsByStudentIdAsync(id);
             return Ok(new ApiResponse<IEnumerable<ResultReadDto>>(200, "Results retrieved successfully", results));
         }
 
-        /// <summary>
-        /// يرجع جلسات المراجعة الخاصة بالطالب
-        /// </summary>
-        [HttpGet("{studentId}/memorize-sessions")]
-        public async Task<IActionResult> GetMemorizeSessionsByStudentId(int studentId)
+        [HttpGet("{id}/sessions")]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<MemorizeSessionReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<MemorizeSessionReadDto>>>> GetSessions(int id)
         {
-            var sessions = await _studentService.GetMemorizeSessionsByStudentIdAsync(studentId);
-            return Ok(new ApiResponse<IEnumerable<MemorizeSessionReadDto>>(200, "Memorize sessions retrieved successfully", sessions));
+            var sessions = await _studentService.GetMemorizeSessionsByStudentIdAsync(id);
+            return Ok(new ApiResponse<IEnumerable<MemorizeSessionReadDto>>(200, "Sessions retrieved successfully", sessions));
         }
 
         // 🔹 إحصائيات
 
-        /// <summary>
-        /// يرجع معدل درجات الطالب
-        /// </summary>
-        [HttpGet("{studentId}/average-score")]
-        public async Task<IActionResult> GetAverageScoreByStudentId(int studentId)
+        [HttpGet("{id}/average-score")]
+        [ProducesResponseType(typeof(ApiResponse<double>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<double>>> GetAverageScore(int id)
         {
-            var avg = await _studentService.GetAverageScoreByStudentIdAsync(studentId);
+            var avg = await _studentService.GetAverageScoreByStudentIdAsync(id);
             return Ok(new ApiResponse<double>(200, "Average score retrieved successfully", avg));
         }
 
-        /// <summary>
-        /// يرجع عدد الكورسات المشترك بها الطالب
-        /// </summary>
-        [HttpGet("{studentId}/total-courses")]
-        public async Task<IActionResult> GetTotalCoursesByStudentId(int studentId)
+        [HttpGet("{id}/total-courses")]
+        [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<int>>> GetTotalCourses(int id)
         {
-            var total = await _studentService.GetTotalCoursesByStudentIdAsync(studentId);
-            return Ok(new ApiResponse<int>(200, "Total courses retrieved successfully", total));
+            var count = await _studentService.GetTotalCoursesByStudentIdAsync(id);
+            return Ok(new ApiResponse<int>(200, "Total courses count retrieved", count));
         }
     }
 }

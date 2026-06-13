@@ -1,84 +1,48 @@
 ﻿using AutoMapper;
 using SchoolLearningSystem.Applicationf.DTOs.Question;
 using SchoolLearningSystem.Applicationf.Interfaces;
+using SchoolLearningSystem.Applicationf.Services.Base;
 using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Interfaces;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using SchoolLearningSystem.Domain.Enums; // استخدمنا الـ Enum لضمان النوع
 
-public class QuestionService : IQuestionService
+namespace SchoolLearningSystem.Applicationf.Services
 {
-    private readonly IQuestionRepository _questionRepository;
-    private readonly IMapper _mapper;
-
-    public QuestionService(IQuestionRepository questionRepository, IMapper mapper)
+    public class QuestionService : BaseService<Question, QuestionReadDto, QuestionCreateDto, QuestionUpdateDto>, IQuestionService
     {
-        _questionRepository = questionRepository;
-        _mapper = mapper;
-    }
+        private readonly IQuestionRepository _questionRepository;
 
-    // 🔹 العمليات الأساسية
+        public QuestionService(IQuestionRepository questionRepository, IMapper mapper)
+            : base(questionRepository, mapper) // الأب يدير الـ CRUD
+        {
+            _questionRepository = questionRepository;
+        }
 
-    public async Task<IEnumerable<QuestionReadDto>> GetAllQuestionsAsync()
-    {
-        var questions = await _questionRepository.GetAllAsync();
-        return _mapper.Map<IEnumerable<QuestionReadDto>>(questions);
-    }
+        // 🔹 CRUD الأساسي: موروث من BaseService (لا حاجة لكتابته هنا)
 
-    public async Task<QuestionReadDto?> GetQuestionByIdAsync(int id)
-    {
-        var question = await _questionRepository.GetByIdAsync(id);
-        return question == null ? null : _mapper.Map<QuestionReadDto>(question);
-    }
+        // 🔹 علاقات إضافية (Logic)
+        public async Task<IEnumerable<QuestionReadDto>> GetQuestionsByExamIdAsync(int examId)
+        {
+            var questions = await _questionRepository.GetByExamIdAsync(examId);
+            return _mapper.Map<IEnumerable<QuestionReadDto>>(questions);
+        }
 
-    public async Task AddQuestionAsync(QuestionCreateDto dto)
-    {
-        var question = _mapper.Map<Question>(dto);
-        await _questionRepository.AddAsync(question);
-    }
+        public async Task<IEnumerable<QuestionReadDto>> GetQuestionsByLessonIdAsync(int lessonId)
+        {
+            var questions = await _questionRepository.GetByLessonIdAsync(lessonId);
+            return _mapper.Map<IEnumerable<QuestionReadDto>>(questions);
+        }
 
-    public async Task UpdateQuestionAsync(int id, QuestionUpdateDto dto)
-    {
-        var existing = await _questionRepository.GetByIdAsync(id);
-        if (existing == null)
-            throw new KeyNotFoundException("Question not found");
+        // 🔹 إحصائيات إضافية
+        public async Task<int> GetQuestionCountByExamIdAsync(int examId)
+        {
+            return await _questionRepository.CountByExamIdAsync(examId);
+        }
 
-        _mapper.Map(dto, existing);
-        await _questionRepository.UpdateAsync(existing);
-    }
-
-    public async Task DeleteQuestionAsync(int id)
-    {
-        var existing = await _questionRepository.GetByIdAsync(id);
-        if (existing == null)
-            throw new KeyNotFoundException("Question not found");
-
-        await _questionRepository.DeleteAsync(existing);
-    }
-
-    // 🔹 علاقات إضافية
-
-    public async Task<IEnumerable<QuestionReadDto>> GetQuestionsByExamIdAsync(int examId)
-    {
-        var questions = await _questionRepository.GetByExamIdAsync(examId);
-        return _mapper.Map<IEnumerable<QuestionReadDto>>(questions);
-    }
-
-    public async Task<IEnumerable<QuestionReadDto>> GetQuestionsByLessonIdAsync(int lessonId)
-    {
-        var questions = await _questionRepository.GetByLessonIdAsync(lessonId);
-        return _mapper.Map<IEnumerable<QuestionReadDto>>(questions);
-    }
-
-    // 🔹 إحصائيات إضافية (اختياري)
-
-    public async Task<int> GetQuestionCountByExamIdAsync(int examId)
-    {
-        return await _questionRepository.CountByExamIdAsync(examId);
-    }
-
-    public async Task<int> GetQuestionCountByDifficultyAsync(string difficultyLevel)
-    {
-        return await _questionRepository.CountByDifficultyAsync(difficultyLevel);
+        public async Task<int> GetQuestionCountByDifficultyAsync(DifficultyLevel difficultyLevel)
+        {
+            // تم تعديل المدخل ليصبح Enum بدلاً من string لزيادة الاحترافية (Type-Safety)
+            return await _questionRepository.CountByDifficultyAsync(difficultyLevel);
+        }
     }
 }

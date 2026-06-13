@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SchoolLearningSystem.Applicationf.Interfaces;
-using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
 using SchoolLearningSystem.API.Responses;
+using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
+using SchoolLearningSystem.Applicationf.Interfaces;
 
 namespace SchoolLearningSystem.API.Controllers
 {
@@ -16,60 +16,48 @@ namespace SchoolLearningSystem.API.Controllers
             _memorizeService = memorizeService;
         }
 
-        // 🔹 CRUD الأساسي
+        // 🔹 CRUD الأساسي (موروث من BaseService)
 
-        /// <summary>
-        /// يرجع كل جلسات المراجعة
-        /// </summary>
-        /// <response code="200">تم جلب الجلسات بنجاح</response>
         [HttpGet]
-        public async Task<IActionResult> GetAllSessions()
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<MemorizeSessionReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<MemorizeSessionReadDto>>>> GetAll()
         {
-            var sessions = await _memorizeService.GetAllSessionsAsync();
-            return Ok(new ApiResponse<IEnumerable<MemorizeSessionReadDto>>(200, "Sessions retrieved successfully", sessions));
+            var data = await _memorizeService.GetAllAsync();
+            return Ok(new ApiResponse<IEnumerable<MemorizeSessionReadDto>>(200, "Sessions retrieved successfully", data));
         }
 
-        /// <summary>
-        /// يرجع جلسة مراجعة حسب الـ Id
-        /// </summary>
-        /// <response code="200">تم جلب الجلسة بنجاح</response>
-        /// <response code="404">الجلسة غير موجودة</response>
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetSessionById(int id)
+        [ProducesResponseType(typeof(ApiResponse<MemorizeSessionReadDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<MemorizeSessionReadDto>>> GetById(int id)
         {
-            var session = await _memorizeService.GetSessionByIdAsync(id);
-            if (session == null)
+            var data = await _memorizeService.GetByIdAsync(id);
+            if (data == null)
                 return NotFound(new ApiResponse<string>(404, "Session not found"));
 
-            return Ok(new ApiResponse<MemorizeSessionReadDto>(200, "Session retrieved successfully", session));
+            return Ok(new ApiResponse<MemorizeSessionReadDto>(200, "Session retrieved successfully", data));
         }
 
-        /// <summary>
-        /// إضافة جلسة مراجعة جديدة
-        /// </summary>
-        /// <response code="201">تم إنشاء الجلسة بنجاح</response>
-        /// <response code="400">خطأ في البيانات المدخلة</response>
         [HttpPost]
-        public async Task<IActionResult> AddSession(MemorizeSessionCreateDto dto)
+        [ProducesResponseType(typeof(ApiResponse<MemorizeSessionReadDto>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<ApiResponse<MemorizeSessionReadDto>>> Add(MemorizeSessionCreateDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(new ApiResponse<string>(400, "Invalid input data"));
 
-            await _memorizeService.AddSessionAsync(dto);
-            return StatusCode(201, new ApiResponse<string>(201, "Session created successfully"));
+            var createdSession = await _memorizeService.CreateAsync(dto);
+            return StatusCode(201, new ApiResponse<MemorizeSessionReadDto>(201, "Session created successfully", createdSession));
         }
 
-        /// <summary>
-        /// تحديث جلسة مراجعة موجودة
-        /// </summary>
-        /// <response code="200">تم تحديث الجلسة بنجاح</response>
-        /// <response code="404">الجلسة غير موجودة</response>
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSession(int id, MemorizeSessionUpdateDto dto)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<string>>> Update(int id, MemorizeSessionUpdateDto dto)
         {
             try
             {
-                await _memorizeService.UpdateSessionAsync(id, dto);
+                await _memorizeService.UpdateAsync(id, dto);
                 return Ok(new ApiResponse<string>(200, "Session updated successfully"));
             }
             catch (Exception ex)
@@ -78,17 +66,14 @@ namespace SchoolLearningSystem.API.Controllers
             }
         }
 
-        /// <summary>
-        /// حذف جلسة مراجعة
-        /// </summary>
-        /// <response code="200">تم حذف الجلسة بنجاح</response>
-        /// <response code="404">الجلسة غير موجودة</response>
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSession(int id)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<string>>> Delete(int id)
         {
             try
             {
-                await _memorizeService.DeleteSessionAsync(id);
+                await _memorizeService.DeleteAsync(id);
                 return Ok(new ApiResponse<string>(200, "Session deleted successfully"));
             }
             catch (Exception ex)
@@ -97,77 +82,56 @@ namespace SchoolLearningSystem.API.Controllers
             }
         }
 
-        // 🔹 علاقات إضافية
+        // 🔹 علاقات إضافية (Custom Queries)
 
-        /// <summary>
-        /// يرجع جلسات المراجعة لطالب معين
-        /// </summary>
-        /// <response code="200">تم جلب الجلسات بنجاح</response>
         [HttpGet("student/{studentId}")]
-        public async Task<IActionResult> GetSessionsByStudentId(int studentId)
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<MemorizeSessionReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<MemorizeSessionReadDto>>>> GetByStudent(int studentId)
         {
-            var sessions = await _memorizeService.GetSessionsByStudentIdAsync(studentId);
-            return Ok(new ApiResponse<IEnumerable<MemorizeSessionReadDto>>(200, "Sessions retrieved successfully", sessions));
+            var data = await _memorizeService.GetSessionsByStudentIdAsync(studentId);
+            return Ok(new ApiResponse<IEnumerable<MemorizeSessionReadDto>>(200, "Sessions retrieved successfully", data));
         }
 
-        /// <summary>
-        /// يرجع جلسات المراجعة لدرس معين
-        /// </summary>
-        /// <response code="200">تم جلب الجلسات بنجاح</response>
         [HttpGet("lesson/{lessonId}")]
-        public async Task<IActionResult> GetSessionsByLessonId(int lessonId)
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<MemorizeSessionReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<MemorizeSessionReadDto>>>> GetByLesson(int lessonId)
         {
-            var sessions = await _memorizeService.GetSessionsByLessonIdAsync(lessonId);
-            return Ok(new ApiResponse<IEnumerable<MemorizeSessionReadDto>>(200, "Sessions retrieved successfully", sessions));
+            var data = await _memorizeService.GetSessionsByLessonIdAsync(lessonId);
+            return Ok(new ApiResponse<IEnumerable<MemorizeSessionReadDto>>(200, "Sessions retrieved successfully", data));
         }
 
-        /// <summary>
-        /// يرجع جلسات المراجعة لتدريب معين
-        /// </summary>
-        /// <response code="200">تم جلب الجلسات بنجاح</response>
         [HttpGet("exercise/{exerciseId}")]
-        public async Task<IActionResult> GetSessionsByExerciseId(int exerciseId)
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<MemorizeSessionReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<MemorizeSessionReadDto>>>> GetByExercise(int exerciseId)
         {
-            var sessions = await _memorizeService.GetSessionsByExerciseIdAsync(exerciseId);
-            return Ok(new ApiResponse<IEnumerable<MemorizeSessionReadDto>>(200, "Sessions retrieved successfully", sessions));
+            var data = await _memorizeService.GetSessionsByExerciseIdAsync(exerciseId);
+            return Ok(new ApiResponse<IEnumerable<MemorizeSessionReadDto>>(200, "Sessions retrieved successfully", data));
         }
 
-        // 🔹 دوال إضافية ترجع أسماء مرتبطة بالجلسة
+        // 🔹 استعلامات معلومات الجلسة
 
-        /// <summary>
-        /// يرجع اسم الطالب المرتبط بالجلسة
-        /// </summary>
-        /// <response code="200">تم جلب الاسم بنجاح</response>
-        /// <response code="404">الجلسة غير موجودة</response>
         [HttpGet("{id}/student-name")]
-        public async Task<IActionResult> GetStudentNameBySessionId(int id)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<string>>> GetStudentName(int id)
         {
             var name = await _memorizeService.GetStudentNameBySessionIdAsync(id);
-            return Ok(new ApiResponse<string>(200, "Student name retrieved successfully", name));
+            return Ok(new ApiResponse<string>(200, "Student name retrieved", name));
         }
 
-        /// <summary>
-        /// يرجع عنوان الدرس المرتبط بالجلسة
-        /// </summary>
-        /// <response code="200">تم جلب العنوان بنجاح</response>
-        /// <response code="404">الجلسة غير موجودة</response>
         [HttpGet("{id}/lesson-title")]
-        public async Task<IActionResult> GetLessonTitleBySessionId(int id)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<string>>> GetLessonTitle(int id)
         {
             var title = await _memorizeService.GetLessonTitleBySessionIdAsync(id);
-            return Ok(new ApiResponse<string>(200, "Lesson title retrieved successfully", title));
+            return Ok(new ApiResponse<string>(200, "Lesson title retrieved", title));
         }
 
-        /// <summary>
-        /// يرجع سؤال التدريب المرتبط بالجلسة
-        /// </summary>
-        /// <response code="200">تم جلب السؤال بنجاح</response>
-        /// <response code="404">الجلسة غير موجودة</response>
         [HttpGet("{id}/exercise-question")]
-        public async Task<IActionResult> GetExerciseQuestionBySessionId(int id)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<string>>> GetExerciseQuestion(int id)
         {
             var question = await _memorizeService.GetExerciseQuestionBySessionIdAsync(id);
-            return Ok(new ApiResponse<string>(200, "Exercise question retrieved successfully", question));
+            return Ok(new ApiResponse<string>(200, "Question retrieved", question));
         }
     }
 }

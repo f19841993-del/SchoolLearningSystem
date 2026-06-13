@@ -21,58 +21,46 @@ namespace SchoolLearningSystem.API.Controllers
 
         // 🔹 CRUD الأساسي
 
-        /// <summary>
-        /// يرجع كل الكورسات الموجودة بالنظام
-        /// </summary>
-        /// <response code="200">تم جلب الكورسات بنجاح</response>
         [HttpGet]
-        public async Task<IActionResult> GetAllCourses()
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<CourseReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<CourseReadDto>>>> GetAllCourses()
         {
-            var courses = await _courseService.GetAllCoursesAsync();
+            var courses = await _courseService.GetAllAsync();
             return Ok(new ApiResponse<IEnumerable<CourseReadDto>>(200, "Courses retrieved successfully", courses));
         }
 
-        /// <summary>
-        /// يرجع بيانات كورس محدد حسب الـ Id
-        /// </summary>
-        /// <response code="200">تم جلب الكورس بنجاح</response>
-        /// <response code="404">الكورس غير موجود</response>
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetCourseById(int id)
+        [ProducesResponseType(typeof(ApiResponse<CourseReadDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<CourseReadDto>>> GetCourseById(int id)
         {
-            var course = await _courseService.GetCourseByIdAsync(id);
+            var course = await _courseService.GetByIdAsync(id);
             if (course == null)
                 return NotFound(new ApiResponse<string>(404, "Course not found"));
 
             return Ok(new ApiResponse<CourseReadDto>(200, "Course retrieved successfully", course));
         }
 
-        /// <summary>
-        /// إضافة كورس جديد للنظام
-        /// </summary>
-        /// <response code="201">تم إنشاء الكورس بنجاح</response>
-        /// <response code="400">خطأ في البيانات المدخلة</response>
         [HttpPost]
-        public async Task<IActionResult> AddCourse(CourseCreateDto dto)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<ApiResponse<string>>> AddCourse(CourseCreateDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(new ApiResponse<string>(400, "Invalid input data"));
 
-            await _courseService.AddCourseAsync(dto);
+            await _courseService.CreateAsync(dto);
             return StatusCode(201, new ApiResponse<string>(201, "Course created successfully"));
         }
 
-        /// <summary>
-        /// تحديث بيانات كورس موجود
-        /// </summary>
-        /// <response code="200">تم تحديث الكورس بنجاح</response>
-        /// <response code="404">الكورس غير موجود</response>
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCourse(int id, CourseUpdateDto dto)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<string>>> UpdateCourse(int id, CourseUpdateDto dto)
         {
             try
             {
-                await _courseService.UpdateCourseAsync(id, dto);
+                await _courseService.UpdateAsync(id, dto);
                 return Ok(new ApiResponse<string>(200, "Course updated successfully"));
             }
             catch (Exception ex)
@@ -81,17 +69,14 @@ namespace SchoolLearningSystem.API.Controllers
             }
         }
 
-        /// <summary>
-        /// حذف كورس من النظام
-        /// </summary>
-        /// <response code="200">تم حذف الكورس بنجاح</response>
-        /// <response code="404">الكورس غير موجود</response>
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCourse(int id)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<string>>> DeleteCourse(int id)
         {
             try
             {
-                await _courseService.DeleteCourseAsync(id);
+                await _courseService.DeleteAsync(id);
                 return Ok(new ApiResponse<string>(200, "Course deleted successfully"));
             }
             catch (Exception ex)
@@ -102,63 +87,48 @@ namespace SchoolLearningSystem.API.Controllers
 
         // 🔹 علاقات إضافية
 
-        /// <summary>
-        /// يرجع الدروس المرتبطة بالكورس
-        /// </summary>
-        /// <response code="200">تم جلب الدروس بنجاح</response>
         [HttpGet("{id}/lessons")]
-        public async Task<IActionResult> GetLessonsByCourseId(int id)
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<LessonReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<LessonReadDto>>>> GetLessonsByCourseId(int id)
         {
             var lessons = await _courseService.GetLessonsByCourseIdAsync(id);
             return Ok(new ApiResponse<IEnumerable<LessonReadDto>>(200, "Lessons retrieved successfully", lessons));
         }
 
-        /// <summary>
-        /// يرجع الطلاب المرتبطين بالكورس
-        /// </summary>
-        /// <response code="200">تم جلب الطلاب بنجاح</response>
         [HttpGet("{id}/students")]
-        public async Task<IActionResult> GetStudentsByCourseId(int id)
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<StudentReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<StudentReadDto>>>> GetStudentsByCourseId(int id)
         {
             var students = await _courseService.GetStudentsByCourseIdAsync(id);
             return Ok(new ApiResponse<IEnumerable<StudentReadDto>>(200, "Students retrieved successfully", students));
         }
 
-        /// <summary>
-        /// يرجع الامتحانات المرتبطة بالكورس
-        /// </summary>
-        /// <response code="200">تم جلب الامتحانات بنجاح</response>
         [HttpGet("{id}/exams")]
-        public async Task<IActionResult> GetExamsByCourseId(int id)
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<ExamReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<ExamReadDto>>>> GetExamsByCourseId(int id)
         {
             var exams = await _courseService.GetExamsByCourseIdAsync(id);
             return Ok(new ApiResponse<IEnumerable<ExamReadDto>>(200, "Exams retrieved successfully", exams));
         }
 
-        /// <summary>
-        /// يرجع المدرس المسؤول عن الكورس
-        /// </summary>
-        /// <response code="200">تم جلب المدرس بنجاح</response>
-        /// <response code="404">الكورس غير موجود</response>
         [HttpGet("{id}/teacher")]
-        public async Task<IActionResult> GetTeacherByCourseId(int id)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<string>>> GetTeacherByCourseId(int id)
         {
-            var course = await _courseService.GetCourseByIdAsync(id);
+            var course = await _courseService.GetByIdAsync(id);
             if (course == null)
                 return NotFound(new ApiResponse<string>(404, "Course not found"));
 
             return Ok(new ApiResponse<string>(200, "Teacher retrieved successfully", course.TeacherName));
         }
 
-        /// <summary>
-        /// يرجع عنوان المنهج المرتبط بالكورس
-        /// </summary>
-        /// <response code="200">تم جلب المنهج بنجاح</response>
-        /// <response code="404">الكورس غير موجود</response>
         [HttpGet("{id}/curriculum")]
-        public async Task<IActionResult> GetCurriculumByCourseId(int id)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<string>>> GetCurriculumByCourseId(int id)
         {
-            var course = await _courseService.GetCourseByIdAsync(id);
+            var course = await _courseService.GetByIdAsync(id);
             if (course == null)
                 return NotFound(new ApiResponse<string>(404, "Course not found"));
 

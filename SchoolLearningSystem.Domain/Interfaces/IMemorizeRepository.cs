@@ -1,18 +1,13 @@
 ﻿using SchoolLearningSystem.Domain.Entities;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using SchoolLearningSystem.Domain.Interfaces.Base; // التأكد من استيراد الواجهة العامة
 
 namespace SchoolLearningSystem.Domain.Interfaces
 {
-    public interface IMemorizeRepository
+    public interface IMemorizeRepository : IGenericRepository<MemorizeSession>
     {
-        Task<IEnumerable<MemorizeSession>> GetAllAsync();
-        Task<MemorizeSession?> GetByIdAsync(int id);
-        Task AddAsync(MemorizeSession entity);
-        Task UpdateAsync(MemorizeSession entity);
-        Task DeleteAsync(int id);
+        // CRUD الأساسي يأتينا تلقائياً من IGenericRepository<MemorizeSession>
 
-        // علاقات إضافية
+        // استعلامات مخصصة لخدمة الـ AI والـ SRS
         Task<IEnumerable<MemorizeSession>> GetByStudentIdAsync(int studentId);
         Task<IEnumerable<MemorizeSession>> GetByLessonIdAsync(int lessonId);
         Task<IEnumerable<MemorizeSession>> GetByExerciseIdAsync(int exerciseId);

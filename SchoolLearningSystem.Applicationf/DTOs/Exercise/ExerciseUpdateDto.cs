@@ -1,12 +1,18 @@
-﻿namespace SchoolLearningSystem.Applicationf.DTOs.Exercise
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace SchoolLearningSystem.Applicationf.DTOs.ExerciseDto
 {
     public class ExerciseUpdateDto
     {
-        public string Title { get; set; } = string.Empty;
+        [StringLength(200)]
+        public string? Title { get; set; }
 
-        public string Question { get; set; } = string.Empty;
-        public string Answer { get; set; } = string.Empty;
+        [StringLength(500)]
+        public string? Question { get; set; }
 
-        public int LessonId { get; set; }
+        public string? Answer { get; set; }
+
+        // نجعله Nullable لأنه في حال لم يرسل المستخدم رقماً، فهذا يعني أنه لا يريد تغيير الـ Lesson
+        public int? LessonId { get; set; }
     }
 }

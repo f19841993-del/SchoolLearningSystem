@@ -2,17 +2,14 @@
 using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
 using SchoolLearningSystem.Applicationf.DTOs.Lesson;
 using SchoolLearningSystem.Applicationf.DTOs.Student;
+using SchoolLearningSystem.Applicationf.Interfaces.Base;
 
 namespace SchoolLearningSystem.Applicationf.Interfaces
 {
-    public interface ICourseService
+    public interface ICourseService: IBaseService<CourseReadDto, CourseCreateDto, CourseUpdateDto>
     {
-        // العمليات الأساسية
-        Task<IEnumerable<CourseReadDto>> GetAllCoursesAsync();
-        Task<CourseReadDto?> GetCourseByIdAsync(int id);
-        Task AddCourseAsync(CourseCreateDto dto);
-        Task UpdateCourseAsync(int id, CourseUpdateDto dto);
-        Task DeleteCourseAsync(int id);
+        // العمليات الأساسية IBaseService
+
 
         // علاقات إضافية
         Task<IEnumerable<StudentReadDto>> GetStudentsByCourseIdAsync(int courseId);

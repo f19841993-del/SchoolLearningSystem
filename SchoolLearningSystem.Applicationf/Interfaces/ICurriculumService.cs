@@ -1,27 +1,26 @@
-﻿
-using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
-using SchoolLearningSystem.Applicationf.DTOs.Curriculum;
+﻿using SchoolLearningSystem.Applicationf.DTOs.CourseDto; // نحتاجها للدالة الخاصة (GetCourses...)
+using SchoolLearningSystem.Applicationf.DTOs.CurriculumDto;
+using SchoolLearningSystem.Applicationf.Interfaces.Base;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using SchoolLearningSystem.Domain.Enums; // لا تنسى استيراد الـ Enum للمرحلة الدراسية
 
 namespace SchoolLearningSystem.Applicationf.Interfaces
 {
-    public interface ICurriculumService
+    // لاحظ التغيير هنا: CurriculumDTOs بدلاً من CourseDTOs
+    public interface ICurriculumService : IBaseService<CurriculumReadDto, CurriculumCreateDto, CurriculumUpdateDto>
     {
-        // العمليات الأساسية
-        Task<IEnumerable<CurriculumReadDto>> GetAllCurriculumsAsync();
-        Task<CurriculumReadDto?> GetCurriculumByIdAsync(int id);
-        Task AddCurriculumAsync(CurriculumCreateDto dto);
-        Task UpdateCurriculumAsync(int id, CurriculumUpdateDto dto);
-        Task DeleteCurriculumAsync(int id);
+        // 🔹 العمليات الأساسية (تم توريثها من IBaseService وهي الآن تعمل على Curriculum)
 
-        // علاقات إضافية
+        
+        // 🔹 علاقات إضافية
         Task<IEnumerable<CourseReadDto>> GetCoursesByCurriculumIdAsync(int curriculumId);
 
-        // البحث حسب المرحلة الدراسية
-        Task<CurriculumReadDto?> GetCurriculumByGradeLevelAsync(string gradeLevel);
+        // 🔹 البحث حسب المرحلة الدراسية
+        // ملاحظة: استبدلنا string بـ GradeLevel لضمان الـ Type-Safety
+        Task<CurriculumReadDto?> GetCurriculumByGradeLevelAsync(GradeLevel gradeLevel);
 
-        // إحصائيات
+        // 🔹 إحصائيات
         Task<int> GetTotalCoursesByCurriculumIdAsync(int curriculumId);
     }
 }

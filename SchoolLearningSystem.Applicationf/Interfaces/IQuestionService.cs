@@ -1,24 +1,23 @@
 ﻿using SchoolLearningSystem.Applicationf.DTOs.Question;
+using SchoolLearningSystem.Applicationf.Interfaces.Base;
+using SchoolLearningSystem.Domain.Enums; // استخدم الـ Enum لضمان النوع
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace SchoolLearningSystem.Applicationf.Interfaces
 {
-    public interface IQuestionService
+    public interface IQuestionService : IBaseService<QuestionReadDto, QuestionCreateDto, QuestionUpdateDto>
     {
-        // 🔹 العمليات الأساسية
-        Task<IEnumerable<QuestionReadDto>> GetAllQuestionsAsync();
-        Task<QuestionReadDto?> GetQuestionByIdAsync(int id);
-        Task AddQuestionAsync(QuestionCreateDto dto);
-        Task UpdateQuestionAsync(int id, QuestionUpdateDto dto);
-        Task DeleteQuestionAsync(int id);
+        // 🔹 CRUD الأساسي: موروث من IBaseService
 
-        // 🔹 علاقات إضافية
+        // 🔹 علاقات إضافية (Business Logic)
         Task<IEnumerable<QuestionReadDto>> GetQuestionsByExamIdAsync(int examId);
         Task<IEnumerable<QuestionReadDto>> GetQuestionsByLessonIdAsync(int lessonId);
 
-        // 🔹 إحصائيات إضافية (اختياري)
+        // 🔹 إحصائيات
         Task<int> GetQuestionCountByExamIdAsync(int examId);
-        Task<int> GetQuestionCountByDifficultyAsync(string difficultyLevel);
+
+        // عدلنا هنا لاستخدام الـ Enum لضمان الـ Type-Safety
+        Task<int> GetQuestionCountByDifficultyAsync(DifficultyLevel difficultyLevel);
     }
 }

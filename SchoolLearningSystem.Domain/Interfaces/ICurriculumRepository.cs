@@ -1,21 +1,12 @@
 ﻿using SchoolLearningSystem.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using SchoolLearningSystem.Domain.Interfaces.Base;
+using SchoolLearningSystem.Domain.Enums; // لاستخدام الـ GradeLevel
 
 namespace SchoolLearningSystem.Domain.Interfaces
 {
-    public interface ICurriculumRepository
+    public interface ICurriculumRepository : IGenericRepository<Curriculum>
     {
-        Task<IEnumerable<Curriculum>> GetAllAsync();
-        Task<Curriculum> GetByIdAsync(int id);
-        Task AddAsync(Curriculum curriculum);
-        Task UpdateAsync(Curriculum curriculum);
-        Task DeleteAsync(int id);
-        // 🔹 الدالة الجديدة للبحث حسب المرحلة الدراسية
-        Task<Curriculum?> GetByGradeLevelAsync(string gradeLevel);
+        // استخدام الـ Enum هنا يضمن دقة البيانات (Type-Safety)
+        Task<Curriculum?> GetByGradeLevelAsync(GradeLevel gradeLevel);
     }
-
 }

@@ -20,24 +20,18 @@ namespace SchoolLearningSystem.API.Controllers
 
         // 🔹 CRUD الأساسي
 
-        /// <summary>
-        /// يرجع كل العلاقات بين الكورسات والطلاب
-        /// </summary>
-        /// <response code="200">تم جلب العلاقات بنجاح</response>
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<CourseStudentReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<CourseStudentReadDto>>>> GetAll()
         {
             var relations = await _courseStudentService.GetAllCourseStudentsAsync();
             return Ok(new ApiResponse<IEnumerable<CourseStudentReadDto>>(200, "Relations retrieved successfully", relations));
         }
 
-        /// <summary>
-        /// يرجع علاقة محددة بين كورس وطالب
-        /// </summary>
-        /// <response code="200">تم جلب العلاقة بنجاح</response>
-        /// <response code="404">العلاقة غير موجودة</response>
         [HttpGet("{courseId}/{studentId}")]
-        public async Task<IActionResult> GetById(int courseId, int studentId)
+        [ProducesResponseType(typeof(ApiResponse<CourseStudentReadDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<CourseStudentReadDto>>> GetById(int courseId, int studentId)
         {
             var relation = await _courseStudentService.GetCourseStudentByIdAsync(courseId, studentId);
             if (relation == null)
@@ -46,13 +40,10 @@ namespace SchoolLearningSystem.API.Controllers
             return Ok(new ApiResponse<CourseStudentReadDto>(200, "Relation retrieved successfully", relation));
         }
 
-        /// <summary>
-        /// إضافة طالب إلى كورس
-        /// </summary>
-        /// <response code="201">تم تسجيل الطالب بالكورس بنجاح</response>
-        /// <response code="400">خطأ في البيانات المدخلة</response>
         [HttpPost]
-        public async Task<IActionResult> Add(CourseStudentCreateDto dto)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<ApiResponse<string>>> Add(CourseStudentCreateDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(new ApiResponse<string>(400, "Invalid input data"));
@@ -61,13 +52,10 @@ namespace SchoolLearningSystem.API.Controllers
             return StatusCode(201, new ApiResponse<string>(201, "Student enrolled successfully"));
         }
 
-        /// <summary>
-        /// تحديث بيانات علاقة طالب بكورس
-        /// </summary>
-        /// <response code="200">تم تحديث العلاقة بنجاح</response>
-        /// <response code="404">العلاقة غير موجودة</response>
         [HttpPut("{courseId}/{studentId}")]
-        public async Task<IActionResult> Update(int courseId, int studentId, CourseStudentUpdateDto dto)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<string>>> Update(int courseId, int studentId, CourseStudentUpdateDto dto)
         {
             try
             {
@@ -80,13 +68,10 @@ namespace SchoolLearningSystem.API.Controllers
             }
         }
 
-        /// <summary>
-        /// حذف طالب من كورس
-        /// </summary>
-        /// <response code="200">تم حذف الطالب من الكورس</response>
-        /// <response code="404">العلاقة غير موجودة</response>
         [HttpDelete("{courseId}/{studentId}")]
-        public async Task<IActionResult> Delete(int courseId, int studentId)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<string>>> Delete(int courseId, int studentId)
         {
             try
             {
@@ -101,23 +86,17 @@ namespace SchoolLearningSystem.API.Controllers
 
         // 🔹 علاقات إضافية
 
-        /// <summary>
-        /// يرجع الطلاب المرتبطين بكورس معين
-        /// </summary>
-        /// <response code="200">تم جلب الطلاب بنجاح</response>
         [HttpGet("{courseId}/students")]
-        public async Task<IActionResult> GetStudentsByCourseId(int courseId)
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<StudentReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<StudentReadDto>>>> GetStudentsByCourseId(int courseId)
         {
             var students = await _courseStudentService.GetStudentsByCourseIdAsync(courseId);
             return Ok(new ApiResponse<IEnumerable<StudentReadDto>>(200, "Students retrieved successfully", students));
         }
 
-        /// <summary>
-        /// يرجع الكورسات المرتبطة بطالب معين
-        /// </summary>
-        /// <response code="200">تم جلب الكورسات بنجاح</response>
         [HttpGet("student/{studentId}/courses")]
-        public async Task<IActionResult> GetCoursesByStudentId(int studentId)
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<CourseReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<CourseReadDto>>>> GetCoursesByStudentId(int studentId)
         {
             var courses = await _courseStudentService.GetCoursesByStudentIdAsync(studentId);
             return Ok(new ApiResponse<IEnumerable<CourseReadDto>>(200, "Courses retrieved successfully", courses));
@@ -125,23 +104,17 @@ namespace SchoolLearningSystem.API.Controllers
 
         // 🔹 إحصائيات
 
-        /// <summary>
-        /// يرجع عدد الطلاب المسجلين بكورس معين
-        /// </summary>
-        /// <response code="200">تم جلب العدد بنجاح</response>
         [HttpGet("{courseId}/total-students")]
-        public async Task<IActionResult> GetTotalStudentsByCourseId(int courseId)
+        [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<int>>> GetTotalStudentsByCourseId(int courseId)
         {
             var count = await _courseStudentService.GetTotalStudentsByCourseIdAsync(courseId);
             return Ok(new ApiResponse<int>(200, "Total students retrieved successfully", count));
         }
 
-        /// <summary>
-        /// يرجع عدد الكورسات اللي مسجل بيها طالب معين
-        /// </summary>
-        /// <response code="200">تم جلب العدد بنجاح</response>
         [HttpGet("student/{studentId}/total-courses")]
-        public async Task<IActionResult> GetTotalCoursesByStudentId(int studentId)
+        [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<int>>> GetTotalCoursesByStudentId(int studentId)
         {
             var count = await _courseStudentService.GetTotalCoursesByStudentIdAsync(studentId);
             return Ok(new ApiResponse<int>(200, "Total courses retrieved successfully", count));

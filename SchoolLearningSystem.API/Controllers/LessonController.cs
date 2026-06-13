@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SchoolLearningSystem.API.Responses;
 using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
-using SchoolLearningSystem.Applicationf.DTOs.Exercise;
+using SchoolLearningSystem.Applicationf.DTOs.ExerciseDto;
 using SchoolLearningSystem.Applicationf.DTOs.Lesson;
 using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
 using SchoolLearningSystem.Applicationf.DTOs.Question;
@@ -21,60 +21,48 @@ namespace SchoolLearningSystem.API.Controllers
             _lessonService = lessonService;
         }
 
-        // 🔹 CRUD الأساسي
+        // 🔹 CRUD الأساسي (موروث من BaseService)
 
-        /// <summary>
-        /// يرجع كل الدروس الموجودة بالنظام
-        /// </summary>
-        /// <response code="200">تم جلب الدروس بنجاح</response>
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<LessonReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<LessonReadDto>>>> GetAll()
         {
-            var lessons = await _lessonService.GetAllLessonsAsync();
-            return Ok(new ApiResponse<IEnumerable<LessonReadDto>>(200, "Lessons retrieved successfully", lessons));
+            var data = await _lessonService.GetAllAsync();
+            return Ok(new ApiResponse<IEnumerable<LessonReadDto>>(200, "Lessons retrieved successfully", data));
         }
 
-        /// <summary>
-        /// يرجع درس محدد حسب الـ Id
-        /// </summary>
-        /// <response code="200">تم جلب الدرس بنجاح</response>
-        /// <response code="404">الدرس غير موجود</response>
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        [ProducesResponseType(typeof(ApiResponse<LessonReadDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<LessonReadDto>>> GetById(int id)
         {
-            var lesson = await _lessonService.GetLessonByIdAsync(id);
-            if (lesson == null)
+            var data = await _lessonService.GetByIdAsync(id);
+            if (data == null)
                 return NotFound(new ApiResponse<string>(404, "Lesson not found"));
 
-            return Ok(new ApiResponse<LessonReadDto>(200, "Lesson retrieved successfully", lesson));
+            return Ok(new ApiResponse<LessonReadDto>(200, "Lesson retrieved successfully", data));
         }
 
-        /// <summary>
-        /// إضافة درس جديد
-        /// </summary>
-        /// <response code="201">تم إنشاء الدرس بنجاح</response>
-        /// <response code="400">خطأ في البيانات المدخلة</response>
         [HttpPost]
-        public async Task<IActionResult> Add(LessonCreateDto dto)
+        [ProducesResponseType(typeof(ApiResponse<LessonReadDto>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<ApiResponse<LessonReadDto>>> Add(LessonCreateDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(new ApiResponse<string>(400, "Invalid input data"));
 
-            await _lessonService.AddLessonAsync(dto);
-            return StatusCode(201, new ApiResponse<string>(201, "Lesson created successfully"));
+            var createdLesson = await _lessonService.CreateAsync(dto);
+            return StatusCode(201, new ApiResponse<LessonReadDto>(201, "Lesson created successfully", createdLesson));
         }
 
-        /// <summary>
-        /// تحديث بيانات درس موجود
-        /// </summary>
-        /// <response code="200">تم تحديث الدرس بنجاح</response>
-        /// <response code="404">الدرس غير موجود</response>
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, LessonUpdateDto dto)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<string>>> Update(int id, LessonUpdateDto dto)
         {
             try
             {
-                await _lessonService.UpdateLessonAsync(id, dto);
+                await _lessonService.UpdateAsync(id, dto);
                 return Ok(new ApiResponse<string>(200, "Lesson updated successfully"));
             }
             catch (Exception ex)
@@ -83,17 +71,14 @@ namespace SchoolLearningSystem.API.Controllers
             }
         }
 
-        /// <summary>
-        /// حذف درس
-        /// </summary>
-        /// <response code="200">تم حذف الدرس بنجاح</response>
-        /// <response code="404">الدرس غير موجود</response>
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<string>>> Delete(int id)
         {
             try
             {
-                await _lessonService.DeleteLessonAsync(id);
+                await _lessonService.DeleteAsync(id);
                 return Ok(new ApiResponse<string>(200, "Lesson deleted successfully"));
             }
             catch (Exception ex)
@@ -102,78 +87,64 @@ namespace SchoolLearningSystem.API.Controllers
             }
         }
 
-        // 🔹 علاقات إضافية
+        // 🔹 علاقات إضافية (Custom Business Logic)
 
-        /// <summary>
-        /// يرجع الامتحانات المرتبطة بالدرس
-        /// </summary>
         [HttpGet("{id}/exams")]
-        public async Task<IActionResult> GetExamsByLessonId(int id)
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<ExamReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<ExamReadDto>>>> GetExams(int id)
         {
-            var exams = await _lessonService.GetExamsByLessonIdAsync(id);
-            return Ok(new ApiResponse<IEnumerable<ExamReadDto>>(200, "Exams retrieved successfully", exams));
+            var data = await _lessonService.GetExamsByLessonIdAsync(id);
+            return Ok(new ApiResponse<IEnumerable<ExamReadDto>>(200, "Exams retrieved successfully", data));
         }
 
-        /// <summary>
-        /// يرجع التدريبات المرتبطة بالدرس
-        /// </summary>
         [HttpGet("{id}/exercises")]
-        public async Task<IActionResult> GetExercisesByLessonId(int id)
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<ExerciseReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<ExerciseReadDto>>>> GetExercises(int id)
         {
-            var exercises = await _lessonService.GetExercisesByLessonIdAsync(id);
-            return Ok(new ApiResponse<IEnumerable<ExerciseReadDto>>(200, "Exercises retrieved successfully", exercises));
+            var data = await _lessonService.GetExercisesByLessonIdAsync(id);
+            return Ok(new ApiResponse<IEnumerable<ExerciseReadDto>>(200, "Exercises retrieved successfully", data));
         }
 
-        /// <summary>
-        /// يرجع النتائج المرتبطة بالدرس
-        /// </summary>
         [HttpGet("{id}/results")]
-        public async Task<IActionResult> GetResultsByLessonId(int id)
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<ResultReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<ResultReadDto>>>> GetResults(int id)
         {
-            var results = await _lessonService.GetResultsByLessonIdAsync(id);
-            return Ok(new ApiResponse<IEnumerable<ResultReadDto>>(200, "Results retrieved successfully", results));
+            var data = await _lessonService.GetResultsByLessonIdAsync(id);
+            return Ok(new ApiResponse<IEnumerable<ResultReadDto>>(200, "Results retrieved successfully", data));
         }
 
-        /// <summary>
-        /// يرجع جلسات المراجعة المرتبطة بالدرس
-        /// </summary>
-        [HttpGet("{id}/memorize-sessions")]
-        public async Task<IActionResult> GetMemorizeSessionsByLessonId(int id)
+        [HttpGet("{id}/sessions")]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<MemorizeSessionReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<MemorizeSessionReadDto>>>> GetSessions(int id)
         {
-            var sessions = await _lessonService.GetMemorizeSessionsByLessonIdAsync(id);
-            return Ok(new ApiResponse<IEnumerable<MemorizeSessionReadDto>>(200, "Memorize sessions retrieved successfully", sessions));
+            var data = await _lessonService.GetMemorizeSessionsByLessonIdAsync(id);
+            return Ok(new ApiResponse<IEnumerable<MemorizeSessionReadDto>>(200, "Sessions retrieved successfully", data));
         }
 
-        /// <summary>
-        /// يرجع الأسئلة المرتبطة بالدرس
-        /// </summary>
         [HttpGet("{id}/questions")]
-        public async Task<IActionResult> GetQuestionsByLessonId(int id)
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<QuestionReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<QuestionReadDto>>>> GetQuestions(int id)
         {
-            var questions = await _lessonService.GetQuestionsByLessonIdAsync(id);
-            return Ok(new ApiResponse<IEnumerable<QuestionReadDto>>(200, "Questions retrieved successfully", questions));
+            var data = await _lessonService.GetQuestionsByLessonIdAsync(id);
+            return Ok(new ApiResponse<IEnumerable<QuestionReadDto>>(200, "Questions retrieved successfully", data));
         }
 
         // 🔹 إحصائيات
 
-        /// <summary>
-        /// يرجع عدد الأسئلة المرتبطة بالدرس
-        /// </summary>
         [HttpGet("{id}/total-questions")]
-        public async Task<IActionResult> GetTotalQuestionsByLessonId(int id)
+        [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<int>>> GetTotalQuestions(int id)
         {
-            var total = await _lessonService.GetTotalQuestionsByLessonIdAsync(id);
-            return Ok(new ApiResponse<int>(200, "Total questions retrieved successfully", total));
+            var count = await _lessonService.GetTotalQuestionsByLessonIdAsync(id);
+            return Ok(new ApiResponse<int>(200, "Total questions count retrieved", count));
         }
 
-        /// <summary>
-        /// يرجع عدد الامتحانات المرتبطة بالدرس
-        /// </summary>
         [HttpGet("{id}/total-exams")]
-        public async Task<IActionResult> GetTotalExamsByLessonId(int id)
+        [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<int>>> GetTotalExams(int id)
         {
-            var total = await _lessonService.GetTotalExamsByLessonIdAsync(id);
-            return Ok(new ApiResponse<int>(200, "Total exams retrieved successfully", total));
+            var count = await _lessonService.GetTotalExamsByLessonIdAsync(id);
+            return Ok(new ApiResponse<int>(200, "Total exams count retrieved", count));
         }
     }
 }

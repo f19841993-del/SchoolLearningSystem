@@ -1,24 +1,20 @@
 ﻿using SchoolLearningSystem.Applicationf.DTOs.Result;
+using SchoolLearningSystem.Applicationf.Interfaces.Base;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace SchoolLearningSystem.Applicationf.Interfaces
 {
-    public interface IResultService
+    public interface IResultService : IBaseService<ResultReadDto, ResultCreateDto, ResultUpdateDto>
     {
-        // العمليات الأساسية
-        Task<IEnumerable<ResultReadDto>> GetAllResultsAsync();
-        Task<ResultReadDto?> GetResultByIdAsync(int id);
-        Task AddResultAsync(ResultCreateDto dto);
-        Task UpdateResultAsync(int id, ResultUpdateDto dto);
-        Task DeleteResultAsync(int id);
+        // 🔹 CRUD الأساسي: موروث من IBaseService (CreateAsync, UpdateAsync, DeleteAsync...)
 
-        // علاقات إضافية
+        // 🔹 علاقات إضافية (Business Logic)
         Task<IEnumerable<ResultReadDto>> GetResultsByStudentIdAsync(int studentId);
         Task<IEnumerable<ResultReadDto>> GetResultsByLessonIdAsync(int lessonId);
         Task<IEnumerable<ResultReadDto>> GetResultsByExamIdAsync(int examId);
 
-        // إحصائيات إضافية (اختياري)
+        // 🔹 إحصائيات
         Task<double> GetAverageScoreByStudentIdAsync(int studentId);
         Task<double> GetAverageScoreByLessonIdAsync(int lessonId);
         Task<double> GetAverageScoreByExamIdAsync(int examId);

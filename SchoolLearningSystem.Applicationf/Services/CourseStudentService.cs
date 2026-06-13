@@ -5,7 +5,6 @@ using SchoolLearningSystem.Applicationf.DTOs.Student;
 using SchoolLearningSystem.Applicationf.Interfaces;
 using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Interfaces;
-using WebApiTemplate.Domain.Interfaces;
 
 namespace SchoolLearningSystem.Applicationf.Services
 {
@@ -28,7 +27,8 @@ namespace SchoolLearningSystem.Applicationf.Services
             _mapper = mapper;
         }
 
-        // العمليات الأساسية
+        // 🔹 العمليات الأساسية (Manual CRUD)
+
         public async Task<IEnumerable<CourseStudentReadDto>> GetAllCourseStudentsAsync()
         {
             var entities = await _courseStudentRepository.GetAllAsync();
@@ -43,12 +43,14 @@ namespace SchoolLearningSystem.Applicationf.Services
 
         public async Task AddCourseStudentAsync(CourseStudentCreateDto dto)
         {
+            // التحقق من وجود الكورس والطالب قبل الربط
             var course = await _courseRepository.GetByIdAsync(dto.CourseId)
                 ?? throw new Exception("Course not found");
             var student = await _studentRepository.GetByIdAsync(dto.StudentId)
                 ?? throw new Exception("Student not found");
 
             var entity = _mapper.Map<CourseStudent>(dto);
+            // ضبط العلاقات
             entity.Course = course;
             entity.Student = student;
 
@@ -69,10 +71,12 @@ namespace SchoolLearningSystem.Applicationf.Services
             await _courseStudentRepository.DeleteAsync(courseId, studentId);
         }
 
-        // علاقات إضافية
+        // 🔹 علاقات إضافية (Query Logic)
+
         public async Task<IEnumerable<StudentReadDto>> GetStudentsByCourseIdAsync(int courseId)
         {
             var relations = await _courseStudentRepository.GetByCourseIdAsync(courseId);
+            // نقوم بعمل Select لجلب الطلاب من العلاقات
             var students = relations.Select(cs => cs.Student);
             return _mapper.Map<IEnumerable<StudentReadDto>>(students);
         }
@@ -84,20 +88,21 @@ namespace SchoolLearningSystem.Applicationf.Services
             return _mapper.Map<IEnumerable<CourseReadDto>>(courses);
         }
 
-        // عمليات التسجيل والإزالة
+        // 🔹 عمليات التسجيل والإزالة (Business Rules)
+
         public async Task EnrollStudentAsync(int courseId, int studentId)
         {
-            var course = await _courseRepository.GetByIdAsync(courseId)
-                ?? throw new Exception("Course not found");
-            var student = await _studentRepository.GetByIdAsync(studentId)
-                ?? throw new Exception("Student not found");
+            // منطق إضافي للتحقق من عدم وجود تسجيل مكرر
+            var exists = await _courseStudentRepository.GetByIdAsync(courseId, studentId);
+            if (exists != null) throw new Exception("Student is already enrolled in this course");
+
+            var course = await _courseRepository.GetByIdAsync(courseId) ?? throw new Exception("Course not found");
+            var student = await _studentRepository.GetByIdAsync(studentId) ?? throw new Exception("Student not found");
 
             var relation = new CourseStudent
             {
                 CourseId = courseId,
                 StudentId = studentId,
-                Course = course,
-                Student = student,
                 EnrolledAt = DateTime.UtcNow,
                 IsActive = true
             };
@@ -108,27 +113,23 @@ namespace SchoolLearningSystem.Applicationf.Services
         public async Task RemoveStudentAsync(int courseId, int studentId)
         {
             var relation = await _courseStudentRepository.GetByIdAsync(courseId, studentId);
-            if (relation != null)
-            {
-                await _courseStudentRepository.DeleteAsync(courseId, studentId);
-            }
-            else
-            {
-                throw new Exception("Relation not found");
-            }
+            if (relation == null) throw new Exception("Relation not found");
+
+            await _courseStudentRepository.DeleteAsync(courseId, studentId);
         }
 
-        // إحصائيات
+        // 🔹 إحصائيات
+
         public async Task<int> GetTotalStudentsByCourseIdAsync(int courseId)
         {
-            var relations = await _courseStudentRepository.GetByCourseIdAsync(courseId);
-            return relations.Count();
+            var relations = await _courseStudentRepository.CountByCourseIdAsync(courseId);
+            return relations;
         }
 
         public async Task<int> GetTotalCoursesByStudentIdAsync(int studentId)
         {
-            var relations = await _courseStudentRepository.GetByStudentIdAsync(studentId);
-            return relations.Count();
+            var relations = await _courseStudentRepository.CountByStudentIdAsync(studentId);
+            return relations;
         }
     }
 }

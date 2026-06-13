@@ -1,15 +1,21 @@
-﻿namespace SchoolLearningSystem.Domain.Entities
+﻿using SchoolLearningSystem.Domain.Enums;
+
+namespace SchoolLearningSystem.Domain.Entities
 {
-    public class Exercise
+    // أضفنا BaseEntity للتوحيد
+    public class Exercise : BaseEntity
     {
-        public int Id { get; set; }
         public string Question { get; set; } = string.Empty;
         public string Answer { get; set; } = string.Empty;
+
+        // لتصنيف مستوى صعوبة التمرين، وهذا حيوي لعمل الذكاء الاصطناعي
+        public DifficultyLevel Difficulty { get; set; }
 
         // علاقة مع Lesson
         public int LessonId { get; set; }
         public Lesson Lesson { get; set; } = null!;
-        public ICollection<MemorizeSession> MemorizeSessions { get; set; } = new List<MemorizeSession>();
 
+        // تتبع جلسات التكرار المتباعد المرتبطة بهذا التمرين
+        public ICollection<MemorizeSession> MemorizeSessions { get; set; } = new List<MemorizeSession>();
     }
 }

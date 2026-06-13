@@ -1,13 +1,14 @@
 ﻿using SchoolLearningSystem.Domain.Entities;
+using SchoolLearningSystem.Domain.Interfaces.Base;
 
 namespace SchoolLearningSystem.Domain.Interfaces
 {
-    public interface ITeacherRepository
+    public interface ITeacherRepository : IGenericRepository<Teacher>
     {
-        Task<Teacher> GetByIdAsync(int id);
-        Task<IEnumerable<Teacher>> GetAllAsync();
-        Task AddAsync(Teacher teacher);
-        Task UpdateAsync(Teacher teacher);
-        Task DeleteAsync(int id);
+        // CRUD الأساسي يأتينا تلقائياً من IGenericRepository<Teacher>
+
+        // 🔹 استعلام مخصص (Custom Query)
+        // جلب الكورسات التي يدرسها هذا المعلم (مهمة جداً للـ Dashboard الخاصة بالمعلم)
+        Task<IEnumerable<Course>> GetCoursesByTeacherIdAsync(int teacherId);
     }
 }

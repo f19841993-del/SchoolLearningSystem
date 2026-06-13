@@ -21,7 +21,7 @@ namespace SchoolLearningSystem.Domain.Entities
 
         public ICollection<CourseStudent> CourseStudents { get; set; } = new List<CourseStudent>();
 
-
+        public ICollection<StudentQuestionProgress> Progresses { get; set; }
         public ICollection<Result> Results { get; set; } = new List<Result>();
     }
 }

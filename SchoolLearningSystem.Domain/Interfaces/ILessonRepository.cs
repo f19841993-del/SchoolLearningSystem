@@ -1,23 +1,18 @@
 ﻿using SchoolLearningSystem.Domain.Entities;
+using SchoolLearningSystem.Domain.Interfaces.Base;
 
 namespace SchoolLearningSystem.Domain.Interfaces
 {
-    public interface ILessonRepository
+    // الآن أصبح الكود نظيفاً جداً، يركز فقط على "ما يميز الدرس"
+    public interface ILessonRepository : IGenericRepository<Lesson>
     {
-        // CRUD الأساسي
-        Task<Lesson> GetByIdAsync(int id);
-        Task<IEnumerable<Lesson>> GetAllAsync();
-        Task AddAsync(Lesson lesson);
-        Task UpdateAsync(Lesson lesson);
-        Task DeleteAsync(int id);
-
-        // استعلام إضافي: دروس حسب الكورس
+        // استعلامات مخصصة لخدمة منطق العمل والذكاء الاصطناعي
         Task<IEnumerable<Lesson>> GetByCourseIdAsync(int courseId);
 
-        // علاقات جديدة
+        // جلب الأسئلة المرتبطة بدرس معين (ضروري للـ AI لبناء الامتحانات)
         Task<IEnumerable<Question>> GetQuestionsByLessonIdAsync(int lessonId);
 
-        // إحصائيات
+        // إحصائيات (مفيدة للـ Dashboard الخاصة بالمعلم أو الطالب)
         Task<int> GetTotalQuestionsByLessonIdAsync(int lessonId);
         Task<int> GetTotalExamsByLessonIdAsync(int lessonId);
     }

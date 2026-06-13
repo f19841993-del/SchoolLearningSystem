@@ -1,17 +1,14 @@
-﻿using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
-
-namespace SchoolLearningSystem.Applicationf.DTOs.Exercise
+﻿namespace SchoolLearningSystem.Applicationf.DTOs.ExerciseDto
 {
     public class ExerciseReadDto
     {
         public int Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-
-        public string Question { get; set; } = string.Empty;
-        public string Answer { get; set; } = string.Empty;
+        public string QuestionText { get; set; } = string.Empty;
+        public string CorrectAnswer { get; set; } = string.Empty;
 
         public int LessonId { get; set; }
+        public string LessonTitle { get; set; } = string.Empty; // لجعل العرض أسرع في الفرونت
 
-        public List<MemorizeSessionReadDto> MemorizeSessions { get; set; } = new List<MemorizeSessionReadDto>();
+        public int DifficultyLevel { get; set; }
     }
 }

@@ -1,23 +1,22 @@
-﻿using SchoolLearningSystem.Applicationf.DTOs.Exercise;
-using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
+﻿using SchoolLearningSystem.Applicationf.DTOs.ExerciseDto;
 using SchoolLearningSystem.Applicationf.DTOs.Lesson;
+using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
+using SchoolLearningSystem.Applicationf.Interfaces.Base;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace SchoolLearningSystem.Applicationf.Interfaces
 {
-    public interface IExerciseService
+    public interface IExerciseService : IBaseService<ExerciseReadDto, ExerciseCreateDto, ExerciseUpdateDto>
     {
-        // العمليات الأساسية
-        Task<IEnumerable<ExerciseReadDto>> GetAllExercisesAsync();
-        Task<ExerciseReadDto?> GetExerciseByIdAsync(int id);
-        Task AddExerciseAsync(ExerciseCreateDto dto);
-        Task UpdateExerciseAsync(int id, ExerciseUpdateDto dto);
-        Task DeleteExerciseAsync(int id);
+        // 🔹 ملاحظة: الـ CRUD الأساسية (GetAll, GetById, Create, Update, Delete) 
+        // أصبحت الآن موجودة وموروثة من IBaseService.
 
-        // علاقات إضافية
+        // 🔹 علاقات إضافية (Specific Business Logic)
         Task<IEnumerable<ExerciseReadDto>> GetExercisesByLessonIdAsync(int lessonId);
+
         Task<IEnumerable<MemorizeSessionReadDto>> GetMemorizeSessionsByExerciseIdAsync(int exerciseId);
+
         Task<LessonReadDto?> GetLessonByExerciseIdAsync(int exerciseId);
     }
 }

@@ -1,14 +1,17 @@
-﻿namespace SchoolLearningSystem.Applicationf.DTOs.Teacher
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace SchoolLearningSystem.Applicationf.DTOs.Teacher
 {
     public class TeacherCreateDto
     {
-        // اسم المدرس
+        [Required(ErrorMessage = "Name is required")]
+        [StringLength(100, MinimumLength = 2)]
         public string Name { get; set; } = string.Empty;
 
-        // المادة الأساسية اللي يدرّسها
-        public string Subject { get; set; } = string.Empty;
+        [Required]
+        public string Subject { get; set; } = "Math"; // افتراضي لأن النظام تعليم رياضيات
 
-        // IDs للكورسات المرتبطة بالمدرس
-        public List<int> CourseIds { get; set; } = new List<int>();
+        [StringLength(500)]
+        public string? Bio { get; set; }
     }
 }

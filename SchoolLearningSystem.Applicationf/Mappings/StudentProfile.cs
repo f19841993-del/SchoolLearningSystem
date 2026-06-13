@@ -1,38 +1,52 @@
 ﻿using AutoMapper;
 using SchoolLearningSystem.Applicationf.DTOs.Student;
 using SchoolLearningSystem.Domain.Entities;
-using SchoolLearningSystem.Domain.Enums;
+using System.Linq;
 
-public class StudentProfile : Profile
+namespace SchoolLearningSystem.Applicationf.Mappings
 {
-    private GradeLevel ParseGradeLevel(string gradeLevelString)
+    public class StudentProfile : Profile
     {
-        return Enum.TryParse<GradeLevel>(gradeLevelString, true, out var gradeLevel)
-            ? gradeLevel
-            : GradeLevel.Third; // قيمة افتراضية إذا فشل التحويل
-    }
+        public StudentProfile()
+        {
+            // 1. من الكيان → للعرض (Read)
+            CreateMap<Student, StudentReadDto>()
+                // الحقول البسيطة تُربط تلقائياً، نضيف العلاقات فقط
+                .ForMember(dest => dest.GradeLevel, opt => opt.MapFrom(src => src.GradeLevel));
 
-    public StudentProfile()
-    {
-        // من Student → StudentReadDto (للعرض)
-        CreateMap<Student, StudentReadDto>()
-            .ForMember(dest => dest.GradeLevel, opt => opt.MapFrom(src => src.GradeLevel.ToString()))
-            .ForMember(dest => dest.CourseIds, opt => opt.MapFrom(src => src.CourseStudents.Select(cs => cs.CourseId)))
-            .ForMember(dest => dest.Results, opt => opt.MapFrom(src => src.Results))
-            .ForMember(dest => dest.MemorizeSessions, opt => opt.MapFrom(src => src.MemorizeSessions));
+            // 2. من الإنشاء → للكيان (Create)
+            CreateMap<StudentCreateDto, Student>()
+                // الحماية الموحدة لحقول الـ BaseEntity
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                
+                // تجاهل العلاقات
+                .ForMember(dest => dest.CourseStudents, opt => opt.Ignore())
+                .ForMember(dest => dest.Results, opt => opt.Ignore())
+                .ForMember(dest => dest.MemorizeSessions, opt => opt.Ignore());
 
-        // من StudentCreateDto → Student (للإضافة)
-        CreateMap<StudentCreateDto, Student>()
-            .ForMember(dest => dest.GradeLevel, opt => opt.MapFrom(src => ParseGradeLevel(src.GradeLevel)))
-            .ForMember(dest => dest.CourseStudents, opt => opt.Ignore())   // CourseIds تتحول لاحقاً بالـ DbContext
-            .ForMember(dest => dest.Results, opt => opt.Ignore())          // تنربط لاحقاً
-            .ForMember(dest => dest.MemorizeSessions, opt => opt.Ignore());// نفس الشي
-
-        // من StudentUpdateDto → Student (للتحديث)
-        CreateMap<StudentUpdateDto, Student>()
-            .ForMember(dest => dest.GradeLevel, opt => opt.MapFrom(src => ParseGradeLevel(src.GradeLevel)))
-            .ForMember(dest => dest.CourseStudents, opt => opt.Ignore())   // CourseIds تتحول لاحقاً بالـ DbContext
-            .ForMember(dest => dest.Results, opt => opt.Ignore())          // تنربط لاحقاً
-            .ForMember(dest => dest.MemorizeSessions, opt => opt.Ignore());// نفس الشي
+            // 3. من التعديل → للكيان (Update) - الحماية من Null Overwrite
+            CreateMap<StudentUpdateDto, Student>()
+                .ForMember(dest => dest.Name, opt => {
+                    opt.Condition(src => src.Name != null);
+                    opt.MapFrom(src => src.Name);
+                })
+                .ForMember(dest => dest.Bio, opt => {
+                    opt.Condition(src => src.Bio != null);
+                    opt.MapFrom(src => src.Bio);
+                })
+                .ForMember(dest => dest.Address, opt => {
+                    opt.Condition(src => src.Address != null);
+                    opt.MapFrom(src => src.Address);
+                })
+                .ForMember(dest => dest.ProfileImage, opt => {
+                    opt.Condition(src => src.ProfileImage != null);
+                    opt.MapFrom(src => src.ProfileImage);
+                })
+                // الحماية الموحدة لحقول الـ BaseEntity والعلاقات
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CourseStudents, opt => opt.Ignore())
+                .ForMember(dest => dest.Results, opt => opt.Ignore())
+                .ForMember(dest => dest.MemorizeSessions, opt => opt.Ignore());
+        }
     }
 }

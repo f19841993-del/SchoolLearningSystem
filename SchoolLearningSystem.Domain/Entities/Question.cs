@@ -4,6 +4,7 @@ namespace SchoolLearningSystem.Domain.Entities
 {
     public class Question
     {
+
         public int Id { get; set; }
         public string Text { get; set; } = string.Empty;
         public string Answer { get; set; } = string.Empty;
@@ -13,5 +14,7 @@ namespace SchoolLearningSystem.Domain.Entities
         public Exam Exam { get; set; }
         public int LessonId { get; set; }
         public Lesson Lesson { get; set; }
+        // إضافة هذه العلاقة لمعرفة مدى صعوبة السؤال
+        public ICollection<StudentQuestionProgress> QuestionStats { get; set; }
     }
 }

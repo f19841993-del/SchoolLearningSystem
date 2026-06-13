@@ -1,14 +1,17 @@
-﻿namespace SchoolLearningSystem.Applicationf.DTOs.Teacher
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace SchoolLearningSystem.Applicationf.DTOs.Teacher
 {
     public class TeacherUpdateDto
     {
-        // اسم المدرس
-        public string Name { get; set; } = string.Empty;
+        [StringLength(100)]
+        public string? Name { get; set; }
 
-        // المادة الأساسية اللي يدرّسها
-        public string Subject { get; set; } = string.Empty;
+        public string? Subject { get; set; }
 
-        // IDs للكورسات المرتبطة بالمدرس
-        public List<int> CourseIds { get; set; } = new List<int>();
+        [StringLength(500)]
+        public string? Bio { get; set; }
+
+        public string? ProfileImage { get; set; }
     }
 }

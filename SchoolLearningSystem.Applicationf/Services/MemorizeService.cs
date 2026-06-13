@@ -1,56 +1,26 @@
 ﻿using AutoMapper;
+using SchoolLearningSystem.Applicationf.DTOs.ExerciseDto;
 using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
 using SchoolLearningSystem.Applicationf.Interfaces;
+using SchoolLearningSystem.Applicationf.Services.Base;
 using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Interfaces;
 
 namespace SchoolLearningSystem.Applicationf.Services
 {
-    public class MemorizeService : IMemorizeService
+    public class MemorizeService : BaseService<MemorizeSession, MemorizeSessionReadDto, MemorizeSessionCreateDto, MemorizeSessionUpdateDto>, IMemorizeService
     {
         private readonly IMemorizeRepository _memorizeRepository;
-        private readonly IMapper _mapper;
 
         public MemorizeService(IMemorizeRepository memorizeRepository, IMapper mapper)
+            : base(memorizeRepository, mapper) // الأب يدير الـ CRUD
         {
             _memorizeRepository = memorizeRepository;
-            _mapper = mapper;
         }
 
-        // 🔹 العمليات الأساسية
-        public async Task<IEnumerable<MemorizeSessionReadDto>> GetAllSessionsAsync()
-        {
-            var sessions = await _memorizeRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<MemorizeSessionReadDto>>(sessions);
-        }
+        // 🔹 CRUD الأساسي: موروث من BaseService (لا حاجة لكتابته هنا)
 
-        public async Task<MemorizeSessionReadDto?> GetSessionByIdAsync(int id)
-        {
-            var session = await _memorizeRepository.GetByIdAsync(id);
-            return _mapper.Map<MemorizeSessionReadDto?>(session);
-        }
-
-        public async Task AddSessionAsync(MemorizeSessionCreateDto dto)
-        {
-            var entity = _mapper.Map<MemorizeSession>(dto);
-            await _memorizeRepository.AddAsync(entity);
-        }
-
-        public async Task UpdateSessionAsync(int id, MemorizeSessionUpdateDto dto)
-        {
-            var entity = await _memorizeRepository.GetByIdAsync(id)
-                ?? throw new Exception("Session not found");
-
-            _mapper.Map(dto, entity);
-            await _memorizeRepository.UpdateAsync(entity);
-        }
-
-        public async Task DeleteSessionAsync(int id)
-        {
-            await _memorizeRepository.DeleteAsync(id);
-        }
-
-        // 🔹 علاقات إضافية
+        // 🔹 علاقات إضافية (Logic)
         public async Task<IEnumerable<MemorizeSessionReadDto>> GetSessionsByStudentIdAsync(int studentId)
         {
             var sessions = await _memorizeRepository.GetByStudentIdAsync(studentId);
@@ -68,7 +38,8 @@ namespace SchoolLearningSystem.Applicationf.Services
             var sessions = await _memorizeRepository.GetByExerciseIdAsync(exerciseId);
             return _mapper.Map<IEnumerable<MemorizeSessionReadDto>>(sessions);
         }
-
+    
+        // 🔹 استعلامات الربط (Orchestration)
         public async Task<string> GetStudentNameBySessionIdAsync(int sessionId)
         {
             var session = await _memorizeRepository.GetByIdAsync(sessionId)
@@ -93,5 +64,6 @@ namespace SchoolLearningSystem.Applicationf.Services
             return session.Exercise?.Question ?? "No Exercise Linked";
         }
 
+      
     }
 }

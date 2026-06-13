@@ -1,14 +1,16 @@
-﻿using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
+﻿
+using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 
-namespace SchoolLearningSystem.Applicationf.DTOs.Curriculum
+namespace SchoolLearningSystem.Applicationf.DTOs.CurriculumDto
 {
     public class CurriculumReadDto
     {
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
-        public string GradeLevel { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string Level { get; set; } = string.Empty;
 
-        // الكورسات المرتبطة بهذا المنهج
-        public List<CourseReadDto> Courses { get; set; } = new List<CourseReadDto>();
+        // قائمة الكورسات التابعة لهذا المنهج (علاقة 1 إلى متعدد)
+        public List<CourseReadDto> Courses { get; set; } = new();
     }
 }

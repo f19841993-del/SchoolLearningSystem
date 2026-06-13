@@ -1,79 +1,49 @@
 ﻿using AutoMapper;
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
-using SchoolLearningSystem.Applicationf.DTOs.Curriculum;
+using SchoolLearningSystem.Applicationf.DTOs.CurriculumDto;
 using SchoolLearningSystem.Applicationf.Interfaces;
+using SchoolLearningSystem.Applicationf.Services.Base;
 using SchoolLearningSystem.Domain.Entities;
+using SchoolLearningSystem.Domain.Enums;
 using SchoolLearningSystem.Domain.Interfaces;
 
 namespace SchoolLearningSystem.Applicationf.Services
 {
-    public class CurriculumService : ICurriculumService
+    public class CurriculumService : BaseService<Curriculum, CurriculumReadDto, CurriculumCreateDto, CurriculumUpdateDto>, ICurriculumService
     {
         private readonly ICurriculumRepository _curriculumRepository;
         private readonly ICourseRepository _courseRepository;
-        private readonly IMapper _mapper;
 
+        // لاحظ هنا: قمنا بتمرير _curriculumRepository إلى base (لأن الـ BaseService يحتاجه للـ CRUD)
         public CurriculumService(
             ICurriculumRepository curriculumRepository,
             ICourseRepository courseRepository,
             IMapper mapper)
+            : base(curriculumRepository, mapper)
         {
             _curriculumRepository = curriculumRepository;
             _courseRepository = courseRepository;
-            _mapper = mapper;
         }
 
-        // 🔹 العمليات الأساسية
-        public async Task<IEnumerable<CurriculumReadDto>> GetAllCurriculumsAsync()
-        {
-            var entities = await _curriculumRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<CurriculumReadDto>>(entities);
-        }
+        // 🔹 الدوال الأساسية (GetAll, Add, Update, Delete)
+        // لا نحتاج كتابتها هنا لأنها موجودة ومطبقة في BaseService!
 
-        public async Task<CurriculumReadDto?> GetCurriculumByIdAsync(int id)
-        {
-            var entity = await _curriculumRepository.GetByIdAsync(id);
-            return _mapper.Map<CurriculumReadDto?>(entity);
-        }
-
-        public async Task AddCurriculumAsync(CurriculumCreateDto dto)
-        {
-            var entity = _mapper.Map<Curriculum>(dto);
-            await _curriculumRepository.AddAsync(entity);
-        }
-
-        public async Task UpdateCurriculumAsync(int id, CurriculumUpdateDto dto)
-        {
-            var entity = await _curriculumRepository.GetByIdAsync(id)
-                ?? throw new Exception("Curriculum not found");
-
-            _mapper.Map(dto, entity);
-            await _curriculumRepository.UpdateAsync(entity);
-        }
-
-        public async Task DeleteCurriculumAsync(int id)
-        {
-            await _curriculumRepository.DeleteAsync(id);
-        }
-
-        // 🔹 علاقات إضافية
+        // 🔹 تنفيذ العمليات الخاصة (Specific Business Logic)
         public async Task<IEnumerable<CourseReadDto>> GetCoursesByCurriculumIdAsync(int curriculumId)
         {
             var curriculum = await _curriculumRepository.GetByIdAsync(curriculumId)
                 ?? throw new Exception("Curriculum not found");
 
-            var courses = curriculum.Courses;
-            return _mapper.Map<IEnumerable<CourseReadDto>>(courses);
+            // هنا نستخدم _mapper لتحويل الكورسات
+            return _mapper.Map<IEnumerable<CourseReadDto>>(curriculum.Courses);
         }
 
-        // 🔹 البحث حسب المرحلة الدراسية
-        public async Task<CurriculumReadDto?> GetCurriculumByGradeLevelAsync(string gradeLevel)
+        public async Task<CurriculumReadDto?> GetCurriculumByGradeLevelAsync(GradeLevel gradeLevel)
         {
             var entity = await _curriculumRepository.GetByGradeLevelAsync(gradeLevel);
             return _mapper.Map<CurriculumReadDto?>(entity);
         }
 
-        // 🔹 إحصائيات
         public async Task<int> GetTotalCoursesByCurriculumIdAsync(int curriculumId)
         {
             var curriculum = await _curriculumRepository.GetByIdAsync(curriculumId)

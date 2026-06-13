@@ -1,27 +1,23 @@
 ﻿
+using SchoolLearningSystem.Applicationf.DTOs.CurriculumDto;
 using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
 using SchoolLearningSystem.Applicationf.DTOs.Lesson;
 using SchoolLearningSystem.Applicationf.DTOs.Question;
 using SchoolLearningSystem.Applicationf.DTOs.Result;
+using SchoolLearningSystem.Applicationf.Interfaces.Base;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace SchoolLearningSystem.Applicationf.Interfaces
 {
-    public interface IExamService
+    public interface IExamService : IBaseService<ExamReadDto, ExamCreateDto, ExamUpdateDto>
     {
-        // العمليات الأساسية
-        Task<IEnumerable<ExamReadDto>> GetAllExamsAsync();
-        Task<ExamReadDto?> GetExamByIdAsync(int id);
-        Task AddExamAsync(ExamCreateDto dto);
-        Task UpdateExamAsync(int id, ExamUpdateDto dto);
-        Task DeleteExamAsync(int id);
+        // الدوال الأساسية (GetAllAsync, GetByIdAsync, AddAsync, UpdateAsync, DeleteAsync) 
+        // أصبحت موجودة تلقائياً بفضل الوراثة من IBaseService
 
-        // علاقات إضافية
+        // 🔹 علاقات إضافية
         Task<IEnumerable<QuestionReadDto>> GetQuestionsByExamIdAsync(int examId);
         Task<IEnumerable<ResultReadDto>> GetResultsByExamIdAsync(int examId);
-
-        // ربط الامتحان بالدرس
         Task<IEnumerable<LessonReadDto>> GetLessonsByExamIdAsync(int examId);
     }
 }

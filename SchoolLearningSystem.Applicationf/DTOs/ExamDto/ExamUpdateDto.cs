@@ -1,10 +1,18 @@
-﻿namespace SchoolLearningSystem.Applicationf.DTOs.ExamDto
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace SchoolLearningSystem.Applicationf.DTOs.ExamDto
 {
     public class ExamUpdateDto
     {
-        public string Title { get; set; } = string.Empty;
-        public string ExamType { get; set; } = string.Empty;
+        [StringLength(200)]
+        public string? Title { get; set; }
 
-        public int LessonId { get; set; }
+        public int? DurationInMinutes { get; set; }
+
+        public int? PassingScore { get; set; }
+
+        public DateTime? StartDate { get; set; }
+
+        public bool? IsActive { get; set; }
     }
 }

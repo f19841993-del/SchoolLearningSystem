@@ -1,23 +1,22 @@
-﻿using SchoolLearningSystem.Domain.Entities;
-
-namespace SchoolLearningSystem.Domain.Entities
+﻿namespace SchoolLearningSystem.Domain.Entities
 {
-    public class Result
+    public class Result : BaseEntity // وراثة BaseEntity لتوحيد الخصائص
     {
-        public int Id { get; set; }
         public int StudentId { get; set; }
         public Student Student { get; set; }
 
         public int LessonId { get; set; }
         public Lesson Lesson { get; set; }
 
-
-        public int? ExamId { get; set; }   // ✅ جديد
+        public int? ExamId { get; set; }
         public Exam? Exam { get; set; }
 
-        // ✅ جديد: نوع النتيجة (Homework, Quiz, Midterm, Final)
         public string ResultType { get; set; } = "Homework";
         public double Score { get; set; }
-        public DateTime Date { get; set; }
+
+        // 💡 إضافة جوهرية للذكاء الاصطناعي: الوقت المستغرق
+        public int DurationInSeconds { get; set; }
+
+        public DateTime Date { get; set; } = DateTime.UtcNow;
     }
 }

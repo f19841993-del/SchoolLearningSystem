@@ -13,5 +13,7 @@ namespace SchoolLearningSystem.Domain.Interfaces
         // دوال إضافية ممكن تحتاجها مستقبلاً
         Task<IEnumerable<CourseStudent>> GetByCourseIdAsync(int courseId);
         Task<IEnumerable<CourseStudent>> GetByStudentIdAsync(int studentId);
+        Task<int> CountByCourseIdAsync(int courseId);
+        Task<int> CountByStudentIdAsync(int studentId);
     }
 }

@@ -1,11 +1,14 @@
-﻿namespace SchoolLearningSystem.Applicationf.DTOs.Lesson
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace SchoolLearningSystem.Applicationf.DTOs.Lesson
 {
     public class LessonUpdateDto
     {
-        public string Title { get; set; } = string.Empty;
-        public string GradeLevel { get; set; } = string.Empty;
-        public string Content { get; set; } = string.Empty;
+        [StringLength(200, MinimumLength = 3)]
+        public string? Title { get; set; }
 
-        public int CourseId { get; set; }
+        public string? Content { get; set; }
+
+        public int? CourseId { get; set; }
     }
 }

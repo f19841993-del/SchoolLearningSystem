@@ -1,15 +1,16 @@
 ﻿using SchoolLearningSystem.Domain.Entities;
+using SchoolLearningSystem.Domain.Interfaces.Base;
 
 namespace SchoolLearningSystem.Domain.Interfaces
 {
-    public interface ICourseRepository
+    // أضف الوراثة هنا:
+    public interface ICourseRepository : IGenericRepository<Course>
     {
-        Task<Course> GetByIdAsync(int id);
-        Task<IEnumerable<Course>> GetAllAsync();
-        Task AddAsync(Course course);
-        Task UpdateAsync(Course course);
-        Task DeleteAsync(int id);
-        Task<IEnumerable<Course>> GetByCurriculumIdAsync(int curriculumId);
-
+        // العمليات الخاصة فقط بالكورس
+        Task<IEnumerable<Student>> GetStudentsByCourseIdAsync(int courseId);
+        Task<IEnumerable<Lesson>> GetLessonsByCourseIdAsync(int courseId);
+        Task<IEnumerable<Exam>> GetExamsByCourseIdAsync(int courseId);
+        Task EnrollStudentAsync(int courseId, int studentId);
+        Task RemoveStudentAsync(int courseId, int studentId);
     }
 }

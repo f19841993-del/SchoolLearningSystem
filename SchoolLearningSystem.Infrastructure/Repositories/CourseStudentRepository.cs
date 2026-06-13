@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SchoolLearningSystem.Domain.Entities;
-using SchoolLearningSystem.Infrastructure.Data;
 using SchoolLearningSystem.Domain.Interfaces;
+using SchoolLearningSystem.Infrastructure.Data;
 
-namespace SchoolLearningSystem.Infrastructure.Infrastructure
+namespace SchoolLearningSystem.Infrastructure.Repositories
 {
     public class CourseStudentRepository : ICourseStudentRepository
     {
@@ -16,20 +16,14 @@ namespace SchoolLearningSystem.Infrastructure.Infrastructure
 
         public async Task<IEnumerable<CourseStudent>> GetAllAsync()
         {
-            return await _context.CourseStudents
-                .Include(cs => cs.Course)   // تحميل العلاقة مع Course
-                .Include(cs => cs.Student) // تحميل العلاقة مع Student
-                .ToListAsync();
+            return await _context.CourseStudents.ToListAsync();
         }
 
         public async Task<CourseStudent?> GetByIdAsync(int courseId, int studentId)
         {
-            return await _context.CourseStudents
-                .Include(cs => cs.Course)
-                .Include(cs => cs.Student)
-                .FirstOrDefaultAsync(cs => cs.CourseId == courseId && cs.StudentId == studentId);
+            // استخدام FindAsync مع المفاتيح المركبة هو الطريقة الاحترافية للبحث
+            return await _context.CourseStudents.FindAsync(courseId, studentId);
         }
-
 
         public async Task AddAsync(CourseStudent courseStudent)
         {
@@ -45,23 +39,19 @@ namespace SchoolLearningSystem.Infrastructure.Infrastructure
 
         public async Task DeleteAsync(int courseId, int studentId)
         {
-            var relation = await _context.CourseStudents
-                .FirstOrDefaultAsync(cs => cs.CourseId == courseId && cs.StudentId == studentId);
-
-            if (relation != null)
+            var entity = await GetByIdAsync(courseId, studentId);
+            if (entity != null)
             {
-                _context.CourseStudents.Remove(relation);
+                _context.CourseStudents.Remove(entity);
                 await _context.SaveChangesAsync();
             }
         }
 
-
-        // دوال إضافية حسب الحاجة
         public async Task<IEnumerable<CourseStudent>> GetByCourseIdAsync(int courseId)
         {
             return await _context.CourseStudents
                 .Where(cs => cs.CourseId == courseId)
-                .Include(cs => cs.Student)
+                .Include(cs => cs.Student) // لجلب بيانات الطالب مع الاشتراك
                 .ToListAsync();
         }
 
@@ -69,10 +59,19 @@ namespace SchoolLearningSystem.Infrastructure.Infrastructure
         {
             return await _context.CourseStudents
                 .Where(cs => cs.StudentId == studentId)
-                .Include(cs => cs.Course)
+                .Include(cs => cs.Course) // لجلب بيانات الكورس مع الاشتراك
                 .ToListAsync();
         }
 
-      
+        public async Task<int> CountByCourseIdAsync(int courseId)
+        {
+            // EF Core سيحول هذا الكود إلى SELECT COUNT(*) FROM ... وهو أسرع بكثير
+            return await _context.CourseStudents.CountAsync(cs => cs.CourseId == courseId);
+        }
+
+        public async Task<int> CountByStudentIdAsync(int studentId)
+        {
+            return await _context.CourseStudents.CountAsync(cs => cs.StudentId == studentId);
+        }
     }
 }

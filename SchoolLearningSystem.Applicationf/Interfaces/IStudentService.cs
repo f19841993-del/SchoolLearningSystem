@@ -2,26 +2,22 @@
 using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
 using SchoolLearningSystem.Applicationf.DTOs.Result;
 using SchoolLearningSystem.Applicationf.DTOs.Student;
+using SchoolLearningSystem.Applicationf.Interfaces.Base;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace SchoolLearningSystem.Applicationf.Interfaces
 {
-    public interface IStudentService
+    public interface IStudentService : IBaseService<StudentReadDto, StudentCreateDto, StudentUpdateDto>
     {
-        // العمليات الأساسية
-        Task<IEnumerable<StudentReadDto>> GetAllStudentsAsync();
-        Task<StudentReadDto?> GetStudentByIdAsync(int id);
-        Task AddStudentAsync(StudentCreateDto dto);
-        Task UpdateStudentAsync(int id, StudentUpdateDto dto);
-        Task DeleteStudentAsync(int id);
+        // 🔹 CRUD الأساسي: موروث من IBaseService، لا حاجة لكتابته هنا!
 
-        // علاقات إضافية
-        Task<IEnumerable<CourseDto>> GetCoursesByStudentIdAsync(int studentId);
+        // 🔹 علاقات إضافية (Business Logic)
+        Task<IEnumerable<CourseReadDto>> GetCoursesByStudentIdAsync(int studentId);
         Task<IEnumerable<ResultReadDto>> GetResultsByStudentIdAsync(int studentId);
         Task<IEnumerable<MemorizeSessionReadDto>> GetMemorizeSessionsByStudentIdAsync(int studentId);
 
-        // إحصائيات
+        // 🔹 إحصائيات
         Task<double> GetAverageScoreByStudentIdAsync(int studentId);
         Task<int> GetTotalCoursesByStudentIdAsync(int studentId);
     }

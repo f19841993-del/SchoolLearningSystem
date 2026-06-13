@@ -1,10 +1,11 @@
-﻿namespace SchoolLearningSystem.Applicationf.DTOs.Question
+﻿using SchoolLearningSystem.Domain.Enums;
+
+namespace SchoolLearningSystem.Applicationf.DTOs.Question
 {
     public class QuestionUpdateDto
     {
-        public string Text { get; set; } = string.Empty;
-        public string Answer { get; set; } = string.Empty;
-        public string DifficultyLevel { get; set; } = string.Empty;
-        public int QuestionNumber { get; set; }
+        public string? Text { get; set; }
+        public string? Answer { get; set; }
+        public DifficultyLevel? DifficultyLevel { get; set; }
     }
 }

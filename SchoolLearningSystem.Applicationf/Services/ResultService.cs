@@ -1,101 +1,64 @@
 ﻿using AutoMapper;
 using SchoolLearningSystem.Applicationf.DTOs.Result;
 using SchoolLearningSystem.Applicationf.Interfaces;
+using SchoolLearningSystem.Applicationf.Services.Base;
 using SchoolLearningSystem.Domain.Entities;
-using SchoolLearningSystem.Domain.Interfaces; // نفترض عندك IResultRepository
+using SchoolLearningSystem.Domain.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace SchoolLearningSystem.Applicationf.Services
 {
-    public class ResultService : IResultService
+    public class ResultService : BaseService<Result, ResultReadDto, ResultCreateDto, ResultUpdateDto>, IResultService
     {
         private readonly IResultRepository _resultRepository;
-        private readonly IMapper _mapper;
 
         public ResultService(IResultRepository resultRepository, IMapper mapper)
+            : base(resultRepository, mapper)
         {
             _resultRepository = resultRepository;
-            _mapper = mapper;
         }
 
-        // العمليات الأساسية
-        public async Task<IEnumerable<ResultReadDto>> GetAllResultsAsync()
-        {
-            var results = await _resultRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<ResultReadDto>>(results);
-        }
-
-        public async Task<ResultReadDto?> GetResultByIdAsync(int id)
-        {
-            var result = await _resultRepository.GetByIdAsync(id);
-            return _mapper.Map<ResultReadDto?>(result);
-        }
-
-        public async Task AddResultAsync(ResultCreateDto dto)
-        {
-            var entity = _mapper.Map<Result>(dto);
-            await _resultRepository.AddAsync(entity);
-        }
-
-        public async Task UpdateResultAsync(int id, ResultUpdateDto dto)
-        {
-            var existing = await _resultRepository.GetByIdAsync(id);
-            if (existing != null)
-            {
-                _mapper.Map(dto, existing);
-                await _resultRepository.UpdateAsync(existing);
-            }
-        }
-
-        public async Task DeleteResultAsync(int id)
-        {
-            await _resultRepository.DeleteAsync(id);
-        }
-
-        // علاقات إضافية
+        // 🔹 العلاقات (الآن أصبحت سريعة لأنها تستعلم من القاعدة مباشرة)
         public async Task<IEnumerable<ResultReadDto>> GetResultsByStudentIdAsync(int studentId)
         {
-            var results = await _resultRepository.GetAllAsync();
-            var filtered = results.Where(r => r.StudentId == studentId);
-            return _mapper.Map<IEnumerable<ResultReadDto>>(filtered);
+            // لاحظ: نستخدم الريبو مباشرة، ولن نستخدم GetAll() أبداً!
+            var results = await _resultRepository.GetByStudentIdAsync(studentId);
+            return _mapper.Map<IEnumerable<ResultReadDto>>(results);
         }
 
         public async Task<IEnumerable<ResultReadDto>> GetResultsByLessonIdAsync(int lessonId)
         {
-            var results = await _resultRepository.GetAllAsync();
-            var filtered = results.Where(r => r.LessonId == lessonId);
-            return _mapper.Map<IEnumerable<ResultReadDto>>(filtered);
+            var results = await _resultRepository.GetByLessonIdAsync(lessonId);
+            return _mapper.Map<IEnumerable<ResultReadDto>>(results);
         }
 
         public async Task<IEnumerable<ResultReadDto>> GetResultsByExamIdAsync(int examId)
         {
-            var results = await _resultRepository.GetAllAsync();
-            var filtered = results.Where(r => r.ExamId == examId);
-            return _mapper.Map<IEnumerable<ResultReadDto>>(filtered);
+            var results = await _resultRepository.GetByExamIdAsync(examId);
+            return _mapper.Map<IEnumerable<ResultReadDto>>(results);
         }
 
-        // إحصائيات إضافية
+        // 🔹 إحصائيات (تطوير الأداء)
         public async Task<double> GetAverageScoreByStudentIdAsync(int studentId)
         {
-            var results = await _resultRepository.GetAllAsync();
-            var filtered = results.Where(r => r.StudentId == studentId);
-            return filtered.Any() ? filtered.Average(r => r.Score) : 0;
+            // الأفضل هنا عمل دالة AverageByStudentId في الريبو لتكون أسرع
+            var results = await _resultRepository.GetByStudentIdAsync(studentId);
+            return results.Any() ? results.Average(r => r.Score) : 0;
         }
-
-        public async Task<double> GetAverageScoreByLessonIdAsync(int lessonId)
+       public async Task<double> GetAverageScoreByLessonIdAsync(int lessonId)
         {
-            var results = await _resultRepository.GetAllAsync();
-            var filtered = results.Where(r => r.LessonId == lessonId);
-            return filtered.Any() ? filtered.Average(r => r.Score) : 0;
+            var results = await _resultRepository.GetByLessonIdAsync(lessonId);
+       
+            return results.Any() ? results.Average(r => r.Score) : 0;
         }
 
         public async Task<double> GetAverageScoreByExamIdAsync(int examId)
         {
-            var results = await _resultRepository.GetAllAsync();
-            var filtered = results.Where(r => r.ExamId == examId);
-            return filtered.Any() ? filtered.Average(r => r.Score) : 0;
+            var results = await _resultRepository.GetByExamIdAsync(examId);
+
+            return results.Any() ? results.Average(r => r.Score) : 0;
         }
     }
 }
