@@ -1,6 +1,4 @@
-﻿
-
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using SchoolLearningSystem.API.Responses;
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
@@ -44,23 +42,28 @@ namespace SchoolLearningSystem.API.Controllers
             return Ok(new ApiResponse<CourseReadDto>(200, "Course retrieved successfully", course));
         }
 
+        // 🔹 التعديل الاحترافي: إرجاع الكائن المُنشأ وإضافة Location Header للامتثال لمعايير REST
         [HttpPost]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse<CourseReadDto>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<ApiResponse<string>>> AddCourse(CourseCreateDto dto)
+        public async Task<ActionResult<ApiResponse<CourseReadDto>>> AddCourse([FromBody] CourseCreateDto dto)
         {
             // التحقق من صحة البيانات يظل في الكنترولر لأنه جزء من الـ API Contract
             if (!ModelState.IsValid)
                 return BadRequest(new ApiResponse<string>(400, "Invalid input data"));
 
-            await _courseService.CreateAsync(dto);
-            return StatusCode(201, new ApiResponse<string>(201, "Course created successfully"));
+            // نقوم بعملية الإضافة ونستلم الـ DTO الخاص بالقراءة بعد التخزين
+            var createdCourse = await _courseService.CreateAsync(dto);
+
+            // نستخدم CreatedAtAction لإرجاع الكائن الجديد وتوفير رابط الوصول إليه في الـ Response
+            return CreatedAtAction(nameof(GetCourseById), new { id = createdCourse.Id },
+                new ApiResponse<CourseReadDto>(201, "Course created successfully", createdCourse));
         }
 
         [HttpPut("{id}")]
         [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<string>>> UpdateCourse(int id, CourseUpdateDto dto)
+        public async Task<ActionResult<ApiResponse<string>>> UpdateCourse(int id, [FromBody] CourseUpdateDto dto)
         {
             // تم حذف الـ try-catch. أي خطأ سيحدث هنا (مثل Course Not Found)
             // سيتم التقاطه بواسطة الـ ExceptionMiddleware.

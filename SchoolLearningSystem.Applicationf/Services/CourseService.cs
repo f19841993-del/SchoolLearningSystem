@@ -1,29 +1,107 @@
 ﻿using AutoMapper;
+using FluentValidation; // 1. أضفنا مكتبة التحقق
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
 using SchoolLearningSystem.Applicationf.DTOs.Lesson;
 using SchoolLearningSystem.Applicationf.DTOs.Student;
+using SchoolLearningSystem.Applicationf.Exceptions;
 using SchoolLearningSystem.Applicationf.Interfaces;
 using SchoolLearningSystem.Applicationf.Services.Base;
 using SchoolLearningSystem.Domain.Entities;
-using SchoolLearningSystem.Domain.Interfaces; // هنا الـ ICourseRepository
+using SchoolLearningSystem.Domain.Interfaces;
 
 namespace SchoolLearningSystem.Applicationf.Services
 {
     public class CourseService : BaseService<Course, CourseReadDto, CourseCreateDto, CourseUpdateDto>, ICourseService
     {
-        // نحتفظ بنسخة خاصة من الـ Repository للوصول للدوال الخاصة بالكورس
+        // نحتفظ بنسخة خاصة من الـ Repository للوصول للعمليات المخصصة للكورس (مثل جلب طلاب الكورس)
         private readonly ICourseRepository _courseRepository;
 
-        // التصميم الاحترافي: نمرر الـ Repository الخاص إلى الـ Base ليقوم بالعمليات العامة
-        // ونحتفظ به هنا للعمليات الخاصة
-        public CourseService(ICourseRepository courseRepository, IMapper mapper)
+        // 2. أضفنا الـ Validator الخاص بعملية الإنشاء لحماية السيرفيس
+        private readonly IValidator<CourseCreateDto> _createValidator;
+        // 1. إضافة حارس التعديل
+        private readonly IValidator<CourseUpdateDto> _updateValidator;
+
+
+        // التصميم الاحترافي: نمرر الـ Repository العام والـ Mapper إلى الكلاس الأب (BaseService)
+        // ونحتفظ بالنسخ الخاصة بنا هنا
+        public CourseService(
+            ICourseRepository courseRepository,
+            IMapper mapper,
+             IValidator<CourseUpdateDto> updateValidator, // حقن الـ Validator الخاص بالتعديل
+            IValidator<CourseCreateDto> createValidator) // حقن الـ Validator
             : base(courseRepository, mapper)
         {
             _courseRepository = courseRepository;
+            _createValidator = createValidator;
+            _updateValidator = updateValidator;
         }
 
-        // 🔹 تنفيذ العمليات الخاصة (Specific Business Logic)
+        #region تجاوز العمليات الأساسية (Overriding Base Operations)
+
+        // 🔹 تجاوز دالة الإضافة (CreateAsync) لتطبيق التحقق (Validation) قبل الحفظ
+        public override async Task<CourseReadDto> CreateAsync(CourseCreateDto dto)
+        {
+            // أ. فحص البيانات القادمة باستخدام القواعد التي كتبناها في كلاس CourseCreateDtoValidator
+            var validationResult = await _createValidator.ValidateAsync(dto);
+
+            // ب. إذا كانت البيانات غير صالحة (مثلاً العنوان فارغ)، نوقف العملية فوراً
+            if (!validationResult.IsValid)
+            {
+                // رمي الاستثناء الذي سيلتقطه الـ Global Middleware ويرجعه كـ 400 BadRequest
+                throw new CustomValidationException(validationResult.Errors);
+            }
+
+            // ج. إذا كانت البيانات صحيحة، نترك الكلاس الأب (BaseService) يقوم بعملية الـ Mapping والحفظ
+            return await base.CreateAsync(dto);
+        }
+
+        // 🔹 تجاوز دالة الحذف (DeleteAsync) لتطبيق قواعد العمل (Business Logic) والحذف المنطقي (Soft Delete)
+        public override async Task DeleteAsync(int id)
+        {
+            // 1. التحقق من وجود الكورس أصلاً
+            var course = await _courseRepository.GetByIdAsync(id);
+            if (course == null)
+            {
+                throw new NotFoundException($"الكورس برقم {id} غير موجود.");
+            }
+
+            // 2. حماية البيانات: التحقق من عدم وجود طلاب مسجلين قبل الحذف
+            var students = await _courseRepository.GetStudentsByCourseIdAsync(id);
+            if (students != null && students.Any())
+            {
+                // رمي خطأ منطقي (Business Rule Exception)
+                throw new BadRequestException("عذراً، لا يمكن حذف هذا الكورس لوجود طلاب مسجلين فيه.");
+            }
+
+            // 3. التنفيذ: تطبيق الحذف المنطقي (Soft Delete) بدلاً من الحذف النهائي
+            course.IsDeleted = true;
+
+            // 4. حفظ التعديل (Update) لتثبيت حالة IsDeleted = true
+            await _courseRepository.UpdateAsync(course);
+            await _courseRepository.SaveChangesAsync();
+
+            // ملاحظة: لم نستدعِ base.DeleteAsync(id) لأننا لا نريد مسح السطر من قاعدة البيانات.
+        }
+
+        // 4. تجاوز دالة التعديل لفحص البيانات قبل حفظها
+        public override async Task UpdateAsync(int id, CourseUpdateDto dto)
+        {
+            // أ. فحص بيانات التعديل
+            var validationResult = await _updateValidator.ValidateAsync(dto);
+
+            if (!validationResult.IsValid)
+            {
+                // ب. رمي الخطأ المخصص إذا كانت البيانات خاطئة
+                throw new CustomValidationException(validationResult.Errors);
+            }
+
+            // ج. إذا كانت البيانات سليمة، نترك الكلاس الأب يقوم بالبحث والتحديث
+            await base.UpdateAsync(id, dto);
+        }
+        #endregion
+
+        #region العمليات المخصصة للكورس (Specific Course Operations)
 
         public async Task<IEnumerable<StudentReadDto>> GetStudentsByCourseIdAsync(int courseId)
         {
@@ -45,8 +123,7 @@ namespace SchoolLearningSystem.Applicationf.Services
 
         public async Task EnrollStudentAsync(int courseId, int studentId)
         {
-            // هنا يمكنك إضافة منطق التحقق (Business Validation)
-            // مثلاً: التحقق هل الطالب مسجل مسبقاً؟
+            // يمكن مستقبلاً إضافة فحص هنا: هل الطالب مسجل بالفعل؟
             await _courseRepository.EnrollStudentAsync(courseId, studentId);
         }
 
@@ -55,133 +132,6 @@ namespace SchoolLearningSystem.Applicationf.Services
             await _courseRepository.RemoveStudentAsync(courseId, studentId);
         }
 
-        // لاحظ: لا نحتاج لكتابة GetAllAsync أو CreateAsync هنا
-        // لأنها موجودة ومطبقة بالفعل في BaseService
+        #endregion
     }
 }
-
-
-
-//using AutoMapper;
-//using SchoolLearningSystem.Applicationf.DTOs;
-//using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
-//using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
-//using SchoolLearningSystem.Applicationf.DTOs.Lesson;
-//using SchoolLearningSystem.Applicationf.DTOs.Student;
-//using SchoolLearningSystem.Applicationf.Interfaces;
-//using SchoolLearningSystem.Domain.Entities;
-//using SchoolLearningSystem.Domain.Interfaces;
-
-
-//namespace SchoolLearningSystem.Applicationf.Services
-//{
-//    public class CourseService : ICourseService
-//    {
-//        private readonly ICourseRepository _courseRepository;
-//        private readonly IStudentRepository _studentRepository;
-//        private readonly ILessonRepository _lessonRepository;
-//        private readonly IExamRepository _examRepository;
-//        private readonly IMapper _mapper;
-
-//        public CourseService(
-//            ICourseRepository courseRepository,
-//            IStudentRepository studentRepository,
-//            ILessonRepository lessonRepository,
-//            IExamRepository examRepository,
-//            IMapper mapper)
-//        {
-//            _courseRepository = courseRepository;
-//            _studentRepository = studentRepository;
-//            _lessonRepository = lessonRepository;
-//            _examRepository = examRepository;
-//            _mapper = mapper;
-//        }
-
-//        // العمليات الأساسية
-//        public async Task<IEnumerable<CourseReadDto>> GetAllCoursesAsync()
-//        {
-//            var courses = await _courseRepository.GetAllAsync();
-//            return _mapper.Map<IEnumerable<CourseReadDto>>(courses);
-//        }
-
-//        public async Task<CourseReadDto?> GetCourseByIdAsync(int id)
-//        {
-//            var course = await _courseRepository.GetByIdAsync(id);
-//            return _mapper.Map<CourseReadDto?>(course);
-//        }
-
-//        public async Task AddCourseAsync(CourseCreateDto dto)
-//        {
-//            var entity = _mapper.Map<Course>(dto);
-//            await _courseRepository.AddAsync(entity);
-//        }
-
-//        public async Task UpdateCourseAsync(int id, CourseUpdateDto dto)
-//        {
-//            var course = await _courseRepository.GetByIdAsync(id);
-//            if (course == null) throw new Exception("Course not found");
-
-//            _mapper.Map(dto, course); // يطبق التعديلات على الكورس الموجود
-//            await _courseRepository.UpdateAsync(course);
-//        }
-
-//        public async Task DeleteCourseAsync(int id)
-//        {
-//            await _courseRepository.DeleteAsync(id);
-//        }
-
-//        // علاقات إضافية
-//        public async Task<IEnumerable<StudentReadDto>> GetStudentsByCourseIdAsync(int courseId)
-//        {
-//            var course = await _courseRepository.GetByIdAsync(courseId);
-//            if (course == null) return Enumerable.Empty<StudentReadDto>();
-
-//            var students = course.CourseStudents.Select(cs => cs.Student);
-//            return _mapper.Map<IEnumerable<StudentReadDto>>(students);
-//        }
-
-//        public async Task<IEnumerable<LessonReadDto>> GetLessonsByCourseIdAsync(int courseId)
-//        {
-//            var lessons = await _lessonRepository.GetByCourseIdAsync(courseId);
-//            return _mapper.Map<IEnumerable<LessonReadDto>>(lessons);
-//        }
-
-//        public async Task<IEnumerable<ExamReadDto>> GetExamsByCourseIdAsync(int courseId)
-//        {
-//            var exams = await _examRepository.GetByCourseIdAsync(courseId);
-//            return _mapper.Map<IEnumerable<ExamReadDto>>(exams);
-//        }
-
-//        // ربط طالب بالكورس
-//        public async Task EnrollStudentAsync(int courseId, int studentId)
-//        {
-//            var course = await _courseRepository.GetByIdAsync(courseId);
-//            var student = await _studentRepository.GetByIdAsync(studentId);
-
-//            if (course == null || student == null)
-//                throw new Exception("Course or Student not found");
-
-//            course.CourseStudents.Add(new CourseStudent
-//            {
-//                CourseId = courseId,
-//                StudentId = studentId,
-//                Student = student
-//            });
-
-//            await _courseRepository.UpdateAsync(course);
-//        }
-
-//        public async Task RemoveStudentAsync(int courseId, int studentId)
-//        {
-//            var course = await _courseRepository.GetByIdAsync(courseId);
-//            if (course == null) throw new Exception("Course not found");
-
-//            var relation = course.CourseStudents.FirstOrDefault(cs => cs.StudentId == studentId);
-//            if (relation != null)
-//            {
-//                course.CourseStudents.Remove(relation);
-//                await _courseRepository.UpdateAsync(course);
-//            }
-//        }
-//    }
-//}

@@ -6,6 +6,8 @@ using SchoolLearningSystem.Domain.Interfaces.Base;
 using SchoolLearningSystem.Infrastructure.Data;
 using SchoolLearningSystem.Infrastructure.Repositories;
 using SchoolLearningSystem.Infrastructure.Repositories.Base;
+using System.Reflection;
+
 
 namespace SchoolLearningSystem.Infrastructure
 {
@@ -34,7 +36,6 @@ namespace SchoolLearningSystem.Infrastructure
             services.AddScoped<IStudentQuestionProgressRepository, StudentQuestionProgressRepository>();
             services.AddScoped<IStudentRepository, StudentRepository>();
             services.AddScoped<ITeacherRepository, TeacherRepository>();
-
             return services;
         }
     }

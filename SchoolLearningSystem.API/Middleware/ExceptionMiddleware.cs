@@ -36,18 +36,23 @@ namespace SchoolLearningSystem.API.Middleware
         {
             context.Response.ContentType = "application/json";
 
-            // القيم الافتراضية
             var statusCode = HttpStatusCode.InternalServerError;
             var message = "حدث خطأ غير متوقع في السيرفر.";
+            object? errorsData = null; // 👈 1. أضفنا هذا المتغير ليحمل قائمة الأخطاء إن وجدت
 
-            // تصنيف الأخطاء
             if (exception is NotFoundException)
             {
                 statusCode = HttpStatusCode.NotFound;
                 message = exception.Message;
             }
-            // هنا نضيف معالجة الـ Validation (التي سأشرحها لك بالأسفل)
-            else if (exception is ValidationException)
+            // 👈 2. نقوم بعمل Cast للاستثناء لكي نستطيع الوصول إلى customValidationEx.Errors
+            else if (exception is CustomValidationException customValidationEx)
+            {
+                statusCode = HttpStatusCode.BadRequest;
+                message = customValidationEx.Message;
+                errorsData = customValidationEx.Errors; // 👈 3. نأخذ قائمة الأخطاء التفصيلية
+            }
+            else if (exception is BadRequestException)
             {
                 statusCode = HttpStatusCode.BadRequest;
                 message = exception.Message;
@@ -59,10 +64,15 @@ namespace SchoolLearningSystem.API.Middleware
 
             context.Response.StatusCode = (int)statusCode;
 
-            // ملاحظة: اجعل ApiResponse هو الشكل الموحد الذي يرجع في كل الحالات
-            var response = new ApiResponse<string>((int)statusCode, message);
+            // 👈 4. نستخدم ApiResponse<object> لكي يستطيع حمل الـ List<string> الخاص بالأخطاء
+            var response = new ApiResponse<object>((int)statusCode, message, errorsData);
 
-            return context.Response.WriteAsync(response.ToString());
+            var jsonResponse = System.Text.Json.JsonSerializer.Serialize(response, new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            });
+
+            return context.Response.WriteAsync(jsonResponse);
         }
     }
 }

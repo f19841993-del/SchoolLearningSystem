@@ -18,6 +18,7 @@ namespace SchoolLearningSystem.Infrastructure.Repositories.Base
             var entity = await GetByIdAsync(id);
             if (entity != null) _context.Set<T>().Remove(entity);
         }
+        public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
     }
 
 }

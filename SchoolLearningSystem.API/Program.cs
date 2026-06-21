@@ -1,6 +1,7 @@
 using SchoolLearningSystem.API.Middleware;
 using SchoolLearningSystem.Applicationf;
 using SchoolLearningSystem.Infrastructure;
+using Serilog;
 
 namespace SchoolLearningSystem.API
 {
@@ -9,7 +10,14 @@ namespace SchoolLearningSystem.API
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            // 1. ≈⁄œ«œ Ê ﬂÊÌ‰ Serilog
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information() //  ÕœÌœ «·„” ÊÏ «·«› —«÷Ì (Information ›„« ›Êﬁ)
+                .WriteTo.Console() // ÿ»«⁄… «·”Ã·«  ›Ì ‘«‘… «·√Ê«„—
+                .WriteTo.File("Logs/log.txt", rollingInterval: RollingInterval.Day) // «·√Â„: Õ›Ÿ «·”Ã·«  ›Ì „·›° Ê≈‰‘«¡ „·› ÃœÌœ ﬂ· ÌÊ„
+                .CreateLogger();
+            // 3. ≈Œ»«— «·‰Ÿ«„ »«” Œœ«„ Serilog
+            builder.Host.UseSerilog();
             // 1.  ”ÃÌ· «·Œœ„« 
             builder.Services.AddControllers();
             builder.Services.AddApplicationServices();
