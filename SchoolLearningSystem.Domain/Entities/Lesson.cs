@@ -12,6 +12,12 @@ namespace SchoolLearningSystem.Domain.Entities
         // المحتوى التعليمي (قد يكون نصاً أو رابطاً لمحتوى تفاعلي)
         public string Content { get; set; } = string.Empty;
 
+        // 💡 إضافة الترتيب لضمان تسلسل الدروس بشكل صحيح
+        public int Order { get; set; }
+
+        // 💡 إضافة رابط الفيديو لأن مادة الرياضيات تعتمد بشدة على الشرح المرئي
+        public string VideoUrl { get; set; } = string.Empty;
+
         // علاقة الدرس بالكورس (الدرس دائماً ينتمي لكورس واحد)
         public int CourseId { get; set; }
         public Course Course { get; set; }
@@ -29,29 +35,3 @@ namespace SchoolLearningSystem.Domain.Entities
 }
 
 
-
-
-//using System.Diagnostics;
-//using SchoolLearningSystem.Domain.Enums;
-
-//namespace SchoolLearningSystem.Domain.Entities
-//{
-//    public class Lesson
-//    {
-//        public int Id { get; set; }
-//        public string Title { get; set; } = string.Empty;
-//        //public GradeLevel GradeLevel { get; set; }
-//        public string Content { get; set; } = string.Empty;
-//        public int CourseId { get; set; }
-//        public Course Course { get; set; }
-
-//        // داخل Lesson.cs
-//        public ICollection<Exam> Exams { get; set; } = new List<Exam>();
-//        public ICollection<MemorizeSession> MemorizeSessions { get; set; } = new List<MemorizeSession>();
-//        public ICollection<Result> Results { get; set; } = new List<Result>();
-//        public ICollection<Exercise> Exercises { get; set; } = new List<Exercise>();
-
-//        // 🔹 إضافة علاقة الأسئلة
-//        public ICollection<Question> Questions { get; set; } = new List<Question>();
-//    }
-//}

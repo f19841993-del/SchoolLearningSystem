@@ -12,40 +12,44 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         {
         }
 
-        // جلب تاريخ الطالب بالكامل (الأحدث أولاً لتحليل التطور)
+        // جلب تاريخ الطالب بالكامل (للقراءة فقط -> AsNoTracking)
         public async Task<IEnumerable<Result>> GetByStudentIdAsync(int studentId)
         {
             return await _context.Results
+                .AsNoTracking()
                 .Where(r => r.StudentId == studentId)
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
         }
 
-        // جلب نتائج امتحان معين (مهم لتحليل سهولة/صعوبة الامتحان)
+        // جلب نتائج امتحان معين
         public async Task<IEnumerable<Result>> GetByExamIdAsync(int examId)
         {
             return await _context.Results
+                .AsNoTracking()
                 .Where(r => r.ExamId == examId)
                 .ToListAsync();
         }
+
+        // جلب نتائج درس معين
         public async Task<IEnumerable<Result>> GetByLessonIdAsync(int lessonId)
         {
             return await _context.Results
+                .AsNoTracking()
                 .Where(r => r.LessonId == lessonId)
                 .ToListAsync();
         }
 
-        // 💡 إضافة ذكية: حساب متوسط درجات الطالب في كورس معين
+        // حساب متوسط درجات الطالب في كورس معين (عملية إحصائية)
         public async Task<double> GetAverageScoreByStudentIdAsync(int studentId, int courseId)
         {
-            // نستخدم AverageAsync ليقوم SQL بحساب المتوسط مباشرة (أداء عالٍ)
-            var average = await _context.Results
+            // العملية تتم في SQL، نستخدم AsNoTracking لأنها عملية حسابية للقراءة فقط
+            return await _context.Results
+                .AsNoTracking()
                 .Where(r => r.StudentId == studentId && r.Exam.CourseId == courseId)
                 .Select(r => r.Score)
-                .DefaultIfEmpty(0) // في حال لم توجد نتائج، يعيد 0 بدلاً من خطأ
+                .DefaultIfEmpty(0)
                 .AverageAsync();
-
-            return average;
         }
     }
 }

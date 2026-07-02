@@ -5,8 +5,9 @@
         public int StudentId { get; set; }
         public Student Student { get; set; }
 
-        public int LessonId { get; set; }
-        public Lesson Lesson { get; set; }
+        // 💡 التعديل هنا: جعل الدرس اختيارياً Nullable
+        public int? LessonId { get; set; }
+        public Lesson? Lesson { get; set; }
 
         public int? ExamId { get; set; }
         public Exam? Exam { get; set; }

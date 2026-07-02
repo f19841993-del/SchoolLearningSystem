@@ -7,6 +7,10 @@
         public string QuestionText { get; set; } = string.Empty;
         public string SelectedAnswer { get; set; } = string.Empty;
         public bool IsCorrect { get; set; }
+
+        // 🌟 إضافة حقل التقييم (Quality) للعرض
+        public int Quality { get; set; }
+
         public int TimeTakenInSeconds { get; set; }
         public DateTime Timestamp { get; set; }
     }

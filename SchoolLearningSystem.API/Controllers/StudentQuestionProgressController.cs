@@ -35,27 +35,24 @@ namespace SchoolLearningSystem.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<ApiResponse<string>>> Add(StudentQuestionProgressCreateDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<string>(400, "Invalid input data"));
-
+           
             await _service.AddProgressAsync(dto);
             return StatusCode(201, new ApiResponse<string>(201, "Progress record created successfully"));
         }
 
         [HttpPut]
         [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ApiResponse<string>>> Update(StudentQuestionProgressUpdateDto dto)
         {
-            try
-            {
-                await _service.UpdateProgressAsync(dto);
-                return Ok(new ApiResponse<string>(200, "Progress record updated successfully"));
-            }
-            catch (Exception ex)
-            {
-                return NotFound(new ApiResponse<string>(404, ex.Message));
-            }
+            // تم الحذف: لا يوجد if (!ModelState.IsValid) هنا!
+
+            // الـ Service ستقوم بالبحث والتحديث، وإذا لم تجد السجل سترمي NotFoundException
+            // وإذا كان هناك خطأ في البيانات (كأن يكون Interval سالباً)، سترمي CustomValidationException
+            await _service.UpdateProgressAsync(dto);
+
+            return Ok(new ApiResponse<string>(200, "Progress record updated successfully"));
         }
 
         // 🔹 علاقات إضافية (Custom Queries)

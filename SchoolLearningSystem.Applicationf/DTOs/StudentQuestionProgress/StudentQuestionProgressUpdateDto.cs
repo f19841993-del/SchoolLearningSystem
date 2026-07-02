@@ -10,7 +10,15 @@ namespace SchoolLearningSystem.Applicationf.DTOs.StudentQuestionProgress
     {
         public int StudentId { get; set; }
         public int QuestionId { get; set; }
-        public bool IsCorrect { get; set; } // ضروري جداً لتحديث EaseFactor
-        public int TimeTakenInSeconds { get; set; } // ضروري جداً لحساب الأداء
+        // 🧠 بيانات خوارزمية الذكاء (SRS)
+        public DateTime NextReviewDate { get; set; }
+        public int RepetitionLevel { get; set; }
+        public double EaseFactor { get; set; }
+        public int Interval { get; set; } // أضفناه حديثاً ليتوافق مع SM-2
+
+        // 📊 بيانات التحليل والإحصاء
+        public int TotalAttempts { get; set; }
+        public int CorrectAttempts { get; set; }
+        public DateTime LastReviewedAt { get; set; }
     }
 }

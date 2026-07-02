@@ -13,20 +13,20 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         {
         }
 
-        // جلب جميع التمارين المرتبطة بدرس معين
+        // جلب جميع التمارين المرتبطة بدرس معين مع تحسين الأداء
         public async Task<IEnumerable<Exercise>> GetByLessonIdAsync(int lessonId)
         {
             return await _context.Exercises
+                .AsNoTracking() // 👈 الأداء الأفضل للقراءة فقط
                 .Where(e => e.LessonId == lessonId)
                 .ToListAsync();
         }
 
-        // 💡 خدمة الذكاء الاصطناعي: جلب التمارين حسب مستوى الصعوبة
+        // جلب التمارين حسب مستوى الصعوبة
         public async Task<IEnumerable<Exercise>> GetByDifficultyAsync(DifficultyLevel difficulty)
         {
-            // تأكد أن اسم الخاصية في كلاس Exercise هو "Difficulty"
-            // إذا كانت مسمى آخر (مثل DifficultyLevel)، قم بتغييره هنا
             return await _context.Exercises
+                .AsNoTracking() // 👈 الأداء الأفضل للقراءة فقط
                 .Where(e => e.Difficulty == difficulty)
                 .ToListAsync();
         }

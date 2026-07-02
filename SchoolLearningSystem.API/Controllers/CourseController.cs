@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SchoolLearningSystem.API.Responses;
+using SchoolLearningSystem.Application.Common.Models;
+using SchoolLearningSystem.Application.Common.Parameters;
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
 using SchoolLearningSystem.Applicationf.DTOs.Lesson;
@@ -31,54 +33,48 @@ namespace SchoolLearningSystem.API.Controllers
 
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(ApiResponse<CourseReadDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)] // 💡 تعديل: استخدمنا الكلاس العادي للخطأ
         public async Task<ActionResult<ApiResponse<CourseReadDto>>> GetCourseById(int id)
         {
-            // أبقينا الفحص هنا حالياً (Hybrid Approach)
             var course = await _courseService.GetByIdAsync(id);
             if (course == null)
-                return NotFound(new ApiResponse<string>(404, "Course not found"));
+                return NotFound(new ApiResponse(404, "Course not found")); // 💡 تعديل: بدون <string>
 
             return Ok(new ApiResponse<CourseReadDto>(200, "Course retrieved successfully", course));
         }
 
-        // 🔹 التعديل الاحترافي: إرجاع الكائن المُنشأ وإضافة Location Header للامتثال لمعايير REST
         [HttpPost]
         [ProducesResponseType(typeof(ApiResponse<CourseReadDto>), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)] // 💡 تعديل
         public async Task<ActionResult<ApiResponse<CourseReadDto>>> AddCourse([FromBody] CourseCreateDto dto)
         {
-            // التحقق من صحة البيانات يظل في الكنترولر لأنه جزء من الـ API Contract
             if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<string>(400, "Invalid input data"));
+                return BadRequest(new ApiResponse(400, "Invalid input data")); // 💡 تعديل: بدون <string>
 
-            // نقوم بعملية الإضافة ونستلم الـ DTO الخاص بالقراءة بعد التخزين
             var createdCourse = await _courseService.CreateAsync(dto);
 
-            // نستخدم CreatedAtAction لإرجاع الكائن الجديد وتوفير رابط الوصول إليه في الـ Response
             return CreatedAtAction(nameof(GetCourseById), new { id = createdCourse.Id },
                 new ApiResponse<CourseReadDto>(201, "Course created successfully", createdCourse));
         }
 
         [HttpPut("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<string>>> UpdateCourse(int id, [FromBody] CourseUpdateDto dto)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)] // 💡 تعديل: إرجاع الكلاس العادي فقط
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)] // 💡 تعديل
+        public async Task<ActionResult<ApiResponse>> UpdateCourse(int id, [FromBody] CourseUpdateDto dto) // 💡 تعديل: Task<ActionResult<ApiResponse>>
         {
-            // تم حذف الـ try-catch. أي خطأ سيحدث هنا (مثل Course Not Found)
-            // سيتم التقاطه بواسطة الـ ExceptionMiddleware.
             await _courseService.UpdateAsync(id, dto);
-            return Ok(new ApiResponse<string>(200, "Course updated successfully"));
+            // 💡 تعديل: رسالة نجاح نقية بدون الحاجة لتمرير نوع بيانات وهمي
+            return Ok(new ApiResponse(200, "Course updated successfully"));
         }
 
         [HttpDelete("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<string>>> DeleteCourse(int id)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)] // 💡 تعديل
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)] // 💡 تعديل
+        public async Task<ActionResult<ApiResponse>> DeleteCourse(int id) // 💡 تعديل
         {
-            // تم حذف الـ try-catch.
             await _courseService.DeleteAsync(id);
-            return Ok(new ApiResponse<string>(200, "Course deleted successfully"));
+            // 💡 تعديل: كود نظيف ومباشر
+            return Ok(new ApiResponse(200, "Course deleted successfully"));
         }
 
         // 🔹 علاقات إضافية
@@ -109,26 +105,38 @@ namespace SchoolLearningSystem.API.Controllers
 
         [HttpGet("{id}/teacher")]
         [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)] // 💡 تعديل
         public async Task<ActionResult<ApiResponse<string>>> GetTeacherByCourseId(int id)
         {
             var course = await _courseService.GetByIdAsync(id);
             if (course == null)
-                return NotFound(new ApiResponse<string>(404, "Course not found"));
+                return NotFound(new ApiResponse(404, "Course not found")); // 💡 تعديل
 
             return Ok(new ApiResponse<string>(200, "Teacher retrieved successfully", course.TeacherName));
         }
 
         [HttpGet("{id}/curriculum")]
         [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)] // 💡 تعديل
         public async Task<ActionResult<ApiResponse<string>>> GetCurriculumByCourseId(int id)
         {
             var course = await _courseService.GetByIdAsync(id);
             if (course == null)
-                return NotFound(new ApiResponse<string>(404, "Course not found"));
+                return NotFound(new ApiResponse(404, "Course not found")); // 💡 تعديل
 
             return Ok(new ApiResponse<string>(200, "Curriculum retrieved successfully", course.CurriculumTitle));
+        }
+
+        // 🔹 دالة الترقيم (Pagination)
+        [HttpGet("paged")]
+        [ProducesResponseType(typeof(ApiResponse<PagedList<CourseReadDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)] // 💡 تعديل
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)] // 💡 تعديل
+        public async Task<ActionResult<ApiResponse<PagedList<CourseReadDto>>>> GetPagedCourses(
+            [FromQuery] QueryParameters parameters)
+        {
+            var pagedCourses = await _courseService.GetPagedAsync(parameters);
+            return Ok(new ApiResponse<PagedList<CourseReadDto>>(200, "Courses retrieved successfully", pagedCourses));
         }
     }
 }

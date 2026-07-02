@@ -2,6 +2,7 @@
 using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Interfaces;
 using SchoolLearningSystem.Infrastructure.Data;
+using SchoolLearningSystem.Infrastructure.Repositories.Base;
 
 namespace SchoolLearningSystem.Infrastructure.Repositories
 {
@@ -14,32 +15,30 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
             _context = context;
         }
 
-        // 1. جلب سجل التقدم الخاص بسؤال معين لطالب معين
-        // نستخدم FindAsync مع المفاتيح المركبة، وهي الطريقة الأسرع والأصح
         public async Task<StudentQuestionProgress?> GetByStudentAndQuestionAsync(int studentId, int questionId)
         {
+            // نستخدم FindAsync للمفاتيح المركبة
             return await _context.StudentQuestionProgresses.FindAsync(studentId, questionId);
         }
 
-        // 2. "قلب الـ SRS": الأسئلة التي حان موعد مراجعتها للطالب
-        public async Task<IEnumerable<StudentQuestionProgress>> GetDueQuestionsAsync(int studentId)
+        public async Task<IEnumerable<StudentQuestionProgress>> GetDueQuestionsAsync(int studentId, DateTime currentDate)
         {
-            var now = DateTime.UtcNow;
             return await _context.StudentQuestionProgresses
-                .Include(s => s.Question) // مهم جداً لجلب محتوى السؤال مع التقدم
-                .Where(s => s.StudentId == studentId && s.NextReviewDate <= now)
+                .AsNoTracking() // 🚀 تحسين الأداء للقراءة
+                .Include(p => p.Question)
+                .Where(p => p.StudentId == studentId && p.NextReviewDate <= currentDate)
+                .OrderBy(p => p.NextReviewDate)
                 .ToListAsync();
         }
 
-        // 3. جلب كل سجلات التقدم لطالب معين
         public async Task<IEnumerable<StudentQuestionProgress>> GetByStudentIdAsync(int studentId)
         {
             return await _context.StudentQuestionProgresses
+                .AsNoTracking() // 🚀 تحسين الأداء
                 .Where(s => s.StudentId == studentId)
                 .ToListAsync();
         }
 
-        // العمليات الأساسية (CRUD) الخاصة بـ IStudentQuestionProgressRepository
         public async Task AddAsync(StudentQuestionProgress entity)
         {
             await _context.StudentQuestionProgresses.AddAsync(entity);

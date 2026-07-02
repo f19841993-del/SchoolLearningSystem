@@ -12,8 +12,9 @@ namespace SchoolLearningSystem.Applicationf.Mappings
             // 1. من الكيان → للعرض (Read)
             CreateMap<StudentAnswerDetail, StudentAnswerDetailReadDto>()
                 .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student != null ? src.Student.Name : string.Empty))
-                //.ForMember(dest => dest.QuestionText, opt => opt.MapFrom(src => src.Question != null ? src.Question.Question : string.Empty)) // افتراض أن حقل السؤال اسمه Question
+                //.ForMember(dest => dest.QuestionText, opt => opt.MapFrom(src => src.Question != null ? src.Question.Question : string.Empty)) 
                 .ForMember(dest => dest.Timestamp, opt => opt.MapFrom(src => src.CreatedAt));
+            // ملاحظة: حقل Quality سيتم تحويله تلقائياً لتطابق الأسماء
 
             // 2. من الإنشاء → للكيان (Create)
             CreateMap<StudentAnswerDetailCreateDto, StudentAnswerDetail>()
@@ -25,6 +26,7 @@ namespace SchoolLearningSystem.Applicationf.Mappings
                 // تجاهل العلاقات
                 .ForMember(dest => dest.Student, opt => opt.Ignore())
                 .ForMember(dest => dest.Question, opt => opt.Ignore());
+            // ملاحظة: حقل Quality سيتم تحويله تلقائياً لتطابق الأسماء
 
             // 3. من التعديل → للكيان (Update) - مع شرط التحديث الجزئي
             CreateMap<StudentAnswerDetailUpdateDto, StudentAnswerDetail>()
@@ -35,6 +37,11 @@ namespace SchoolLearningSystem.Applicationf.Mappings
                 .ForMember(dest => dest.IsCorrect, opt => {
                     opt.Condition(src => src.IsCorrect.HasValue);
                     opt.MapFrom(src => src.IsCorrect);
+                })
+                // 🌟 التعديل الجديد: إضافة شرط الحماية لحقل التقييم (Quality)
+                .ForMember(dest => dest.Quality, opt => {
+                    opt.Condition(src => src.Quality.HasValue);
+                    opt.MapFrom(src => src.Quality);
                 })
                 // الحماية الموحدة لحقول الـ BaseEntity والعلاقات
                 .ForMember(dest => dest.Id, opt => opt.Ignore())

@@ -12,11 +12,12 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         {
         }
 
-        // تنفيذ الاستعلام المخصص لجلب الكورسات الخاصة بمعلم معين
+        // 🔹 تنفيذ الاستعلام المخصص لجلب الكورسات الخاصة بمعلم معين
         public async Task<IEnumerable<Course>> GetCoursesByTeacherIdAsync(int teacherId)
         {
-            // نستخدم _context للوصول إلى جدول الكورسات وتصفيتها حسب الـ teacherId
+            // نستخدم AsNoTracking لتحسين الأداء لأننا نجلب بيانات للعرض فقط
             return await _context.Courses
+                .AsNoTracking()
                 .Where(c => c.TeacherId == teacherId)
                 .ToListAsync();
         }

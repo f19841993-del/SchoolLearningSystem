@@ -10,6 +10,7 @@
         public DateTime NextReviewDate { get; set; }
         public int RepetitionLevel { get; set; }
         public double EaseFactor { get; set; }
+        public int Interval { get; set; }
 
         // بيانات التحليل
         public int TotalAttempts { get; set; }

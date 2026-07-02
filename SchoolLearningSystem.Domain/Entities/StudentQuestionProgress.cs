@@ -1,6 +1,8 @@
-﻿namespace SchoolLearningSystem.Domain.Entities
+﻿using System;
+
+namespace SchoolLearningSystem.Domain.Entities
 {
-    // حذفنا BaseEntity هنا
+    // حذفنا BaseEntity هنا لأن هذا جدول ربط (Bridge Table) بمفاتيح مركبة
     public class StudentQuestionProgress
     {
         // مفاتيح الربط (سيتم تعريفها كمفتاح مركب في الـ AppDbContext)
@@ -11,12 +13,17 @@
         public Student Student { get; set; } = null!;
         public Question Question { get; set; } = null!;
 
-        // حقول SRS (تم وضع قيم ابتدائية منطقية للخوارزمية)
+        // 🧠 حقول الذكاء الاصطناعي (SRS - SM-2 Algorithm)
         public DateTime NextReviewDate { get; set; } = DateTime.UtcNow;
-        public int RepetitionLevel { get; set; } = 0; // أول مرة يتعلم السؤال
-        public double EaseFactor { get; set; } = 2.5; // القيمة المعيارية في خوارزمية SM-2
 
-        // حقول التحليل
+        public int RepetitionLevel { get; set; } = 0; // التكرارات المتتالية الصحيحة
+
+        public double EaseFactor { get; set; } = 2.5; // القيمة المعيارية للسهولة في SM-2
+
+        // 🔹 التعديل: إضافة حقل الفاصل الزمني
+        public int Interval { get; set; } = 0; // الفاصل الزمني الحالي بالأيام
+
+        // 📊 حقول التحليل والإحصائيات
         public int TotalAttempts { get; set; } = 0;
         public int CorrectAttempts { get; set; } = 0;
         public DateTime LastReviewedAt { get; set; } = DateTime.UtcNow;

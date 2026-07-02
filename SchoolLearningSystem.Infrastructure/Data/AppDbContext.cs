@@ -8,8 +8,10 @@ namespace SchoolLearningSystem.Infrastructure.Data
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+        public DbSet<Curriculum> Curriculums { get; set; }
         public DbSet<Teacher> Teachers { get; set; }
         public DbSet<Student> Students { get; set; }
+
         public DbSet<Course> Courses { get; set; }
         public DbSet<Lesson> Lessons { get; set; }
         public DbSet<Exam> Exams { get; set; }
@@ -18,7 +20,8 @@ namespace SchoolLearningSystem.Infrastructure.Data
         public DbSet<MemorizeSession> MemorizeSessions { get; set; }
         public DbSet<Exercise> Exercises { get; set; }
         public DbSet<CourseStudent> CourseStudents { get; set; }
-        public DbSet<Curriculum> Curriculums { get; set; }
+      
+
 
         // الكيانات التحليلية للذكاء الاصطناعي
         public DbSet<StudentQuestionProgress> StudentQuestionProgresses { get; set; }
@@ -36,28 +39,7 @@ namespace SchoolLearningSystem.Infrastructure.Data
             // 2. السطر الذهبي: هذا السطر يبحث في المشروع الحالي عن أي كلاس يطبق IEntityTypeConfiguration وينفذه تلقائياً
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
-            // ملاحظة: إذا كان CourseStudent لا يملك Id، ستحتاج لتعريف المفتاح المركب هنا أو في ملف Configuration خاص به
-        
-
-        //// 1. ضبط المفاتيح المركبة (Composite Keys)
-
-        //// علاقة الطالب بالكورس
-        //modelBuilder.Entity<CourseStudent>()
-        //    .HasKey(cs => new { cs.CourseId, cs.StudentId });
-
-
-        //// علاقة التقدم في السؤال (محرك الـ SRS)
-        //modelBuilder.Entity<StudentQuestionProgress>()
-        //    .HasKey(sqp => new { sqp.StudentId, sqp.QuestionId });
-
-        //// 2. ضبط العلاقات (Relationships) وحذف البيانات (Delete Behavior)
-        //// نمنع الحذف المتتالي (Cascade) لبعض العلاقات لتجنب فقدان البيانات التاريخية
-        //modelBuilder.Entity<CourseStudent>()
-        //    .HasOne(cs => cs.Course)
-        //    .WithMany(c => c.CourseStudents)
-        //    .OnDelete(DeleteBehavior.Restrict);
-
-        // يمكنك إضافة المزيد من الإعدادات هنا لاحقاً حسب الحاجة
+           
     }
     }
 }

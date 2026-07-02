@@ -14,9 +14,10 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
             _context = context;
         }
 
+        // 🔹 للقراءة فقط -> AsNoTracking
         public async Task<IEnumerable<CourseStudent>> GetAllAsync()
         {
-            return await _context.CourseStudents.ToListAsync();
+            return await _context.CourseStudents.AsNoTracking().ToListAsync();
         }
 
         public async Task<CourseStudent?> GetByIdAsync(int courseId, int studentId)
@@ -47,17 +48,21 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
             }
         }
 
+        // 🔹 للقراءة فقط -> AsNoTracking
         public async Task<IEnumerable<CourseStudent>> GetByCourseIdAsync(int courseId)
         {
             return await _context.CourseStudents
+                .AsNoTracking()
                 .Where(cs => cs.CourseId == courseId)
                 .Include(cs => cs.Student) // لجلب بيانات الطالب مع الاشتراك
                 .ToListAsync();
         }
 
+        // 🔹 للقراءة فقط -> AsNoTracking
         public async Task<IEnumerable<CourseStudent>> GetByStudentIdAsync(int studentId)
         {
             return await _context.CourseStudents
+                .AsNoTracking()
                 .Where(cs => cs.StudentId == studentId)
                 .Include(cs => cs.Course) // لجلب بيانات الكورس مع الاشتراك
                 .ToListAsync();
@@ -72,6 +77,40 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         public async Task<int> CountByStudentIdAsync(int studentId)
         {
             return await _context.CourseStudents.CountAsync(cs => cs.StudentId == studentId);
+        }
+
+        // 🔹 للقراءة فقط -> AsNoTracking
+        public async Task<(IEnumerable<CourseStudent> Items, int TotalCount)> GetPagedByCourseIdAsync(int courseId, int pageNumber, int pageSize)
+        {
+            var query = _context.CourseStudents
+                .AsNoTracking()
+                .Include(cs => cs.Student) // 👈 مهم جداً لكي لا يكون الطالب null في الـ DTO
+                .Where(cs => cs.CourseId == courseId); // الفلترة أولاً
+
+            var totalCount = await query.CountAsync(); // الحساب في DB
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize) // الترقيم في DB
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
+        }
+
+        // 🔹 للقراءة فقط -> AsNoTracking
+        public async Task<(IEnumerable<CourseStudent> Items, int TotalCount)> GetPagedByStudentIdAsync(int studentId, int pageNumber, int pageSize)
+        {
+            var query = _context.CourseStudents
+                .AsNoTracking()
+                .Include(cs => cs.Course) // 👈 مهم جداً لكي لا يكون الكورس null في الـ DTO
+                .Where(cs => cs.StudentId == studentId); // الفلترة أولاً
+
+            var totalCount = await query.CountAsync(); // الحساب في DB
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize) // الترقيم في DB
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
         }
     }
 }

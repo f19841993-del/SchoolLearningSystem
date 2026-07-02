@@ -9,7 +9,7 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
 {
     public class ExamRepository : GenericRepository<Exam>, IExamRepository
     {
-        // نستلم الـ DbContext ونمرره للـ GenericRepository
+        // نمرر الـ AppDbContext للـ Base Class (الـ GenericRepository)
         public ExamRepository(AppDbContext context) : base(context)
         {
         }
@@ -18,17 +18,25 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         public async Task<IEnumerable<Exam>> GetByCourseIdAsync(int courseId)
         {
             return await _context.Exams
+                .AsNoTracking() // تحسين أداء للقراءة فقط
                 .Where(e => e.CourseId == courseId)
                 .ToListAsync();
         }
 
-        // 💡 إضافة ذكية للذكاء الاصطناعي:
-        // جلب الامتحانات حسب مستوى الصعوبة
+        // جلب الامتحانات حسب مستوى الصعوبة لدعم الـ AI Engine
         public async Task<IEnumerable<Exam>> GetExamsByDifficultyAsync(DifficultyLevel difficulty)
         {
             return await _context.Exams
+                .AsNoTracking()
                 .Where(e => e.Difficulty == difficulty)
                 .ToListAsync();
+        }
+
+        // جلب عدد الامتحانات لكل درس (مفيدة في لوحات تحكم المعلمين)
+        public async Task<int> GetTotalExamsByLessonIdAsync(int lessonId)
+        {
+            return await _context.Exams
+                .CountAsync(e => e.LessonId == lessonId);
         }
     }
 }

@@ -2,20 +2,19 @@
 
 namespace SchoolLearningSystem.Domain.Entities
 {
-    // أضفنا BaseEntity للتوحيد
     public class Exercise : BaseEntity
     {
         public string Question { get; set; } = string.Empty;
         public string Answer { get; set; } = string.Empty;
 
-        // لتصنيف مستوى صعوبة التمرين، وهذا حيوي لعمل الذكاء الاصطناعي
+        // تصنيف التمرين (مفيد لعرض التمارين بالتدريج من السهل للصعب داخل الدرس)
         public DifficultyLevel Difficulty { get; set; }
 
-        // علاقة مع Lesson
+        // علاقة إجبارية مع Lesson (إذا حُذف الدرس، يُحذف التمرين)
         public int LessonId { get; set; }
         public Lesson Lesson { get; set; } = null!;
 
-        // تتبع جلسات التكرار المتباعد المرتبطة بهذا التمرين
-        public ICollection<MemorizeSession> MemorizeSessions { get; set; } = new List<MemorizeSession>();
+        // 💡 تم إزالة MemorizeSessions لتركيز مهام الذكاء الاصطناعي على جدول Questions فقط، 
+        // لكي لا يتشتت النظام ويصبح بطيئاً.
     }
 }

@@ -1,7 +1,11 @@
 ﻿ using AutoMapper;
     using global::SchoolLearningSystem.Applicationf.Interfaces.Base;
     using global::SchoolLearningSystem.Domain.Interfaces.Base;
+using SchoolLearningSystem.Application.Common.Models;
+using SchoolLearningSystem.Application.Common.Parameters;
+using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Applicationf.Exceptions;
+using System.Linq.Expressions;
 
 
 namespace SchoolLearningSystem.Applicationf.Services.Base
@@ -61,6 +65,30 @@ namespace SchoolLearningSystem.Applicationf.Services.Base
                 await _repository.DeleteAsync(id);
             await _repository.SaveChangesAsync();
         }
+
+        // 🌟 لاحظ الإضافة: جعلنا الفلتر متغيراً اختيارياً نعطيه قيمة افتراضية null
+        // 🌟 1. الدالة العامة (Public) التي يراها الـ Controller وتطبق الواجهة
+        public virtual async Task<PagedList<TReadDto>> GetPagedAsync(QueryParameters parameters)
+        {
+            // تنادي الدالة المحمية (في الأسفل) وتمرر لها null لأنه لا يوجد فلتر خاص
+            return await GetPagedWithFilterAsync(parameters, null);
         }
+
+        // 🌟 2. الدالة المحمية (Protected) التي يراها الأبناء فقط (مثل CourseService)
+        // لاحظ هنا أننا نستطيع استخدام TEntity براحة لأننا داخل الكلاس الذي يعرفه!
+        protected async Task<PagedList<TReadDto>> GetPagedWithFilterAsync(
+            QueryParameters parameters,
+            Expression<Func<TEntity, bool>> filter)
+        {
+            var result = await _repository.GetPagedAsync(filter, parameters.PageNumber, parameters.PageSize);
+            var itemsDto = _mapper.Map<IEnumerable<TReadDto>>(result.Items);
+            return new PagedList<TReadDto>(itemsDto, result.TotalCount, parameters.PageNumber, parameters.PageSize);
+        }
+
+
+
+
+
+    }
     }
 

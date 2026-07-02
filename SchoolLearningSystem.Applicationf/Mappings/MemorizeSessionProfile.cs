@@ -30,7 +30,7 @@ namespace SchoolLearningSystem.Applicationf.Mappings
 
             // 3. من التعديل → للكيان (Update)
             CreateMap<MemorizeSessionUpdateDto, MemorizeSession>()
-                .ForMember(dest => dest.Attempts, opt => {
+                .ForMember(dest => dest.TotalAttempts, opt => {
                     opt.Condition(src => src.Attempts.HasValue);
                     opt.MapFrom(src => src.Attempts);
                 })

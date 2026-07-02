@@ -3,6 +3,9 @@ using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Interfaces;
 using SchoolLearningSystem.Infrastructure.Data;
 using SchoolLearningSystem.Infrastructure.Repositories.Base;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SchoolLearningSystem.Infrastructure.Repositories
 {
@@ -13,37 +16,43 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         {
         }
 
-        // 1. تنفيذ الاستعلام الخاص (الذي أضفته أنت)
+        // 1. تنفيذ الاستعلام الخاص بالمنهج (للقراءة فقط -> AsNoTracking)
         public async Task<IEnumerable<Course>> GetByCurriculumIdAsync(int curriculumId)
         {
             return await _context.Courses
+                .AsNoTracking()
                 .Where(c => c.CurriculumId == curriculumId)
                 .ToListAsync();
         }
 
-        // 2. تنفيذ باقي الدوال الخاصة التي تتطلبها ICourseRepository
+        // 2. جلب الطلاب المسجلين (للقراءة فقط -> AsNoTracking)
         public async Task<IEnumerable<Student>> GetStudentsByCourseIdAsync(int courseId)
         {
-            // استعلام لجلب الطلاب المسجلين في كورس معين (بافتراض وجود علاقة في الكيانات)
             return await _context.Students
+                .AsNoTracking()
                 .Where(s => s.CourseStudents.Any(cs => cs.CourseId == courseId))
                 .ToListAsync();
         }
 
+        // 3. جلب الدروس (للقراءة فقط -> AsNoTracking)
         public async Task<IEnumerable<Lesson>> GetLessonsByCourseIdAsync(int courseId)
         {
             return await _context.Lessons
+                .AsNoTracking()
                 .Where(l => l.CourseId == courseId)
                 .ToListAsync();
         }
 
+        // 4. جلب الامتحانات (للقراءة فقط -> AsNoTracking)
         public async Task<IEnumerable<Exam>> GetExamsByCourseIdAsync(int courseId)
         {
             return await _context.Exams
+                .AsNoTracking()
                 .Where(e => e.CourseId == courseId)
                 .ToListAsync();
         }
 
+        // 🔹 عمليات الكتابة والتعديل (تبقى بدون AsNoTracking لأننا نحتاج تتبعها)
         public async Task EnrollStudentAsync(int courseId, int studentId)
         {
             var enrollment = new CourseStudent { CourseId = courseId, StudentId = studentId };

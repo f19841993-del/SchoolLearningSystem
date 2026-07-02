@@ -16,38 +16,41 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         public async Task<IEnumerable<StudentAnswerDetail>> GetByStudentIdAsync(int studentId)
         {
             return await _context.StudentAnswerDetails
+                .AsNoTracking() // 🚀 تحسين أداء
                 .Where(s => s.StudentId == studentId)
-                .OrderByDescending(s => s.Timestamp) // الأحدث أولاً
+                .OrderByDescending(s => s.CreatedAt)
                 .ToListAsync();
         }
 
-        // 2. جلب إجابات كل الطلاب على سؤال معين (لتحليل سهولة/صعوبة السؤال)
+        // 2. جلب إجابات كل الطلاب على سؤال معين
         public async Task<IEnumerable<StudentAnswerDetail>> GetByQuestionIdAsync(int questionId)
         {
             return await _context.StudentAnswerDetails
+                .AsNoTracking() // 🚀 تحسين أداء
                 .Where(s => s.QuestionId == questionId)
                 .ToListAsync();
         }
 
-        // 3. جلب آخر N إجابة (لتحديث الـ Dashboard)
+        // 3. جلب آخر N إجابة
         public async Task<IEnumerable<StudentAnswerDetail>> GetRecentAnswersAsync(int studentId, int count)
         {
             return await _context.StudentAnswerDetails
+                .AsNoTracking() // 🚀 تحسين أداء
                 .Where(s => s.StudentId == studentId)
-                .OrderByDescending(s => s.Timestamp)
-                .Take(count) // جلب العدد المطلوب فقط
+                .OrderByDescending(s => s.CreatedAt)
+                .Take(count)
                 .ToListAsync();
         }
 
-        // 4. استعلام ذكي: جلب الإجابات الخاطئة لدرس معين (أساس جلسة المراجعة)
+        // 4. جلب الإجابات الخاطئة لدرس معين (استعلام تحليلي)
         public async Task<IEnumerable<StudentAnswerDetail>> GetIncorrectAnswersByStudentIdAsync(int studentId, int lessonId)
         {
-            // نحتاج ربط (Include) كلاس Question للوصول إلى LessonId
             return await _context.StudentAnswerDetails
-                .Include(s => s.Question)
+                .AsNoTracking() // 🚀 تحسين أداء
+                .Include(s => s.Question) // نستخدم Include للوصول لبيانات السؤال
                 .Where(s => s.StudentId == studentId
-                            && s.Question.LessonId == lessonId
-                            && !s.IsCorrect)
+                          && s.Question.LessonId == lessonId
+                          && !s.IsCorrect)
                 .ToListAsync();
         }
     }

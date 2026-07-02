@@ -16,6 +16,11 @@ namespace SchoolLearningSystem.Applicationf.DTOs.StudentAnswer
         [Required]
         public bool IsCorrect { get; set; }
 
+        // 🌟 إضافة حقل التقييم (Quality) ليتطابق مع الـ Entity
+        [Required]
+        [Range(0, 5, ErrorMessage = "Quality must be between 0 and 5.")]
+        public int Quality { get; set; }
+
         [Required]
         [Range(1, 3600, ErrorMessage = "Time must be between 1 second and 1 hour")]
         public int TimeTakenInSeconds { get; set; }

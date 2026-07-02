@@ -13,18 +13,20 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         {
         }
 
-        // جلب الأسئلة المرتبطة باختبار معين
+        // جلب الأسئلة المرتبطة باختبار معين (للقراءة فقط -> AsNoTracking)
         public async Task<IEnumerable<Question>> GetByExamIdAsync(int examId)
         {
             return await _context.Questions
+                .AsNoTracking()
                 .Where(q => q.ExamId == examId)
                 .ToListAsync();
         }
 
-        // جلب الأسئلة المرتبطة بدرس معين
-        public async Task<IEnumerable<Question>> GetByLessonIdAsync(int lessonId)
+        // جلب الأسئلة المرتبطة بدرس معين (للقراءة فقط -> AsNoTracking)
+        public async Task<IEnumerable<Question>> GetQuestionsByLessonIdAsync(int lessonId)
         {
             return await _context.Questions
+                .AsNoTracking()
                 .Where(q => q.LessonId == lessonId)
                 .ToListAsync();
         }
@@ -32,16 +34,22 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         // إحصائيات: عدد الأسئلة في امتحان محدد
         public async Task<int> CountByExamIdAsync(int examId)
         {
-            // CountAsync يقوم بتنفيذ عملية العد داخل SQL مباشرة (أسرع وأخف)
             return await _context.Questions
                 .CountAsync(q => q.ExamId == examId);
         }
 
-        // 🔹 إحصائيات: عدد الأسئلة حسب الصعوبة
+        // إحصائيات: عدد الأسئلة حسب الصعوبة
         public async Task<int> CountByDifficultyAsync(DifficultyLevel difficultyLevel)
         {
             return await _context.Questions
                 .CountAsync(q => q.DifficultyLevel == difficultyLevel);
+        }
+
+        // إحصائيات: عدد الأسئلة في درس محدد
+        public async Task<int> GetTotalQuestionsByLessonIdAsync(int lessonId)
+        {
+            return await _context.Questions
+                .CountAsync(q => q.LessonId == lessonId);
         }
     }
 }

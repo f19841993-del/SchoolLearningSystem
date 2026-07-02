@@ -11,12 +11,17 @@ namespace SchoolLearningSystem.Domain.Interfaces
 
         // استعلامات مخصصة لخدمة الـ AI والـ Exam System
         Task<IEnumerable<Question>> GetByExamIdAsync(int examId);
-        Task<IEnumerable<Question>> GetByLessonIdAsync(int lessonId);
 
         // 🔹 إحصائيات مع تطوير الـ Type Safety
         Task<int> CountByExamIdAsync(int examId);
 
         // استخدام الـ Enum هنا يمنع الأخطاء البرمجية عند الاستعلام
         Task<int> CountByDifficultyAsync(DifficultyLevel difficultyLevel);
+
+        // إحصائيات (مفيدة للـ Dashboard الخاصة بالمعلم أو الطالب)
+        Task<int> GetTotalQuestionsByLessonIdAsync(int lessonId);
+
+        // جلب الأسئلة المرتبطة بدرس معين (ضروري للـ AI لبناء الامتحانات)
+        Task<IEnumerable<Question>> GetQuestionsByLessonIdAsync(int lessonId);
     }
 }

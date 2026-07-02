@@ -12,28 +12,23 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         {
         }
 
-        // جلب جلسات طالب معين (يستخدم للـ AI لتحليل نمط دراسة الطالب)
-        public async Task<IEnumerable<MemorizeSession>> GetByStudentIdAsync(int studentId)
+        // 1. جلب الجلسة الحالية (غير المكتملة) للطالب
+        public async Task<MemorizeSession?> GetActiveSessionByStudentIdAsync(int studentId)
         {
             return await _context.MemorizeSessions
+                .AsNoTracking()
+                // من الأفضل دائماً جلب الـ AnswerDetails إذا كنت ستستخدمها فوراً في الـ Service
+                .Include(s => s.AnswerDetails)
+                .FirstOrDefaultAsync(s => s.StudentId == studentId && !s.IsCompleted);
+        }
+
+        // 2. جلب سجل جلسات الطالب (التاريخ) - مرتبة من الأحدث للأقدم
+        public async Task<IEnumerable<MemorizeSession>> GetSessionHistoryByStudentIdAsync(int studentId)
+        {
+            return await _context.MemorizeSessions
+                .AsNoTracking()
                 .Where(s => s.StudentId == studentId)
-                .OrderByDescending(s => s.CreatedAt) // جلب الأحدث أولاً
-                .ToListAsync();
-        }
-
-        // جلب جلسات درس معين (مفيد لتحليل صعوبة الدرس عالمياً)
-        public async Task<IEnumerable<MemorizeSession>> GetByLessonIdAsync(int lessonId)
-        {
-            return await _context.MemorizeSessions
-                .Where(s => s.LessonId == lessonId)
-                .ToListAsync();
-        }
-
-        // جلب جلسات تمرين معين
-        public async Task<IEnumerable<MemorizeSession>> GetByExerciseIdAsync(int exerciseId)
-        {
-            return await _context.MemorizeSessions
-                .Where(s => s.ExerciseId == exerciseId)
+                .OrderByDescending(s => s.CreatedAt)
                 .ToListAsync();
         }
     }

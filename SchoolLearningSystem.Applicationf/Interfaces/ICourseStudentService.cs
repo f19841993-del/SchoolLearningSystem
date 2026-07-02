@@ -1,4 +1,6 @@
 ﻿
+using SchoolLearningSystem.Application.Common.Models;
+using SchoolLearningSystem.Application.Common.Parameters;
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Applicationf.DTOs.CourseStudent;
 using SchoolLearningSystem.Applicationf.DTOs.Student;
@@ -27,5 +29,11 @@ namespace SchoolLearningSystem.Applicationf.Interfaces
         // إحصائيات
         Task<int> GetTotalStudentsByCourseIdAsync(int courseId);
         Task<int> GetTotalCoursesByStudentIdAsync(int studentId);
+
+        // جلب طلاب كورس معين مع الترقيم
+        Task<PagedList<StudentReadDto>> GetPagedStudentsByCourseIdAsync(int courseId, QueryParameters parameters);
+
+        // جلب كورسات طالب معين مع الترقيم
+        Task<PagedList<CourseReadDto>> GetPagedCoursesByStudentIdAsync(int studentId, QueryParameters parameters);
     }
 }

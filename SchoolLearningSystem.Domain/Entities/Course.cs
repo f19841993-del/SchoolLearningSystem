@@ -9,6 +9,9 @@ namespace SchoolLearningSystem.Domain.Entities
         public string Description { get; set; } = string.Empty;
         public string Image { get; set; } = string.Empty;
 
+        // 💡 التعديل الجديد: لضمان ترتيب الفصول (مثلاً: 1 للفصل الأول، 2 للفصل الثاني)
+        public int Order { get; set; }
+
         public int TeacherId { get; set; }
         public Teacher Teacher { get; set; }
 

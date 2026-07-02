@@ -8,7 +8,8 @@ namespace SchoolLearningSystem.Domain.Interfaces
         Task<StudentQuestionProgress?> GetByStudentAndQuestionAsync(int studentId, int questionId);
 
         // 2. "قلب الـ SRS": يجلب الأسئلة التي حان موعد مراجعتها للطالب الآن
-        Task<IEnumerable<StudentQuestionProgress>> GetDueQuestionsAsync(int studentId);
+        Task<IEnumerable<StudentQuestionProgress>> GetDueQuestionsAsync(int studentId, DateTime currentDate);
+
 
         // 3. جلب سجلات التقدم الخاصة بطالب معين (مفيد للتحليلات أو الـ Dashboard)
         Task<IEnumerable<StudentQuestionProgress>> GetByStudentIdAsync(int studentId);

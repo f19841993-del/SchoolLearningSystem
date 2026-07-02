@@ -8,16 +8,23 @@ namespace SchoolLearningSystem.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<Course> builder)
         {
-            // 1. تحديد اسم الجدول (اختياري، EF يفعل ذلك تلقائياً، لكنه ممارسة جيدة)
+            // 1. تحديد اسم الجدول
             builder.ToTable("Courses");
 
             // 2. إعداد الخصائص الأساسية (Properties)
             builder.Property(c => c.Title)
                 .IsRequired()
-                .HasMaxLength(100); // تحديد طول النص لحماية قاعدة البيانات
+                .HasMaxLength(200); // 200 حرف كافية جداً لعنوان الكورس
 
             builder.Property(c => c.Description)
-                .HasMaxLength(1000);
+                .HasMaxLength(2000); // الوصف قد يكون طويلاً، 2000 حرف مناسبة
+
+            builder.Property(c => c.Image)
+                .HasMaxLength(500); // 👈 اللمسة الهندسية: تقييد طول مسار الصورة (URL)
+
+            // (اختياري) يمكنك جعل قيمة افتراضية للترتيب إذا أردت
+            builder.Property(c => c.Order)
+                .HasDefaultValue(0);
 
             // 3. إعداد العلاقات (Relationships)
 
@@ -31,8 +38,10 @@ namespace SchoolLearningSystem.Infrastructure.Configurations
             builder.HasOne(c => c.Curriculum)
                 .WithMany(curr => curr.Courses)
                 .HasForeignKey(c => c.CurriculumId)
-                .OnDelete(DeleteBehavior.Restrict);
-          
+                .OnDelete(DeleteBehavior.Restrict); // يمنع حذف المنهج إذا كان لديه كورسات
+
+            // 4. تجاوز الكورسات المحذوفة من الاستعلامات (Soft Delete)
+            builder.HasQueryFilter(c => !c.IsDeleted);
         }
     }
 }

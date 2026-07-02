@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SchoolLearningSystem.API.Responses;
+using SchoolLearningSystem.Application.Common.Models;
+using SchoolLearningSystem.Application.Common.Parameters;
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Applicationf.DTOs.CourseStudent;
 using SchoolLearningSystem.Applicationf.DTOs.Student;
@@ -18,106 +20,101 @@ namespace SchoolLearningSystem.API.Controllers
             _courseStudentService = courseStudentService;
         }
 
-        // 🔹 CRUD الأساسي
+        #region 1. عمليات التسجيل (Enrollment)
 
-        [HttpGet]
-        [ProducesResponseType(typeof(ApiResponse<IEnumerable<CourseStudentReadDto>>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse<IEnumerable<CourseStudentReadDto>>>> GetAll()
-        {
-            var relations = await _courseStudentService.GetAllCourseStudentsAsync();
-            return Ok(new ApiResponse<IEnumerable<CourseStudentReadDto>>(200, "Relations retrieved successfully", relations));
-        }
-
-        [HttpGet("{courseId}/{studentId}")]
-        [ProducesResponseType(typeof(ApiResponse<CourseStudentReadDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<CourseStudentReadDto>>> GetById(int courseId, int studentId)
-        {
-            var relation = await _courseStudentService.GetCourseStudentByIdAsync(courseId, studentId);
-            if (relation == null)
-                return NotFound(new ApiResponse<string>(404, "Relation not found"));
-
-            return Ok(new ApiResponse<CourseStudentReadDto>(200, "Relation retrieved successfully", relation));
-        }
-
-        [HttpPost]
+        /// <summary>
+        /// تسجيل طالب في كورس معين
+        /// </summary>
+        [Tags("1. إدارة التسجيل (Enrollment)")]
+        [HttpPost("enroll")]
         [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<ApiResponse<string>>> Add(CourseStudentCreateDto dto)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<ApiResponse<string>>> EnrollStudent([FromBody] CourseStudentCreateDto dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<string>(400, "Invalid input data"));
+                return BadRequest(new ApiResponse(400, "Invalid input data"));
 
-            await _courseStudentService.AddCourseStudentAsync(dto);
+            await _courseStudentService.EnrollStudentAsync(dto.CourseId, dto.StudentId);
             return StatusCode(201, new ApiResponse<string>(201, "Student enrolled successfully"));
         }
 
-        [HttpPut("{courseId}/{studentId}")]
+        /// <summary>
+        /// إلغاء تسجيل طالب من كورس
+        /// </summary>
+        [Tags("1. إدارة التسجيل (Enrollment)")]
+        [HttpDelete("remove/{courseId}/{studentId}")]
         [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<string>>> Update(int courseId, int studentId, CourseStudentUpdateDto dto)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<ApiResponse<string>>> RemoveStudent(int courseId, int studentId)
         {
-            try
-            {
-                await _courseStudentService.UpdateCourseStudentAsync(courseId, studentId, dto);
-                return Ok(new ApiResponse<string>(200, "Relation updated successfully"));
-            }
-            catch (Exception ex)
-            {
-                return NotFound(new ApiResponse<string>(404, ex.Message));
-            }
+            await _courseStudentService.RemoveStudentAsync(courseId, studentId);
+            return Ok(new ApiResponse<string>(200, "Student removed from course successfully"));
         }
 
-        [HttpDelete("{courseId}/{studentId}")]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<string>>> Delete(int courseId, int studentId)
+        #endregion
+
+        #region 2. الاستعلام عبر العلاقات (Relationships with Pagination)
+
+        /// <summary>
+        /// جلب قائمة الطلاب المسجلين في كورس معين (مرقمة)
+        /// </summary>
+        [Tags("2. الاستعلام والعلاقات (Queries)")]
+        [HttpGet("course/{courseId}/students/paged")]
+        [ProducesResponseType(typeof(ApiResponse<PagedList<StudentReadDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<ApiResponse<PagedList<StudentReadDto>>>> GetPagedStudentsByCourse(
+            int courseId, [FromQuery] QueryParameters parameters)
         {
-            try
-            {
-                await _courseStudentService.DeleteCourseStudentAsync(courseId, studentId);
-                return Ok(new ApiResponse<string>(200, "Relation deleted successfully"));
-            }
-            catch (Exception ex)
-            {
-                return NotFound(new ApiResponse<string>(404, ex.Message));
-            }
+            var pagedStudents = await _courseStudentService.GetPagedStudentsByCourseIdAsync(courseId, parameters);
+            return Ok(new ApiResponse<PagedList<StudentReadDto>>(200, "Students retrieved successfully", pagedStudents));
         }
 
-        // 🔹 علاقات إضافية
-
-        [HttpGet("{courseId}/students")]
-        [ProducesResponseType(typeof(ApiResponse<IEnumerable<StudentReadDto>>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse<IEnumerable<StudentReadDto>>>> GetStudentsByCourseId(int courseId)
+        /// <summary>
+        /// جلب قائمة الكورسات التي سجل فيها طالب معين (مرقمة)
+        /// </summary>
+        [Tags("2. الاستعلام والعلاقات (Queries)")]
+        [HttpGet("student/{studentId}/courses/paged")]
+        [ProducesResponseType(typeof(ApiResponse<PagedList<CourseReadDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<ApiResponse<PagedList<CourseReadDto>>>> GetPagedCoursesByStudent(
+            int studentId, [FromQuery] QueryParameters parameters)
         {
-            var students = await _courseStudentService.GetStudentsByCourseIdAsync(courseId);
-            return Ok(new ApiResponse<IEnumerable<StudentReadDto>>(200, "Students retrieved successfully", students));
+            var pagedCourses = await _courseStudentService.GetPagedCoursesByStudentIdAsync(studentId, parameters);
+            return Ok(new ApiResponse<PagedList<CourseReadDto>>(200, "Courses retrieved successfully", pagedCourses));
         }
 
-        [HttpGet("student/{studentId}/courses")]
-        [ProducesResponseType(typeof(ApiResponse<IEnumerable<CourseReadDto>>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse<IEnumerable<CourseReadDto>>>> GetCoursesByStudentId(int studentId)
-        {
-            var courses = await _courseStudentService.GetCoursesByStudentIdAsync(studentId);
-            return Ok(new ApiResponse<IEnumerable<CourseReadDto>>(200, "Courses retrieved successfully", courses));
-        }
+        #endregion
 
-        // 🔹 إحصائيات
+        #region 3. الإحصائيات (Statistics)
 
-        [HttpGet("{courseId}/total-students")]
+        /// <summary>
+        /// جلب عدد الطلاب الكلي المسجلين في كورس
+        /// </summary>
+        [Tags("3. الإحصائيات (Statistics)")]
+        [HttpGet("course/{courseId}/students/count")]
         [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<ApiResponse<int>>> GetTotalStudentsByCourseId(int courseId)
         {
             var count = await _courseStudentService.GetTotalStudentsByCourseIdAsync(courseId);
-            return Ok(new ApiResponse<int>(200, "Total students retrieved successfully", count));
+            return Ok(new ApiResponse<int>(200, "Total students count retrieved successfully", count));
         }
 
-        [HttpGet("student/{studentId}/total-courses")]
+        /// <summary>
+        /// جلب عدد الكورسات التي سجل فيها الطالب
+        /// </summary>
+        [Tags("3. الإحصائيات (Statistics)")]
+        [HttpGet("student/{studentId}/courses/count")]
         [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<ApiResponse<int>>> GetTotalCoursesByStudentId(int studentId)
         {
             var count = await _courseStudentService.GetTotalCoursesByStudentIdAsync(studentId);
-            return Ok(new ApiResponse<int>(200, "Total courses retrieved successfully", count));
+            return Ok(new ApiResponse<int>(200, "Total courses count retrieved successfully", count));
         }
+
+        #endregion
     }
 }

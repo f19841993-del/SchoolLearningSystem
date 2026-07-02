@@ -12,5 +12,6 @@ namespace SchoolLearningSystem.Domain.Interfaces
         // 💡 إضافة ذكية للذكاء الاصطناعي:
         // تمكن الـ Service من جلب امتحانات ذات مستوى صعوبة محدد ليقوم الـ AI بتخصيص التقييم للطالب
         Task<IEnumerable<Exam>> GetExamsByDifficultyAsync(DifficultyLevel difficulty);
+        Task<int> GetTotalExamsByLessonIdAsync(int lessonId);
     }
 }
