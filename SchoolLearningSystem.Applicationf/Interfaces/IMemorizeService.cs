@@ -1,22 +1,28 @@
 ﻿using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
 using SchoolLearningSystem.Applicationf.Interfaces.Base;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace SchoolLearningSystem.Applicationf.Interfaces
 {
-    public interface IMemorizeService : IBaseService<MemorizeSessionReadDto, MemorizeSessionCreateDto, MemorizeSessionUpdateDto>
+    public interface IMemorizeService
+        : IBaseService<MemorizeSessionReadDto, MemorizeSessionCreateDto, MemorizeSessionUpdateDto>
     {
-        // 🔹 CRUD الأساسي: موروث من IBaseService
+        // 🔹 العمليات الأساسية (GetAll, GetById, Create, Update, Delete, GetPaged)
+        // موجودة مسبقاً بفضل الوراثة من IBaseService
 
-        // 🔹 علاقات إضافية (Specific Business Logic)
-        Task<IEnumerable<MemorizeSessionReadDto>> GetSessionsByStudentIdAsync(int studentId);
-        Task<IEnumerable<MemorizeSessionReadDto>> GetSessionsByLessonIdAsync(int lessonId);
-         Task<IEnumerable<MemorizeSessionReadDto>> GetSessionsByExerciseIdAsync(int exerciseId);
+        // ==========================================
+        // 🔹 عمليات مخصصة لجلسات المراجعة (SRS Business Logic)
+        // ==========================================
 
-        // 🔹 استعلامات الربط
-        Task<string> GetStudentNameBySessionIdAsync(int sessionId);
-        Task<string> GetLessonTitleBySessionIdAsync(int sessionId);
-        Task<string> GetExerciseQuestionBySessionIdAsync(int sessionId);
+        // جلب الجلسة النشطة الحالية للطالب (إن وُجدت) - نقطة البداية عند فتح شاشة المراجعة
+        Task<MemorizeSessionReadDto?> GetActiveSessionByStudentIdAsync(int studentId);
+
+        // جلب سجل كل جلسات الطالب (تاريخ المراجعات) لعرضه بلوحة تحكمه
+        Task<IEnumerable<MemorizeSessionReadDto>> GetSessionHistoryByStudentIdAsync(int studentId);
+
+        // جلب جلسة معيّنة مع كل تفاصيل إجاباتها (مراجعة كاملة بعد الانتهاء)
+        Task<MemorizeSessionReadDto> GetSessionWithAnswersAsync(int sessionId);
+
+        // إنهاء الجلسة الحالية: تحديد IsCompleted=true وتسجيل CompletedAt ونسبة النجاح
+        Task CompleteSessionAsync(int sessionId, double successRate);
     }
 }

@@ -5,8 +5,6 @@ namespace SchoolLearningSystem.Domain.Interfaces
 {
     public interface IResultRepository : IGenericRepository<Result>
     {
-        // CRUD الأساسي يأتينا تلقائياً من IGenericRepository<Result>
-
         // استعلامات مخصصة لخدمة التحليلات (Analytics) والذكاء الاصطناعي
 
         // لجلب تاريخ الطالب بالكامل (مهم للـ AI لتحليل تطور الأداء)
@@ -14,8 +12,13 @@ namespace SchoolLearningSystem.Domain.Interfaces
 
         // لجلب نتائج امتحان معين (مهم لتحليل صعوبة الامتحان)
         Task<IEnumerable<Result>> GetByExamIdAsync(int examId);
-        Task<IEnumerable<Result>> GetByLessonIdAsync(int lessonId); // أضفنا هذه
-        // لجلب متوسط درجات الطالب في الكورس (مؤشر أداء)
-        Task<double> GetAverageScoreByStudentIdAsync(int studentId, int courseId);
+
+        // لجلب نتائج درس معين
+        Task<IEnumerable<Result>> GetByLessonIdAsync(int lessonId);
+
+        // 🔹 متوسطات الدرجات (يطابق توقيع IResultService بالضبط)
+        Task<double> GetAverageScoreByStudentIdAsync(int studentId);
+        Task<double> GetAverageScoreByLessonIdAsync(int lessonId);
+        Task<double> GetAverageScoreByExamIdAsync(int examId);
     }
 }

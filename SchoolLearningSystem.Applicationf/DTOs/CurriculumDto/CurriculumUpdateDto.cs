@@ -1,15 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using SchoolLearningSystem.Domain.Enums;
 
-namespace SchoolLearningSystem.Applicationf.DTOs.CurriculumDto
+namespace SchoolLearningSystem.Applicationf.DTOs.Curriculum
 {
     public class CurriculumUpdateDto
     {
-        [StringLength(150, ErrorMessage = "Title cannot exceed 150 characters")]
-        public string? Title { get; set; }
+        public GradeLevel? GradeLevel { get; set; }
 
-        [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters")]
+        [StringLength(150, MinimumLength = 3)]
+        public string? Name { get; set; }
+
         public string? Description { get; set; }
-
-        public string? Level { get; set; }
     }
 }

@@ -13,22 +13,22 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         {
         }
 
-        // 1. جلب الطلاب حسب المرحلة الدراسية مع تحسين الأداء
+        // جلب الطلاب حسب المرحلة الدراسية
         public async Task<IEnumerable<Student>> GetByGradeLevelAsync(GradeLevel gradeLevel)
         {
             return await _context.Students
-                .AsNoTracking() // 🚀 تحسين الأداء للقراءة
-                .Where(s => s.GradeLevel == gradeLevel)
+                .AsNoTracking()
+                .Where(s => s.GradeLevel == gradeLevel && !s.IsDeleted)
                 .ToListAsync();
         }
 
-        // 2. جلب الطالب مع سجل تقدمه (مهم جداً لمحرك الـ SRS)
+        // جلب الطالب مع سجل تقدمه (مهم جداً لمحرك الـ SRS)
+        // 💡 بدون AsNoTracking عن قصد: هذي الدالة غالباً تُستخدم قبل تعديل سجلات التقدم
         public async Task<Student?> GetStudentWithProgressAsync(int studentId)
         {
-            // هنا لا نستخدم AsNoTracking لأننا غالباً نجلب الطالب لنعدل على تقدمه
             return await _context.Students
                 .Include(s => s.Progresses)
-                .FirstOrDefaultAsync(s => s.Id == studentId);
+                .FirstOrDefaultAsync(s => s.Id == studentId && !s.IsDeleted);
         }
     }
 }

@@ -1,10 +1,6 @@
 ﻿using AutoMapper;
-using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
-using SchoolLearningSystem.Applicationf.DTOs.ExerciseDto;
 using SchoolLearningSystem.Applicationf.DTOs.Lesson;
-using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
-using SchoolLearningSystem.Applicationf.DTOs.Question;
-using SchoolLearningSystem.Applicationf.DTOs.Result;
+using SchoolLearningSystem.Applicationf.Exceptions;
 using SchoolLearningSystem.Applicationf.Interfaces;
 using SchoolLearningSystem.Applicationf.Services.Base;
 using SchoolLearningSystem.Domain.Entities;
@@ -12,6 +8,12 @@ using SchoolLearningSystem.Domain.Interfaces;
 
 namespace SchoolLearningSystem.Applicationf.Services
 {
+    // ==================================================================================
+    // 📌 دور هذا الـ Service:
+    // يدير بيانات "الدرس" نفسه فقط (نشر، ترتيب، استرجاع). أي بيانات تخص كيانات أخرى
+    // مرتبطة بالدرس (امتحانات، تمارين، أسئلة...) لها Service مستقل مسؤول عنها
+    // (مثلاً ExamService.GetExamsByLessonIdAsync موجودة هناك أصلاً - لا نكررها هنا).
+    // ==================================================================================
     public class LessonService : BaseService<Lesson, LessonReadDto, LessonCreateDto, LessonUpdateDto>, ILessonService
     {
         private readonly ILessonRepository _lessonRepository;
@@ -22,66 +24,92 @@ namespace SchoolLearningSystem.Applicationf.Services
             _lessonRepository = lessonRepository;
         }
 
-        // 🔹 CRUD الأساسي:
-        // أصبح موروثاً تلقائياً من BaseService، لا حاجة لكتابته!
+        // 🔹 CRUD الأساسي (GetAll, GetById, Create, Update, Delete, GetPaged)
+        // موروث تلقائياً من BaseService
 
-        // 🔹 علاقات إضافية (Business Logic)
-        public async Task<IEnumerable<ExamReadDto>> GetExamsByLessonIdAsync(int lessonId)
+        // ============================================================================
+        // 🎯 Use Case: "المعلم يحذف درساً بالخطأ، ثم يرجع بسرعة يسترجعه بضغطة واحدة"
+        //
+        // كيف تشتغل: تستخدم RestoreAsync الموروثة من IGenericRepository (تعيد
+        // IsDeleted إلى false)، وتُسجَّل هنا كدالة Business واضحة الاسم للمعلم.
+        // ============================================================================
+        public async Task RestoreLessonAsync(int lessonId)
         {
-            var lesson = await _lessonRepository.GetByIdAsync(lessonId)
-                ?? throw new Exception("Lesson not found");
+            var lesson = await _lessonRepository.GetByIdAsync(lessonId);
+            // ملاحظة: GetByIdAsync يستبعد المحذوف منطقياً، فلو رجع null هنا فعلاً
+            // غير موجود أصلاً (مو بالضرورة محذوف) - نتحقق أيضاً بحالة الحذف مباشرة:
+            if (lesson == null)
+                throw new NotFoundException($"الدرس برقم {lessonId} غير موجود.");
 
-            return _mapper.Map<IEnumerable<ExamReadDto>>(lesson.Exams);
+            await _lessonRepository.RestoreAsync(lessonId);
+            await _lessonRepository.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<ExerciseReadDto>> GetExercisesByLessonIdAsync(int lessonId)
+        // ============================================================================
+        // 🎯 Use Case: "المعلم ينهي تحضير الدرس ويضغط (نشر) ليصبح مرئياً للطلاب"
+        //
+        // مين يستدعيها: المعلم من لوحة تحكم إدارة المحتوى، قبل بدء الفصل الدراسي
+        //               أو بعد الانتهاء من كتابة محتوى الدرس.
+        // ============================================================================
+        public async Task PublishLessonAsync(int lessonId)
         {
             var lesson = await _lessonRepository.GetByIdAsync(lessonId)
-                ?? throw new Exception("Lesson not found");
+                ?? throw new NotFoundException($"الدرس برقم {lessonId} غير موجود.");
 
-            return _mapper.Map<IEnumerable<ExerciseReadDto>>(lesson.Exercises);
+            lesson.IsPublished = true;
+            await _lessonRepository.UpdateAsync(lesson);
+            await _lessonRepository.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<ResultReadDto>> GetResultsByLessonIdAsync(int lessonId)
+        // ============================================================================
+        // 🎯 Use Case: "المعلم يسحب ويرتب الدروس بترتيب مختلف (Drag & Drop) بواجهة الإدارة"
+        //
+        // مثال: تبديل ترتيب الدرس 3 والدرس 4 داخل نفس الكورس.
+        // ============================================================================
+        public async Task UpdateLessonOrderAsync(int lessonId, int newOrder)
         {
             var lesson = await _lessonRepository.GetByIdAsync(lessonId)
-                ?? throw new Exception("Lesson not found");
+                ?? throw new NotFoundException($"الدرس برقم {lessonId} غير موجود.");
 
-            return _mapper.Map<IEnumerable<ResultReadDto>>(lesson.Results);
+            lesson.Order = newOrder;
+            await _lessonRepository.UpdateAsync(lesson);
+            await _lessonRepository.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<MemorizeSessionReadDto>> GetMemorizeSessionsByLessonIdAsync(int lessonId)
+        // ============================================================================
+        // 🎯 Use Case: "الطالب يحل تمريناً (Exercise)، والنظام يحتاج يعرض اسم/رابط
+        //              الدرس المرتبط بهذا التمرين (مثلاً لعرض زر (رجوع للدرس))"
+        //
+        // 💡 Nullable لأنه من الناحية النظرية قد لا يوجد درس مرتبط بهذا التمرين
+        //    (حسب تصميم Exercise Entity)، فنترك القرار للـ Controller.
+        // ============================================================================
+        public async Task<LessonReadDto?> GetLessonByExerciseIdAsync(int exerciseId)
         {
-            var lesson = await _lessonRepository.GetByIdAsync(lessonId)
-                ?? throw new Exception("Lesson not found");
-
-            return _mapper.Map<IEnumerable<MemorizeSessionReadDto>>(lesson.MemorizeSessions);
+            var lesson = await _lessonRepository.GetByExerciseIdAsync(exerciseId);
+            return _mapper.Map<LessonReadDto?>(lesson);
         }
 
-        public async Task<IEnumerable<QuestionReadDto>> GetQuestionsByLessonIdAsync(int lessonId)
+        // ============================================================================
+        // 🎯 Use Case: "الطالب يفتح صفحة الكورس ليرى قائمة الدروس المتاحة للتعلم،
+        //              مرتبة بتسلسلها الصحيح (Order)"
+        // ============================================================================
+        public async Task<IEnumerable<LessonReadDto>> GetLessonsByCourseIdAsync(int courseId)
         {
-            var lesson = await _lessonRepository.GetByIdAsync(lessonId)
-                ?? throw new Exception("Lesson not found");
-
-            return _mapper.Map<IEnumerable<QuestionReadDto>>(lesson.Questions);
+            var lessons = await _lessonRepository.GetByCourseIdAsync(courseId);
+            return _mapper.Map<IEnumerable<LessonReadDto>>(lessons);
         }
 
-        // 🔹 إحصائيات
-        // نصيحة: إذا كان العدد كبيراً جداً، يفضل عمل Count في الـ Repository مباشرة
-        public async Task<int> GetTotalQuestionsByLessonIdAsync(int lessonId)
+        // ============================================================================
+        // 🎯 Use Case: "الطالب ينهي الدرس الحالي، فيضغط (التالي) والنظام يوجهه
+        //              تلقائياً لأقرب درس تالٍ بالتسلسل ضمن نفس الكورس"
+        //
+        // 💡 Nullable لأنه من الطبيعي أن يكون الدرس الحالي هو "آخر درس" بالكورس،
+        //    وبهذي الحالة ما فيه درس تالٍ (نهاية الكورس)، وهذا ليس خطأ بل حالة طبيعية.
+        // ============================================================================
+        public async Task<LessonReadDto?> GetNextLessonAsync(int courseId, int currentLessonOrder)
         {
-            var lesson = await _lessonRepository.GetByIdAsync(lessonId)
-                ?? throw new Exception("Lesson not found");
-
-            return lesson.Questions?.Count ?? 0;
-        }
-
-        public async Task<int> GetTotalExamsByLessonIdAsync(int lessonId)
-        {
-            var lesson = await _lessonRepository.GetByIdAsync(lessonId)
-                ?? throw new Exception("Lesson not found");
-
-            return lesson.Exams?.Count ?? 0;
+            var nextLesson = await _lessonRepository.GetNextLessonAsync(courseId, currentLessonOrder);
+            return _mapper.Map<LessonReadDto?>(nextLesson);
         }
     }
 }

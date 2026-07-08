@@ -1,39 +1,51 @@
-﻿
-using SchoolLearningSystem.Application.Common.Models;
-using SchoolLearningSystem.Application.Common.Parameters;
+﻿using SchoolLearningSystem.Applicationf.Common.Models;
+using SchoolLearningSystem.Applicationf.Common.Parameters;
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Applicationf.DTOs.CourseStudent;
 using SchoolLearningSystem.Applicationf.DTOs.Student;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace SchoolLearningSystem.Applicationf.Interfaces
 {
+    // ملاحظة: لا يرث من IBaseService لأن CourseStudent كيان وسيط
+    // بمفتاح مركّب (courseId + studentId) وليس مفتاحاً بسيطاً (int id)
     public interface ICourseStudentService
     {
-        // العمليات الأساسية
+        // ==========================================
+        // 🔹 العمليات الأساسية (CRUD)
+        // ==========================================
         Task<IEnumerable<CourseStudentReadDto>> GetAllCourseStudentsAsync();
-        Task<CourseStudentReadDto?> GetCourseStudentByIdAsync(int courseId, int studentId);
-        Task AddCourseStudentAsync(CourseStudentCreateDto dto);
-        Task UpdateCourseStudentAsync(int courseId, int studentId, CourseStudentUpdateDto dto);
-        Task DeleteCourseStudentAsync(int courseId, int studentId);
 
-        // علاقات إضافية
+        // 💡 غير Nullable الآن: السلوك الفعلي يرمي NotFoundException دائماً إذا لم يوجد السجل
+        // (نمط Fail Fast، متسق مع RemoveStudentAsync و UpdateCourseStudentAsync)
+        Task<CourseStudentReadDto> GetCourseStudentByIdAsync(int courseId, int studentId);
+
+        Task UpdateCourseStudentAsync(int courseId, int studentId, CourseStudentUpdateDto dto);
+
+        // ==========================================
+        // 🔹 علاقات إضافية (Query Logic)
+        // ==========================================
+        // 💡 هذه هي المصدر الوحيد لهذا المنطق في كامل المشروع
+        // (تم حذفها من ICourseService لتفادي التكرار)
         Task<IEnumerable<StudentReadDto>> GetStudentsByCourseIdAsync(int courseId);
         Task<IEnumerable<CourseReadDto>> GetCoursesByStudentIdAsync(int studentId);
 
-        // عمليات التسجيل والإزالة (اختصار للإنشاء والحذف)
+        // ==========================================
+        // 🔹 عمليات التسجيل والإزالة (Business Rules)
+        // ==========================================
+        // 💡 المصدر الوحيد للتسجيل/الإزالة - يُستدعى من أي Controller (Course أو Student)
         Task EnrollStudentAsync(int courseId, int studentId);
         Task RemoveStudentAsync(int courseId, int studentId);
 
-        // إحصائيات
+        // ==========================================
+        // 🔹 إحصائيات (Statistics)
+        // ==========================================
         Task<int> GetTotalStudentsByCourseIdAsync(int courseId);
         Task<int> GetTotalCoursesByStudentIdAsync(int studentId);
 
-        // جلب طلاب كورس معين مع الترقيم
+        // ==========================================
+        // 🔹 الترقيم والفلترة (Pagination)
+        // ==========================================
         Task<PagedList<StudentReadDto>> GetPagedStudentsByCourseIdAsync(int courseId, QueryParameters parameters);
-
-        // جلب كورسات طالب معين مع الترقيم
         Task<PagedList<CourseReadDto>> GetPagedCoursesByStudentIdAsync(int studentId, QueryParameters parameters);
     }
 }

@@ -2,10 +2,12 @@
 using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Interfaces;
 using SchoolLearningSystem.Infrastructure.Data;
-using SchoolLearningSystem.Infrastructure.Repositories.Base;
 
 namespace SchoolLearningSystem.Infrastructure.Repositories
 {
+    // 💡 لا يرث من GenericRepository<T> لأن StudentQuestionProgress له مفتاح مركّب
+    // (StudentId + QuestionId)، ولا يحتوي BaseEntity (لا حاجة لـ Soft Delete هنا -
+    // هو سجل إحصائي/حالة تقدم، لا "محتوى" يُحذف منطقياً).
     public class StudentQuestionProgressRepository : IStudentQuestionProgressRepository
     {
         private readonly AppDbContext _context;
@@ -17,37 +19,39 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
 
         public async Task<StudentQuestionProgress?> GetByStudentAndQuestionAsync(int studentId, int questionId)
         {
-            // نستخدم FindAsync للمفاتيح المركبة
-            return await _context.StudentQuestionProgresses.FindAsync(studentId, questionId);
+            return await _context.StudentQuestionProgresses
+                .FirstOrDefaultAsync(p => p.StudentId == studentId && p.QuestionId == questionId);
         }
 
+        // 🧠 "قلب الـ SRS": الأسئلة المستحقة المراجعة الآن لهذا الطالب
+        // (NextReviewDate <= الآن) - هذا الاستعلام هو ما يبني جلسة المراجعة اليومية
         public async Task<IEnumerable<StudentQuestionProgress>> GetDueQuestionsAsync(int studentId, DateTime currentDate)
         {
             return await _context.StudentQuestionProgresses
-                .AsNoTracking() // 🚀 تحسين الأداء للقراءة
-                .Include(p => p.Question)
+                .AsNoTracking()
+                .Include(p => p.Question) // نحتاج بيانات السؤال نفسه لعرضه بالجلسة
                 .Where(p => p.StudentId == studentId && p.NextReviewDate <= currentDate)
-                .OrderBy(p => p.NextReviewDate)
+                .OrderBy(p => p.NextReviewDate) // الأكثر استحقاقاً (تأخيراً) أولاً
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<StudentQuestionProgress>> GetByStudentIdAsync(int studentId)
         {
             return await _context.StudentQuestionProgresses
-                .AsNoTracking() // 🚀 تحسين الأداء
-                .Where(s => s.StudentId == studentId)
+                .AsNoTracking()
+                .Where(p => p.StudentId == studentId)
                 .ToListAsync();
         }
 
-        public async Task AddAsync(StudentQuestionProgress entity)
+        public async Task AddAsync(StudentQuestionProgress progress)
         {
-            await _context.StudentQuestionProgresses.AddAsync(entity);
+            await _context.StudentQuestionProgresses.AddAsync(progress);
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(StudentQuestionProgress entity)
+        public async Task UpdateAsync(StudentQuestionProgress progress)
         {
-            _context.StudentQuestionProgresses.Update(entity);
+            _context.StudentQuestionProgresses.Update(progress);
             await _context.SaveChangesAsync();
         }
     }

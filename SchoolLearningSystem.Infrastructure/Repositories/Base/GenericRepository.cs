@@ -1,40 +1,59 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Interfaces.Base;
 using SchoolLearningSystem.Infrastructure.Data;
-using System; // 👈 ضرورية جداً للـ Func
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 
 namespace SchoolLearningSystem.Infrastructure.Repositories.Base
 {
-    public class GenericRepository<T> : IGenericRepository<T> where T : class
+    // ==================================================================================
+    // 📌 قرارات معمارية مطبّقة بهذا الملف (نتيجة كل النقاشات السابقة):
+    // 1. القيد where T : BaseEntity ضروري للوصول إلى Id/IsDeleted بأمان وقت الترجمة.
+    // 2. لا يوجد فلتر !IsDeleted يدوي هنا لأن AppDbContext يطبّق Global Query Filter
+    //    تلقائياً على كل الاستعلامات العادية لأي Entity يرث BaseEntity.
+    // 3. SaveChangesAsync لا تُستدعى من أي دالة هنا - هي مسؤولية الـ Service حصراً
+    //    (Unit of Work)، لتفادي رحلتين لقاعدة البيانات بنفس العملية المنطقية.
+    // 4. RestoreAsync/HardDeleteAsync تستخدم IgnoreQueryFilters() لأنها الوحيدة التي
+    //    تحتاج الوصول لسجلات IsDeleted=true (المستبعدة تلقائياً من كل استعلام آخر).
+    // ==================================================================================
+    public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
     {
         protected readonly AppDbContext _context;
-        public GenericRepository(AppDbContext context) => _context = context;
+        protected readonly DbSet<T> _dbSet;
 
-        // دالة GetById تبقى متعقبة (Tracked) لأننا غالباً نجلب العنصر لنعدله أو نحذفه
-        public async Task<T?> GetByIdAsync(int id) => await _context.Set<T>().FindAsync(id);
-
-        // 🔹 الأداء الأقصى: أضفنا AsNoTracking للقراءة فقط
-        public async Task<IEnumerable<T>> GetAllAsync()
-            => await _context.Set<T>().AsNoTracking().ToListAsync();
-
-        // 🔹 تنفيذ دالة الترقيم (Pagination)
-        public async Task<(IEnumerable<T> Items, int TotalCount)> GetPagedAsync(
-             Expression<Func<T, bool>> filter, int pageNumber, int pageSize)
+        public GenericRepository(AppDbContext context)
         {
-            // 1. تطبيق الفلتر مع إيقاف التتبع لتسريع الأداء (AsNoTracking)
-            var query = filter != null
-                ? _context.Set<T>().AsNoTracking().Where(filter)
-                : _context.Set<T>().AsNoTracking();
+            _context = context;
+            _dbSet = context.Set<T>();
+        }
 
-            // 2. حساب العدد بعد الفلترة
+        public async Task<T?> GetByIdAsync(int id)
+        {
+            // الفلتر العام بـ AppDbContext يستبعد IsDeleted=true تلقائياً هنا
+            return await _dbSet.FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        public async Task<IEnumerable<T>> GetAllAsync()
+        {
+            return await _dbSet.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<(IEnumerable<T> Items, int TotalCount)> GetPagedAsync(
+            Expression<Func<T, bool>>? filter, // 💡 Nullable - يمنع ArgumentNullException
+            int pageNumber,
+            int pageSize)
+        {
+            var query = _dbSet.AsNoTracking();
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
             var totalCount = await query.CountAsync();
 
-            // 3. جلب البيانات المفلترة والمرقمة من قاعدة البيانات مباشرة!
             var items = await query
+                .OrderBy(e => e.Id) // ترتيب ثابت ضروري مع Skip/Take
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -42,21 +61,55 @@ namespace SchoolLearningSystem.Infrastructure.Repositories.Base
             return (items, totalCount);
         }
 
-        public async Task AddAsync(T entity) => await _context.Set<T>().AddAsync(entity);
+        // 💡 بدون SaveChangesAsync هنا - تُستدعى من الـ Service بعد هذي الدالة
+        public async Task AddAsync(T entity)
+        {
+            await _dbSet.AddAsync(entity);
+        }
 
-        // 🔹 التعديل الهندسي: إلغاء الـ async لتجنب التحذير (Compiler Warning)
         public Task UpdateAsync(T entity)
         {
-            _context.Set<T>().Update(entity);
-            return Task.CompletedTask; // نرجع Task مكتمل وهمي لتلبية شروط الواجهة
+            entity.LastModifiedAt = DateTime.UtcNow;
+            _dbSet.Update(entity);
+            return Task.CompletedTask;
         }
 
         public async Task DeleteAsync(int id)
         {
-            var entity = await GetByIdAsync(id);
-            if (entity != null) _context.Set<T>().Remove(entity);
+            var entity = await _dbSet.FirstOrDefaultAsync(e => e.Id == id);
+            if (entity != null && !entity.IsDeleted)
+            {
+                entity.IsDeleted = true;
+                entity.LastModifiedAt = DateTime.UtcNow;
+            }
         }
 
-        public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
+        // ⚠️ IgnoreQueryFilters() ضرورية: السجل IsDeleted=true، والفلتر العام
+        // يستبعده تلقائياً من أي استعلام عادي. بدون هذا التجاوز الصريح، الاسترجاع
+        // يفشل بصمت دائماً (يرجع null حتى لو السجل موجود فعلياً بقاعدة البيانات).
+        public async Task RestoreAsync(int id)
+        {
+            var entity = await _dbSet.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.Id == id);
+            if (entity != null && entity.IsDeleted)
+            {
+                entity.IsDeleted = false;
+                entity.LastModifiedAt = DateTime.UtcNow;
+            }
+        }
+
+        // ⚠️ نفس السبب: نحتاج الوصول للسجل بغض النظر عن حالة IsDeleted لحذفه نهائياً
+        public async Task HardDeleteAsync(int id)
+        {
+            var entity = await _dbSet.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.Id == id);
+            if (entity != null)
+            {
+                _dbSet.Remove(entity);
+            }
+        }
+
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
     }
 }

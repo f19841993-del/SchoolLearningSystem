@@ -7,11 +7,12 @@ namespace SchoolLearningSystem.Applicationf.DTOs.Teacher
         [StringLength(100)]
         public string? Name { get; set; }
 
-        public string? Subject { get; set; }
-
         [StringLength(500)]
         public string? Bio { get; set; }
 
         public string? ProfileImage { get; set; }
+
+        // Subject مستثنى عمداً - نفس منطق TeacherCreateDto، القيمة ثابتة على "Math"
+        // ولا تُعدَّل عبر API عام.
     }
 }

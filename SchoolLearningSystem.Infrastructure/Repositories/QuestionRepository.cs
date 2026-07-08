@@ -13,43 +13,47 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         {
         }
 
-        // جلب الأسئلة المرتبطة باختبار معين (للقراءة فقط -> AsNoTracking)
         public async Task<IEnumerable<Question>> GetByExamIdAsync(int examId)
         {
             return await _context.Questions
                 .AsNoTracking()
-                .Where(q => q.ExamId == examId)
+                .Where(q => q.ExamId == examId && !q.IsDeleted)
                 .ToListAsync();
         }
 
-        // جلب الأسئلة المرتبطة بدرس معين (للقراءة فقط -> AsNoTracking)
         public async Task<IEnumerable<Question>> GetQuestionsByLessonIdAsync(int lessonId)
         {
             return await _context.Questions
                 .AsNoTracking()
-                .Where(q => q.LessonId == lessonId)
+                .Where(q => q.LessonId == lessonId && !q.IsDeleted)
                 .ToListAsync();
         }
 
-        // إحصائيات: عدد الأسئلة في امتحان محدد
+        // 🆕 جلب الأسئلة حسب مستوى الصعوبة
+        public async Task<IEnumerable<Question>> GetByDifficultyAsync(DifficultyLevel difficultyLevel)
+        {
+            return await _context.Questions
+                .AsNoTracking()
+                .Where(q => q.DifficultyLevel == difficultyLevel && !q.IsDeleted)
+                .ToListAsync();
+        }
+
         public async Task<int> CountByExamIdAsync(int examId)
         {
             return await _context.Questions
-                .CountAsync(q => q.ExamId == examId);
+                .CountAsync(q => q.ExamId == examId && !q.IsDeleted);
         }
 
-        // إحصائيات: عدد الأسئلة حسب الصعوبة
         public async Task<int> CountByDifficultyAsync(DifficultyLevel difficultyLevel)
         {
             return await _context.Questions
-                .CountAsync(q => q.DifficultyLevel == difficultyLevel);
+                .CountAsync(q => q.DifficultyLevel == difficultyLevel && !q.IsDeleted);
         }
 
-        // إحصائيات: عدد الأسئلة في درس محدد
         public async Task<int> GetTotalQuestionsByLessonIdAsync(int lessonId)
         {
             return await _context.Questions
-                .CountAsync(q => q.LessonId == lessonId);
+                .CountAsync(q => q.LessonId == lessonId && !q.IsDeleted);
         }
     }
 }

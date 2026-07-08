@@ -1,17 +1,27 @@
-﻿namespace SchoolLearningSystem.Applicationf.DTOs.Srs
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace SchoolLearningSystem.Applicationf.DTOs.Srs
 {
+    // يمثّل بيانات إجابة واحدة يرسلها الطالب أثناء جلسة المراجعة
     public class AnswerSubmissionDto
     {
+        [Required]
         public int StudentId { get; set; }
+
+        [Required]
         public int QuestionId { get; set; }
 
-        // 🌟 الحقل المفقود الأهم للذكاء الاصطناعي (من 0 إلى 5)
+        // ✅ إضافة إجبارية: StudentAnswerDetail.MemorizeSessionId هو FK إجباري
+        // بالـ Entity - لازم يُمرَّر هنا حتى يقدر SrsService.ProcessAnswerAsync
+        // يُنشئ سجل StudentAnswerDetail الكامل بدون فشل.
+        [Required]
+        public int MemorizeSessionId { get; set; }
+
+        // جودة الإجابة من 0 إلى 5 حسب خوارزمية SM-2
+        [Range(0, 5)]
         public int Quality { get; set; }
 
-        // الإجابة التي اختارها الطالب نصياً (لتوثيقها في سجل الذكاء الاصطناعي)
-        public string? SelectedAnswer { get; set; }
-
-
-        public int TimeTakenInSeconds { get; set; }
+        // اختياري: الوقت المستغرق بالثواني (يفيد بتحليلات AI مستقبلية)
+        public int? TimeTakenInSeconds { get; set; }
     }
 }

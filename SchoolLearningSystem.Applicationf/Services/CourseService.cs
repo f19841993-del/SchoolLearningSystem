@@ -1,9 +1,8 @@
 ﻿using AutoMapper;
-using FluentValidation; // 1. أضفنا مكتبة التحقق
+using FluentValidation;
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
 using SchoolLearningSystem.Applicationf.DTOs.Lesson;
-using SchoolLearningSystem.Applicationf.DTOs.Student;
 using SchoolLearningSystem.Applicationf.Exceptions;
 using SchoolLearningSystem.Applicationf.Interfaces;
 using SchoolLearningSystem.Applicationf.Services.Base;
@@ -12,124 +11,130 @@ using SchoolLearningSystem.Domain.Interfaces;
 
 namespace SchoolLearningSystem.Applicationf.Services
 {
+    // ==================================================================================
+    // 📌 دور هذا الـ Service:
+    // يدير بيانات "الكورس" نفسه (إنشاء، تعديل، حذف منطقي) بالإضافة لعمليات تجمع بينه
+    // وبين الدروس/الامتحانات التابعة له. تسجيل/إزالة الطلاب مسؤولية ICourseStudentService
+    // حصرياً (مصدر واحد للحقيقة، لا نكررها هنا).
+    // ==================================================================================
     public class CourseService : BaseService<Course, CourseReadDto, CourseCreateDto, CourseUpdateDto>, ICourseService
     {
-        // نحتفظ بنسخة خاصة من الـ Repository للوصول للعمليات المخصصة للكورس (مثل جلب طلاب الكورس)
         private readonly ICourseRepository _courseRepository;
-
-        // 2. أضفنا الـ Validator الخاص بعملية الإنشاء لحماية السيرفيس
+        private readonly ILessonRepository _lessonRepository;
+        private readonly IExamRepository _examRepository;
+        private readonly ICourseStudentRepository _courseStudentRepository;
         private readonly IValidator<CourseCreateDto> _createValidator;
-        // 1. إضافة حارس التعديل
         private readonly IValidator<CourseUpdateDto> _updateValidator;
 
-
-        // التصميم الاحترافي: نمرر الـ Repository العام والـ Mapper إلى الكلاس الأب (BaseService)
-        // ونحتفظ بالنسخ الخاصة بنا هنا
         public CourseService(
             ICourseRepository courseRepository,
+            ILessonRepository lessonRepository,
+            IExamRepository examRepository,
+            ICourseStudentRepository courseStudentRepository,
             IMapper mapper,
-             IValidator<CourseUpdateDto> updateValidator, // حقن الـ Validator الخاص بالتعديل
-            IValidator<CourseCreateDto> createValidator) // حقن الـ Validator
+            IValidator<CourseUpdateDto> updateValidator,
+            IValidator<CourseCreateDto> createValidator)
             : base(courseRepository, mapper)
         {
             _courseRepository = courseRepository;
+            _lessonRepository = lessonRepository;
+            _examRepository = examRepository;
+            _courseStudentRepository = courseStudentRepository;
             _createValidator = createValidator;
             _updateValidator = updateValidator;
         }
 
         #region تجاوز العمليات الأساسية (Overriding Base Operations)
 
-        // 🔹 تجاوز دالة الإضافة (CreateAsync) لتطبيق التحقق (Validation) قبل الحفظ
+        // ============================================================================
+        // 🎯 Use Case: "المعلم أو الإدارة تنشئ كورساً رياضياً جديداً بالمنصة، والنظام
+        //              يتحقق من صحة البيانات المدخلة قبل الحفظ (عنوان غير فاضي، Order
+        //              صحيح، TeacherId/CurriculumId موجودين... حسب قواعد الـ Validator)"
+        //
+        // مين يستدعيها: CourseController عند استقبال طلب POST لإنشاء كورس جديد.
+        //
+        // 💡 Override كامل لـ base.CreateAsync لإضافة خطوة التحقق (FluentValidation)
+        //    قبل تفويض باقي العملية (Mapping + Add + SaveChanges) للأب.
+        // ============================================================================
         public override async Task<CourseReadDto> CreateAsync(CourseCreateDto dto)
         {
-            // أ. فحص البيانات القادمة باستخدام القواعد التي كتبناها في كلاس CourseCreateDtoValidator
             var validationResult = await _createValidator.ValidateAsync(dto);
-
-            // ب. إذا كانت البيانات غير صالحة (مثلاً العنوان فارغ)، نوقف العملية فوراً
             if (!validationResult.IsValid)
-            {
-                // رمي الاستثناء الذي سيلتقطه الـ Global Middleware ويرجعه كـ 400 BadRequest
                 throw new CustomValidationException(validationResult.Errors);
-            }
 
-            // ج. إذا كانت البيانات صحيحة، نترك الكلاس الأب (BaseService) يقوم بعملية الـ Mapping والحفظ
             return await base.CreateAsync(dto);
         }
 
-        // 🔹 تجاوز دالة الحذف (DeleteAsync) لتطبيق قواعد العمل (Business Logic) والحذف المنطقي (Soft Delete)
+        // ============================================================================
+        // 🎯 Use Case: "الإدارة تقرر أرشفة/حذف كورس بسبب انتهاء صلاحيته أو وجود خطأ"
+        //
+        // القصة الكاملة خطوة بخطوة:
+        //   1. نتأكد أن الكورس موجود أصلاً (مو Id وهمي).
+        //   2. نتحقق: هل يوجد طلاب مسجلين فعلياً بهذا الكورس؟ إذا نعم، نمنع الحذف
+        //      (قرار عمل: لا نحذف كورساً فيه طلاب نشطون بدون معالجة اشتراكاتهم أولاً).
+        //   3. إذا الفحص نجح، نخفي الكورس منطقياً (Soft Delete). الدروس والامتحانات
+        //      التابعة له تُخفى تلقائياً عبر Global Query Filters (بدون تعديل يدوي).
+        //
+        // مين يستدعيها: الأدمن من لوحة تحكم إدارة المحتوى.
+        // ============================================================================
         public override async Task DeleteAsync(int id)
         {
-            // 1. التحقق من وجود الكورس أصلاً
             var course = await _courseRepository.GetByIdAsync(id);
             if (course == null)
-            {
-                throw new NotFoundException($"الكورس برقم {id} غير موجود.");
-            }
+                throw new NotFoundException("الكورس غير موجود.");
 
-            // 2. حماية البيانات: التحقق من عدم وجود طلاب مسجلين قبل الحذف
-            var students = await _courseRepository.GetStudentsByCourseIdAsync(id);
-            if (students != null && students.Any())
-            {
-                // رمي خطأ منطقي (Business Rule Exception)
-                throw new BadRequestException("عذراً، لا يمكن حذف هذا الكورس لوجود طلاب مسجلين فيه.");
-            }
+            var enrolledCount = await _courseStudentRepository.CountByCourseIdAsync(id);
+            if (enrolledCount > 0)
+                throw new BadRequestException("لا يمكن حذف الكورس لوجود طلاب مسجلين.");
 
-            // 3. التنفيذ: تطبيق الحذف المنطقي (Soft Delete) بدلاً من الحذف النهائي
             course.IsDeleted = true;
-
-            // 4. حفظ التعديل (Update) لتثبيت حالة IsDeleted = true
             await _courseRepository.UpdateAsync(course);
             await _courseRepository.SaveChangesAsync();
-
-            // ملاحظة: لم نستدعِ base.DeleteAsync(id) لأننا لا نريد مسح السطر من قاعدة البيانات.
         }
 
-        // 4. تجاوز دالة التعديل لفحص البيانات قبل حفظها
+        // ============================================================================
+        // 🎯 Use Case: "المعلم يقوم بتصحيح خطأ إملائي بعنوان الكورس أو تعديل وصفه،
+        //              والنظام يتحقق من صحة التعديلات قبل حفظها"
+        //
+        // مين يستدعيها: CourseController عند استقبال طلب PUT/PATCH لتعديل كورس قائم.
+        // ============================================================================
         public override async Task UpdateAsync(int id, CourseUpdateDto dto)
         {
-            // أ. فحص بيانات التعديل
             var validationResult = await _updateValidator.ValidateAsync(dto);
-
             if (!validationResult.IsValid)
-            {
-                // ب. رمي الخطأ المخصص إذا كانت البيانات خاطئة
                 throw new CustomValidationException(validationResult.Errors);
-            }
 
-            // ج. إذا كانت البيانات سليمة، نترك الكلاس الأب يقوم بالبحث والتحديث
             await base.UpdateAsync(id, dto);
         }
+
         #endregion
 
         #region العمليات المخصصة للكورس (Specific Course Operations)
+        // 💡 ملاحظة: تسجيل/إزالة الطلاب وجلب قائمتهم أصبحت مسؤولية ICourseStudentService
+        // حصرياً، لتفادي تكرار المنطق بمكانين (راجع النقاش الخاص بـ CourseStudentService).
 
-        public async Task<IEnumerable<StudentReadDto>> GetStudentsByCourseIdAsync(int courseId)
-        {
-            var students = await _courseRepository.GetStudentsByCourseIdAsync(courseId);
-            return _mapper.Map<IEnumerable<StudentReadDto>>(students);
-        }
-
+        // ============================================================================
+        // 🎯 Use Case: "الطالب يفتح صفحة الكورس ليرى قائمة الدروس المتاحة للتعلم،
+        //              مرتبة بتسلسلها الصحيح"
+        //
+        // مين يستدعيها: صفحة تفاصيل الكورس بواجهة الطالب.
+        // ============================================================================
         public async Task<IEnumerable<LessonReadDto>> GetLessonsByCourseIdAsync(int courseId)
         {
-            var lessons = await _courseRepository.GetLessonsByCourseIdAsync(courseId);
+            var lessons = await _lessonRepository.GetByCourseIdAsync(courseId);
             return _mapper.Map<IEnumerable<LessonReadDto>>(lessons);
         }
 
+        // ============================================================================
+        // 🎯 Use Case: "الطالب يبحث عن الاختبارات المتاحة داخل الكورس لاختبار مستواه
+        //              قبل أو بعد إنهاء الدروس"
+        //
+        // مين يستدعيها: صفحة تفاصيل الكورس بواجهة الطالب (تبويب "الاختبارات").
+        // ============================================================================
         public async Task<IEnumerable<ExamReadDto>> GetExamsByCourseIdAsync(int courseId)
         {
-            var exams = await _courseRepository.GetExamsByCourseIdAsync(courseId);
+            var exams = await _examRepository.GetByCourseIdAsync(courseId);
             return _mapper.Map<IEnumerable<ExamReadDto>>(exams);
-        }
-
-        public async Task EnrollStudentAsync(int courseId, int studentId)
-        {
-            // يمكن مستقبلاً إضافة فحص هنا: هل الطالب مسجل بالفعل؟
-            await _courseRepository.EnrollStudentAsync(courseId, studentId);
-        }
-
-        public async Task RemoveStudentAsync(int courseId, int studentId)
-        {
-            await _courseRepository.RemoveStudentAsync(courseId, studentId);
         }
 
         #endregion

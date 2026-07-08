@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SchoolLearningSystem.API.Responses;
-using SchoolLearningSystem.Application.Common.Models;
-using SchoolLearningSystem.Application.Common.Parameters;
+using SchoolLearningSystem.Applicationf.Common.Models;
+using SchoolLearningSystem.Applicationf.Common.Parameters;
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
 using SchoolLearningSystem.Applicationf.DTOs.Lesson;

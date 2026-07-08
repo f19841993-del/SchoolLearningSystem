@@ -1,23 +1,37 @@
 ﻿using SchoolLearningSystem.Applicationf.DTOs.Question;
 using SchoolLearningSystem.Applicationf.Interfaces.Base;
-using SchoolLearningSystem.Domain.Enums; // استخدم الـ Enum لضمان النوع
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using SchoolLearningSystem.Domain.Enums;
 
 namespace SchoolLearningSystem.Applicationf.Interfaces
 {
     public interface IQuestionService : IBaseService<QuestionReadDto, QuestionCreateDto, QuestionUpdateDto>
     {
-        // 🔹 CRUD الأساسي: موروث من IBaseService
+        // 🔹 العمليات الأساسية (GetAll, GetById, Create, Update, Delete, GetPaged)
+        // موجودة مسبقاً بفضل الوراثة من IBaseService
 
-        // 🔹 علاقات إضافية (Business Logic)
+        // ==========================================
+        // 🔹 علاقات إضافية
+        // ==========================================
+
+        // جلب أسئلة امتحان معيّن (تُستخدم فعلياً من داخل ExamService.GetQuestionsByExamIdAsync)
         Task<IEnumerable<QuestionReadDto>> GetQuestionsByExamIdAsync(int examId);
+
+        // جلب كل الأسئلة العامة لدرس معيّن (تدريب حر، غير مرتبطة بامتحان محدد)
         Task<IEnumerable<QuestionReadDto>> GetQuestionsByLessonIdAsync(int lessonId);
 
-        // 🔹 إحصائيات
-        Task<int> GetQuestionCountByExamIdAsync(int examId);
+        // ==========================================
+        // 🔹 دعم الذكاء الاصطناعي (AI Support)
+        // ==========================================
 
-        // عدلنا هنا لاستخدام الـ Enum لضمان الـ Type-Safety
-        Task<int> GetQuestionCountByDifficultyAsync(DifficultyLevel difficultyLevel);
+        // جلب أسئلة حسب مستوى صعوبة معيّن - يستخدمها محرك الـ AI لبناء اختبار تكيفي
+        Task<IEnumerable<QuestionReadDto>> GetQuestionsByDifficultyAsync(DifficultyLevel difficulty);
+
+        // ==========================================
+        // 🔹 إحصائيات
+        // ==========================================
+
+        Task<int> CountByExamIdAsync(int examId);
+        Task<int> CountByDifficultyAsync(DifficultyLevel difficulty);
+        Task<int> GetTotalQuestionsByLessonIdAsync(int lessonId);
     }
 }

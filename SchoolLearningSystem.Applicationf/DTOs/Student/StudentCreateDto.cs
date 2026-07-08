@@ -18,5 +18,8 @@ namespace SchoolLearningSystem.Applicationf.DTOs.Student
 
         [Required]
         public GradeLevel GradeLevel { get; set; }
+
+        // Bio/Address/Education/ProfileImage مستثناة عمداً من Create -
+        // بيانات تكميلية تُضاف بعد التسجيل عبر Update، نفس منطق Teacher.Subject
     }
 }

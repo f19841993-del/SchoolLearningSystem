@@ -1,8 +1,6 @@
 ﻿using AutoMapper;
 using SchoolLearningSystem.Applicationf.DTOs.Question;
 using SchoolLearningSystem.Domain.Entities;
-using SchoolLearningSystem.Domain.Enums;
-using System.Linq;
 
 namespace SchoolLearningSystem.Applicationf.Mappings
 {
@@ -11,19 +9,20 @@ namespace SchoolLearningSystem.Applicationf.Mappings
         public QuestionProfile()
         {
             // 1. من الكيان → للعرض (Read)
+            // Text/Answer/DifficultyLevel/LessonId تتطابق أسماؤها تلقائياً
             CreateMap<Question, QuestionReadDto>()
-                .ForMember(dest => dest.LessonTitle, opt => opt.MapFrom(src => src.Lesson != null ? src.Lesson.Title : string.Empty))
-                // بقية الحقول (Id, Text, Answer, DifficultyLevel, LessonId) تتطابق أسماؤها تلقائياً
-                ;
+                .ForMember(dest => dest.LessonTitle,
+                    opt => opt.MapFrom(src => src.Lesson != null ? src.Lesson.Title : string.Empty));
 
             // 2. من الإنشاء → للكيان (Create)
             CreateMap<QuestionCreateDto, Question>()
-                // الحماية الموحدة لحقول الـ BaseEntity
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
-               
-                // تجاهل العلاقات
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.LastModifiedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
                 .ForMember(dest => dest.Lesson, opt => opt.Ignore())
-                .ForMember(dest => dest.Exam, opt => opt.Ignore());
+                .ForMember(dest => dest.Exam, opt => opt.Ignore())
+                .ForMember(dest => dest.QuestionStats, opt => opt.Ignore());
 
             // 3. من التعديل → للكيان (Update)
             CreateMap<QuestionUpdateDto, Question>()
@@ -39,10 +38,13 @@ namespace SchoolLearningSystem.Applicationf.Mappings
                     opt.Condition(src => src.DifficultyLevel.HasValue);
                     opt.MapFrom(src => src.DifficultyLevel);
                 })
-                // الحماية الموحدة لحقول الـ BaseEntity والعلاقات
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.LastModifiedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
                 .ForMember(dest => dest.Lesson, opt => opt.Ignore())
-                .ForMember(dest => dest.Exam, opt => opt.Ignore());
+                .ForMember(dest => dest.Exam, opt => opt.Ignore())
+                .ForMember(dest => dest.QuestionStats, opt => opt.Ignore());
         }
     }
 }

@@ -1,8 +1,9 @@
-﻿namespace SchoolLearningSystem.Applicationf.DTOs.CourseDto
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace SchoolLearningSystem.Applicationf.DTOs.CourseDto
 {
     public class CourseUpdateDto
     {
-        // نظيف تماماً! الـ Validator هو من سيفحص الطول
         public string? Title { get; set; }
 
         public string? Description { get; set; }
@@ -12,5 +13,8 @@
         public int? TeacherId { get; set; }
 
         public int? CurriculumId { get; set; }
+
+        // Order مستثنى عمداً - نفس منطق CourseCreateDto. لو تحتاج إعادة ترتيب
+        // الكورسات يدوياً، الأفضل DTO مستقل ReorderCoursesDto بدل خلطه هنا.
     }
 }

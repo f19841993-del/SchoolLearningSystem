@@ -1,18 +1,30 @@
-﻿using SchoolLearningSystem.Applicationf.DTOs.StudentAnswer; // تأكد من المسار الصحيح
+﻿using SchoolLearningSystem.Applicationf.DTOs.StudentAnswer;
+
 using SchoolLearningSystem.Applicationf.Interfaces.Base;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace SchoolLearningSystem.Applicationf.Interfaces
 {
-    public interface IStudentAnswerDetailService : IBaseService<StudentAnswerDetailReadDto, StudentAnswerDetailCreateDto, StudentAnswerDetailUpdateDto>
+    public interface IStudentAnswerDetailService
+        : IBaseService<StudentAnswerDetailReadDto, StudentAnswerDetailCreateDto, StudentAnswerDetailUpdateDto>
     {
-        // 🔹 CRUD الأساسي: موروث من IBaseService
+        // 🔹 العمليات الأساسية (GetAll, GetById, Create, Update, Delete, GetPaged)
+        // موجودة مسبقاً بفضل الوراثة من IBaseService
+        // 💡 تسجيل إجابة جديدة يتم عبر CreateAsync الموروثة مباشرة - لا حاجة لدالة مخصصة
 
-        // 🔹 علاقات إضافية (Logic)
-        Task<IEnumerable<StudentAnswerDetailReadDto>> GetByStudentIdAsync(int studentId);
-        Task<IEnumerable<StudentAnswerDetailReadDto>> GetByQuestionIdAsync(int questionId);
-        Task<IEnumerable<StudentAnswerDetailReadDto>> GetRecentAnswersAsync(int studentId, int count);
+        // ==========================================
+        // 🔹 بناء ملف تعلّم الطالب (Learning Profile) - قلب الذكاء الاصطناعي
+        // ==========================================
+
+        // تاريخ إجابات الطالب بالكامل
+        Task<IEnumerable<StudentAnswerDetailReadDto>> GetAnswersByStudentIdAsync(int studentId);
+
+        // كل إجابات الطلاب على سؤال معيّن - لتحليل صعوبته الفعلية
+        Task<IEnumerable<StudentAnswerDetailReadDto>> GetAnswersByQuestionIdAsync(int questionId);
+
+        // آخر N إجابة للطالب - لتتبع التطور اللحظي بلوحة التحكم
+        Task<IEnumerable<StudentAnswerDetailReadDto>> GetRecentAnswersByStudentIdAsync(int studentId, int count);
+
+        // إجابات الطالب الخاطئة ضمن درس معيّن - لإعادة التدريب المستهدف
         Task<IEnumerable<StudentAnswerDetailReadDto>> GetIncorrectAnswersByStudentIdAsync(int studentId, int lessonId);
     }
 }

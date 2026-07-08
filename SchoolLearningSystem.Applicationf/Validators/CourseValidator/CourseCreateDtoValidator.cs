@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FluentValidation;
-using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
+using SchoolLearningSystem.Applicationf.DTOs.Course;
 
-namespace SchoolLearningSystem.Applicationf.Validators
+namespace SchoolLearningSystem.Applicationf.Validators.CourseValidator
 {
-    
-
     public class CourseCreateDtoValidator : AbstractValidator<CourseCreateDto>
     {
         public CourseCreateDtoValidator()
@@ -20,6 +13,14 @@ namespace SchoolLearningSystem.Applicationf.Validators
 
             RuleFor(x => x.Description)
                 .NotEmpty().WithMessage("وصف الكورس لا يمكن أن يكون فارغاً.");
+
+            RuleFor(x => x.TeacherId)
+                .GreaterThan(0).WithMessage("رقم المعلم غير صالح.");
+
+            RuleFor(x => x.CurriculumId)
+                .GreaterThan(0).WithMessage("رقم المنهج غير صالح.");
+
+            // Order مستثنى عمداً — يُحسب بالـ Service (dtos_review_report.md #4.1)
         }
     }
 }

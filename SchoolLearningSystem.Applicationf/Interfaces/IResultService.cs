@@ -18,5 +18,6 @@ namespace SchoolLearningSystem.Applicationf.Interfaces
         Task<double> GetAverageScoreByStudentIdAsync(int studentId);
         Task<double> GetAverageScoreByLessonIdAsync(int lessonId);
         Task<double> GetAverageScoreByExamIdAsync(int examId);
+        
     }
 }

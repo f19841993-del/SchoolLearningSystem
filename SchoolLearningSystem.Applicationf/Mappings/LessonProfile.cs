@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using SchoolLearningSystem.Applicationf.DTOs.Lesson;
 using SchoolLearningSystem.Domain.Entities;
-using System.Linq;
 
 namespace SchoolLearningSystem.Applicationf.Mappings
 {
@@ -10,24 +9,27 @@ namespace SchoolLearningSystem.Applicationf.Mappings
         public LessonProfile()
         {
             // 1. من الكيان → للعرض (Read)
+            // Title, Content, VideoUrl, Order, IsPublished, CourseId تتطابق أسماؤها تلقائياً
             CreateMap<Lesson, LessonReadDto>()
-                .ForMember(dest => dest.CourseTitle, opt => opt.MapFrom(src => src.Course != null ? src.Course.Title : string.Empty));
-            // باقي الحقول (Id, Title, Content, CourseId) تطابق الأسماء لذا AutoMapper سيربطها تلقائياً
+                .ForMember(dest => dest.CourseTitle,
+                    opt => opt.MapFrom(src => src.Course != null ? src.Course.Title : string.Empty));
 
             // 2. من الإنشاء → للكيان (Create)
             CreateMap<LessonCreateDto, Lesson>()
-                // الحماية الموحدة لحقول الـ BaseEntity
+                // Order/IsPublished مستثنيان عمداً - يُديرهما الـ Service (راجع LessonCreateDto)
+                .ForMember(dest => dest.Order, opt => opt.Ignore())
+                .ForMember(dest => dest.IsPublished, opt => opt.Ignore())
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.LastModifiedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
-                // تجاهل العلاقات
                 .ForMember(dest => dest.Course, opt => opt.Ignore())
                 .ForMember(dest => dest.Exams, opt => opt.Ignore())
                 .ForMember(dest => dest.Exercises, opt => opt.Ignore())
                 .ForMember(dest => dest.Results, opt => opt.Ignore())
-                .ForMember(dest => dest.MemorizeSessions, opt => opt.Ignore())
                 .ForMember(dest => dest.Questions, opt => opt.Ignore());
+            // ⚠️ لا يوجد MemorizeSessions هنا - هذه Navigation Property محذوفة
+            // عمداً من Lesson Entity (راجع تعليق Lesson.cs)
 
             // 3. من التعديل → للكيان (Update)
             CreateMap<LessonUpdateDto, Lesson>()
@@ -39,11 +41,16 @@ namespace SchoolLearningSystem.Applicationf.Mappings
                     opt.Condition(src => src.Content != null);
                     opt.MapFrom(src => src.Content);
                 })
+                .ForMember(dest => dest.VideoUrl, opt => {
+                    opt.Condition(src => src.VideoUrl != null);
+                    opt.MapFrom(src => src.VideoUrl);
+                })
                 .ForMember(dest => dest.CourseId, opt => {
                     opt.Condition(src => src.CourseId.HasValue);
                     opt.MapFrom(src => src.CourseId);
                 })
-                // الحماية الموحدة لحقول الـ BaseEntity والعلاقات
+                .ForMember(dest => dest.Order, opt => opt.Ignore())
+                .ForMember(dest => dest.IsPublished, opt => opt.Ignore())
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.LastModifiedAt, opt => opt.Ignore())
@@ -52,7 +59,6 @@ namespace SchoolLearningSystem.Applicationf.Mappings
                 .ForMember(dest => dest.Exams, opt => opt.Ignore())
                 .ForMember(dest => dest.Exercises, opt => opt.Ignore())
                 .ForMember(dest => dest.Results, opt => opt.Ignore())
-                .ForMember(dest => dest.MemorizeSessions, opt => opt.Ignore())
                 .ForMember(dest => dest.Questions, opt => opt.Ignore());
         }
     }

@@ -3,14 +3,18 @@ using SchoolLearningSystem.Domain.Interfaces.Base;
 
 namespace SchoolLearningSystem.Domain.Interfaces
 {
-    // أضف الوراثة هنا:
     public interface ICourseRepository : IGenericRepository<Course>
     {
-        // العمليات الخاصة فقط بالكورس
-        Task<IEnumerable<Student>> GetStudentsByCourseIdAsync(int courseId);
-        Task<IEnumerable<Lesson>> GetLessonsByCourseIdAsync(int courseId);
-        Task<IEnumerable<Exam>> GetExamsByCourseIdAsync(int courseId);
-        Task EnrollStudentAsync(int courseId, int studentId);
-        Task RemoveStudentAsync(int courseId, int studentId);
+        // جلب كل كورسات مدرّس معين
+        Task<IEnumerable<Course>> GetByTeacherIdAsync(int teacherId);
+
+        // جلب كورسات منهج معين (مرتبة حسب Order لأنها فصول متسلسلة)
+        Task<IEnumerable<Course>> GetByCurriculumIdAsync(int curriculumId);
+
+        // جلب كورس مع تفاصيله الكاملة (دروس + امتحانات + طلاب) بطلب واحد لتفادي N+1
+        Task<Course?> GetWithDetailsAsync(int courseId);
+
+        // عدد الطلاب المسجلين بكورس (يفيد صفحة تفاصيل الكورس / الداشبورد)
+        Task<int> GetEnrolledStudentsCountAsync(int courseId);
     }
 }

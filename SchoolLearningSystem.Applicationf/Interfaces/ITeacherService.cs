@@ -1,23 +1,20 @@
 ﻿using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
-using SchoolLearningSystem.Applicationf.DTOs.Lesson;
 using SchoolLearningSystem.Applicationf.DTOs.Teacher;
 using SchoolLearningSystem.Applicationf.Interfaces.Base;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace SchoolLearningSystem.Applicationf.Interfaces
 {
-    public interface ITeacherService: IBaseService<TeacherReadDto, TeacherCreateDto, TeacherUpdateDto>
+    public interface ITeacherService : IBaseService<TeacherReadDto, TeacherCreateDto, TeacherUpdateDto>
     {
-        // العمليات الأساسية
-       
+        // 🔹 العمليات الأساسية (GetAll, GetById, Create, Update, Delete, GetPaged)
+        // موجودة مسبقاً بفضل الوراثة من IBaseService
 
-        // علاقات إضافية
+        // ==========================================
+        // 🔹 علاقات إضافية
+        // ==========================================
+
+        // جلب كل الكورسات التي يدرّسها معلم معيّن
+        // 💡 تعتمد داخلياً على ICourseRepository.GetByTeacherIdAsync (مصدر واحد للحقيقة)
         Task<IEnumerable<CourseReadDto>> GetCoursesByTeacherIdAsync(int teacherId);
-        Task<IEnumerable<LessonReadDto>> GetLessonsByTeacherIdAsync(int teacherId);
-
-        // إحصائيات
-        Task<int> GetTotalCoursesByTeacherIdAsync(int teacherId);
-        Task<int> GetTotalLessonsByTeacherIdAsync(int teacherId);
     }
 }

@@ -1,16 +1,15 @@
-﻿
-using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
+﻿using SchoolLearningSystem.Domain.Enums;
 
-namespace SchoolLearningSystem.Applicationf.DTOs.CurriculumDto
+namespace SchoolLearningSystem.Applicationf.DTOs.Curriculum
 {
     public class CurriculumReadDto
     {
         public int Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string? Description { get; set; }
-        public string Level { get; set; } = string.Empty;
+        public GradeLevel GradeLevel { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
 
-        // قائمة الكورسات التابعة لهذا المنهج (علاقة 1 إلى متعدد)
-        public List<CourseReadDto> Courses { get; set; } = new();
+        // عدّاد كورسات المنهج - موثّق كـ Use Case بـ CurriculumService
+        public int CoursesCount { get; set; }
     }
 }

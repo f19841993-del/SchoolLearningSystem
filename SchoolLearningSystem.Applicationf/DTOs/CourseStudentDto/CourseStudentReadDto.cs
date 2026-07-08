@@ -2,14 +2,15 @@
 {
     public class CourseStudentReadDto
     {
-        public int Id { get; set; } // معرف عملية التسجيل (Enrollment ID)
-
         public int CourseId { get; set; }
-        public string CourseTitle { get; set; } = string.Empty; // لجعل العرض أسهل للفرونت
+        public string CourseTitle { get; set; } = string.Empty;
 
         public int StudentId { get; set; }
-        public string StudentName { get; set; } = string.Empty; // اسم الطالب
+        public string StudentName { get; set; } = string.Empty;
 
-        public DateTime EnrollmentDate { get; set; } // تاريخ التسجيل مهم جداً في خوارزميات الـ SRS
+        public DateTime EnrolledAt { get; set; }
+        public bool IsActive { get; set; }
+        public double ProgressPercentage { get; set; }
+        public DateTime LastAccessedAt { get; set; }
     }
 }

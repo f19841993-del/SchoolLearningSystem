@@ -1,22 +1,26 @@
 ﻿using SchoolLearningSystem.Applicationf.DTOs.ExerciseDto;
-using SchoolLearningSystem.Applicationf.DTOs.Lesson;
-using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
 using SchoolLearningSystem.Applicationf.Interfaces.Base;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using SchoolLearningSystem.Domain.Enums;
 
 namespace SchoolLearningSystem.Applicationf.Interfaces
 {
     public interface IExerciseService : IBaseService<ExerciseReadDto, ExerciseCreateDto, ExerciseUpdateDto>
     {
-        // 🔹 ملاحظة: الـ CRUD الأساسية (GetAll, GetById, Create, Update, Delete) 
-        // أصبحت الآن موجودة وموروثة من IBaseService.
+        // 🔹 العمليات الأساسية (GetAll, GetById, Create, Update, Delete, GetPaged)
+        // موجودة مسبقاً بفضل الوراثة من IBaseService
 
-        // 🔹 علاقات إضافية (Specific Business Logic)
+        // ==========================================
+        // 🔹 علاقات إضافية
+        // ==========================================
+
+        // جلب كل تمارين درس معيّن
         Task<IEnumerable<ExerciseReadDto>> GetExercisesByLessonIdAsync(int lessonId);
 
-        Task<IEnumerable<MemorizeSessionReadDto>> GetMemorizeSessionsByExerciseIdAsync(int exerciseId);
+        // ==========================================
+        // 🔹 دعم الذكاء الاصطناعي (AI Support)
+        // ==========================================
 
-        Task<LessonReadDto?> GetLessonByExerciseIdAsync(int exerciseId);
+        // جلب تمارين حسب مستوى صعوبة معيّن - لبناء مسار تعليمي تصاعدي (سهل ثم متوسط ثم صعب)
+        Task<IEnumerable<ExerciseReadDto>> GetExercisesByDifficultyAsync(DifficultyLevel difficulty);
     }
 }

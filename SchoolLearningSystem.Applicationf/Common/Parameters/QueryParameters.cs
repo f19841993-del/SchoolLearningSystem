@@ -1,4 +1,4 @@
-﻿namespace SchoolLearningSystem.Application.Common.Parameters
+﻿namespace SchoolLearningSystem.Applicationf.Common.Parameters
 {
     public class QueryParameters
     {
@@ -6,16 +6,35 @@
         const int maxPageSize = 50;
 
         // 2. الصفحة الافتراضية هي 1
-        public int PageNumber { get; set; } = 1;
+        private int _pageNumber = 1;
 
-        // 3. الحجم الافتراضي هو 10
+        // 3. حماية PageNumber: لا تقل عن 1 أبداً
+        // (بدون هذي الحماية، PageNumber = 0 أو قيمة سالبة تنتج Skip سالب
+        // بالـ Repository وترمي ArgumentException وقت التشغيل)
+        public int PageNumber
+        {
+            get { return _pageNumber; }
+            set { _pageNumber = value < 1 ? 1 : value; }
+        }
+
+        // 4. الحجم الافتراضي هو 10
         private int _pageSize = 10;
 
-        // 4. حماية الـ PageSize لكي لا يتجاوز الـ Max
+        // 5. حماية الـ PageSize من الحدين معاً:
+        //    - لا يتجاوز الحد الأقصى (maxPageSize)
+        //    - لا يكون صفر أو سالب (يمنع DivideByZero وكسر Skip/Take)
         public int PageSize
         {
             get { return _pageSize; }
-            set { _pageSize = (value > maxPageSize) ? maxPageSize : value; }
+            set
+            {
+                if (value <= 0)
+                    _pageSize = 10;
+                else if (value > maxPageSize)
+                    _pageSize = maxPageSize;
+                else
+                    _pageSize = value;
+            }
         }
 
         public string? SearchTerm { get; set; }

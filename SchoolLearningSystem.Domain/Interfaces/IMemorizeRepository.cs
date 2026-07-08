@@ -5,14 +5,17 @@ namespace SchoolLearningSystem.Domain.Interfaces
 {
     public interface IMemorizeRepository : IGenericRepository<MemorizeSession>
     {
-        // 1. جلب الجلسة الحالية المفتوحة للطالب (إذا كان لديه جلسة لم يكملها اليوم)
+        // جلب الجلسة الحالية المفتوحة للطالب (لم يكملها اليوم)
         Task<MemorizeSession?> GetActiveSessionByStudentIdAsync(int studentId);
 
-        // 2. جلب سجل جلسات الطالب (تاريخ المراجعات) - مفيد للوحة التحكم (Dashboard)
+        // جلب سجل جلسات الطالب (تاريخ المراجعات) - مفيد للوحة التحكم (Dashboard)
         Task<IEnumerable<MemorizeSession>> GetSessionHistoryByStudentIdAsync(int studentId);
 
-        // ملاحظة: تم حذف GetByLessonIdAsync و GetByExerciseIdAsync 
+        // 🆕 جلب جلسة معيّنة مع كل تفاصيل إجاباتها (للمراجعة الكاملة بعد انتهاء الجلسة)
+        Task<MemorizeSession?> GetSessionWithAnswersAsync(int sessionId);
+
+        // ملاحظة: تم حذف GetByLessonIdAsync و GetByExerciseIdAsync عن قصد
         // لأن الجلسة تعتمد على "الطالب" و "اليوم"، وليس على درس معين.
-        // الأسئلة داخل الجلسة هي التي قد تنتمي لدروس مختلفة بناءً على موعد استحقاقها.
+        // الأسئلة داخل الجلسة قد تنتمي لدروس مختلفة بناءً على موعد استحقاقها (SRS).
     }
 }

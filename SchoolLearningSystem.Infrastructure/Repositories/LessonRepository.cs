@@ -12,36 +12,35 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         {
         }
 
-        // 1. جلب الدروس حسب الكورس مع الأداء الأفضل
+        // 🔹 جلب كل دروس كورس معيّن، مرتبة حسب التسلسل (Order)
         public async Task<IEnumerable<Lesson>> GetByCourseIdAsync(int courseId)
         {
             return await _context.Lessons
-                .AsNoTracking() // 🚀 تحسين أداء
-                .Where(l => l.CourseId == courseId)
+                .AsNoTracking() // 🚀 تحسين أداء لعمليات القراءة فقط
+                .Where(l => l.CourseId == courseId && !l.IsDeleted) // استبعاد الدروس المحذوفة منطقياً
+                .OrderBy(l => l.Order) // ضروري لعرض الدروس بترتيبها الصحيح
                 .ToListAsync();
         }
 
-        // 2. جلب الأسئلة الخاصة بدرس معين
-        public async Task<IEnumerable<Question>> GetQuestionsByLessonIdAsync(int lessonId)
+        // 🔹 جلب الدرس التالي بالتسلسل بعد درس معيّن (يفيد نظام التعلم التكيفي / AI)
+        public async Task<Lesson?> GetNextLessonAsync(int courseId, int currentLessonOrder)
         {
-            return await _context.Questions
-                .AsNoTracking() // 🚀 تحسين أداء
-                .Where(q => q.LessonId == lessonId)
-                .ToListAsync();
+            return await _context.Lessons
+                .AsNoTracking()
+                .Where(l => l.CourseId == courseId
+                            && l.Order > currentLessonOrder
+                            && !l.IsDeleted) // استبعاد الدروس المحذوفة منطقياً
+                .OrderBy(l => l.Order)
+                .FirstOrDefaultAsync();
         }
 
-        // 3. إحصائيات: عدد الأسئلة (استخدام CountAsync هو الخيار الأمثل دائماً)
-        public async Task<int> GetTotalQuestionsByLessonIdAsync(int lessonId)
+        // 🔹 جلب الدرس المرتبط بتمرين معيّن (Exercise)
+        public async Task<Lesson?> GetByExerciseIdAsync(int exerciseId)
         {
-            return await _context.Questions
-                .CountAsync(q => q.LessonId == lessonId);
-        }
-
-        // 4. إحصائيات: عدد الامتحانات
-        public async Task<int> GetTotalExamsByLessonIdAsync(int lessonId)
-        {
-            return await _context.Exams
-                .CountAsync(e => e.LessonId == lessonId);
+            return await _context.Lessons
+                .AsNoTracking()
+                .Where(l => !l.IsDeleted && l.Exercises.Any(e => e.Id == exerciseId))
+                .FirstOrDefaultAsync();
         }
     }
 }

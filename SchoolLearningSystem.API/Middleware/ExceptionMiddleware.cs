@@ -1,13 +1,13 @@
 ﻿// Middleware/ExceptionMiddleware.cs
-using SchoolLearningSystem.API.Models;
-using SchoolLearningSystem.API.Responses;
+using SchoolLearningSystem.API.Responses; // ⚠️ تأكد أن ApiResponse<T> معرّفة هنا فعلاً
+                                          // وليست بـ SchoolLearningSystem.API.Models —
+                                          // لو كانت هناك، احذف هذا الـ using وأضف ذاك بدلاً عنه.
+
 using SchoolLearningSystem.Applicationf.Exceptions;
 using System.Net;
 
 namespace SchoolLearningSystem.API.Middleware
 {
-  
-
     public class ExceptionMiddleware
     {
         private readonly RequestDelegate _next;
@@ -27,7 +27,9 @@ namespace SchoolLearningSystem.API.Middleware
             }
             catch (Exception ex)
             {
-                _logger.LogError($"حدث خطأ غير متوقع: {ex.Message}");
+                // ملاحظة: التسجيل الفعلي (بمستوياته المختلفة) صار بالكامل
+                // داخل HandleExceptionAsync، لتفادي تسجيل نفس الاستثناء مرتين
+                // وبمستوى خطأ (LogError) غير مناسب لحالات الأعمال المتوقعة.
                 await HandleExceptionAsync(context, ex);
             }
         }
@@ -35,38 +37,45 @@ namespace SchoolLearningSystem.API.Middleware
         private Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             context.Response.ContentType = "application/json";
-
             var statusCode = HttpStatusCode.InternalServerError;
             var message = "حدث خطأ غير متوقع في السيرفر.";
-            object? errorsData = null; // 👈 1. أضفنا هذا المتغير ليحمل قائمة الأخطاء إن وجدت
+            object? errorsData = null; // يحمل قائمة الأخطاء التفصيلية إن وجدت
 
             if (exception is NotFoundException)
             {
                 statusCode = HttpStatusCode.NotFound;
                 message = exception.Message;
+
+                // Warning لا Error: هذا تدفق عمل طبيعي (مورد غير موجود)، مو عطل بالسيرفر
+                _logger.LogWarning("NotFound: {Message}", exception.Message);
             }
-            // 👈 2. نقوم بعمل Cast للاستثناء لكي نستطيع الوصول إلى customValidationEx.Errors
             else if (exception is CustomValidationException customValidationEx)
             {
                 statusCode = HttpStatusCode.BadRequest;
                 message = customValidationEx.Message;
-                errorsData = customValidationEx.Errors; // 👈 3. نأخذ قائمة الأخطاء التفصيلية
+                errorsData = customValidationEx.Errors; // قائمة الأخطاء التفصيلية
+
+                _logger.LogWarning("فشل تحقق: {Errors}", string.Join("; ", customValidationEx.Errors));
             }
             else if (exception is BadRequestException)
             {
                 statusCode = HttpStatusCode.BadRequest;
                 message = exception.Message;
+
+                _logger.LogWarning("BadRequest: {Message}", exception.Message);
             }
             else
             {
+                // الاستثناء الحقيقي غير المتوقع فقط هو اللي يستاهل LogError
+                // مع تمرير الكائن كاملاً (exception وليس exception.Message فقط)
+                // للحصول على الـ Stack Trace الكامل بسجلات المطور.
                 _logger.LogError(exception, "خطأ غير معالج: {Message}", exception.Message);
             }
 
             context.Response.StatusCode = (int)statusCode;
 
-            // 👈 4. نستخدم ApiResponse<object> لكي يستطيع حمل الـ List<string> الخاص بالأخطاء
+            // استخدام ApiResponse<object> لكي يستطيع حمل الـ List<string> الخاص بالأخطاء
             var response = new ApiResponse<object>((int)statusCode, message, errorsData);
-
             var jsonResponse = System.Text.Json.JsonSerializer.Serialize(response, new System.Text.Json.JsonSerializerOptions
             {
                 PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase

@@ -1,74 +1,55 @@
 ﻿using AutoMapper;
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
-using SchoolLearningSystem.Applicationf.DTOs.Lesson;
 using SchoolLearningSystem.Applicationf.DTOs.Teacher;
+using SchoolLearningSystem.Applicationf.Exceptions;
 using SchoolLearningSystem.Applicationf.Interfaces;
 using SchoolLearningSystem.Applicationf.Services.Base;
 using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace SchoolLearningSystem.Applicationf.Services
 {
-    public class TeacherService : BaseService<Teacher, TeacherReadDto, TeacherCreateDto, TeacherUpdateDto>, ITeacherService
+    // ==================================================================================
+    // 📌 دور هذا الـ Service:
+    // يدير الملف الشخصي للمعلم (الاسم، النبذة، الصورة). أي بيانات تخص علاقة المعلم
+    // بالكورسات تُجلب من ICourseRepository مباشرة (مصدر واحد للحقيقة، بدون تكرار
+    // منطق "كورسات المعلم" بمكانين مختلفين - نفس المبدأ المطبّق بكل الخدمات السابقة).
+    // ==================================================================================
+    public class TeacherService
+        : BaseService<Teacher, TeacherReadDto, TeacherCreateDto, TeacherUpdateDto>, ITeacherService
     {
         private readonly ITeacherRepository _teacherRepository;
+        private readonly ICourseRepository _courseRepository;
 
-        public TeacherService(ITeacherRepository teacherRepository, IMapper mapper)
-            : base(teacherRepository, mapper) // الأب يدير الـ CRUD
+        public TeacherService(
+            ITeacherRepository teacherRepository,
+            ICourseRepository courseRepository,
+            IMapper mapper)
+            : base(teacherRepository, mapper)
         {
             _teacherRepository = teacherRepository;
+            _courseRepository = courseRepository;
         }
 
-      
+        // 🔹 CRUD الأساسي موروث من BaseService
 
-    
-
-        // 🔹 CRUD الأساسي: موروث من BaseService (لا حاجة لكتابته)
-
-        // 🔹 علاقات إضافية (Business Logic)
+        // ============================================================================
+        // 🎯 Use Case: "المعلم يفتح لوحة تحكمه الشخصية ليشوف كل الكورسات التي
+        //              يدرّسها حالياً، بغض النظر عن المنهج أو الصف الذي تتبع له"
+        //
+        // مين يستدعيها: صفحة "لوحة تحكم المعلم" الرئيسية.
+        //
+        // 💡 لاحظ: لا نستخدم teacher.Courses (Navigation Property) لأن GetByIdAsync
+        //    لا يستخدم Include، فترجع فاضية دائماً بصمت. نستخدم ICourseRepository
+        //    مباشرة، وهي مصممة أصلاً لهذا الغرض بالضبط (GetByTeacherIdAsync).
+        // ============================================================================
         public async Task<IEnumerable<CourseReadDto>> GetCoursesByTeacherIdAsync(int teacherId)
         {
-            // نعتمد هنا على أن الـ Repository يجلب الكيان مع علاقاته (Courses)
-            var teacher = await _teacherRepository.GetByIdAsync(teacherId)
-                ?? throw new Exception("Teacher not found");
+            var teacherExists = await _teacherRepository.GetByIdAsync(teacherId)
+                ?? throw new NotFoundException($"المعلم برقم {teacherId} غير موجود.");
 
-            return _mapper.Map<IEnumerable<CourseReadDto>>(teacher.Courses);
+            var courses = await _courseRepository.GetByTeacherIdAsync(teacherId);
+            return _mapper.Map<IEnumerable<CourseReadDto>>(courses);
         }
-
-        public async Task<IEnumerable<LessonReadDto>> GetLessonsByTeacherIdAsync(int teacherId)
-        {
-            var teacher = await _teacherRepository.GetByIdAsync(teacherId)
-                ?? throw new Exception("Teacher not found");
-
-            // تسطيح البيانات: المعلم يملك كورسات، والكورسات تملك دروساً
-            var lessons = teacher.Courses.SelectMany(c => c.Lessons);
-            return _mapper.Map<IEnumerable<LessonReadDto>>(lessons);
-        }
-
-      
-
-        // 🔹 إحصائيات
-        public async Task<int> GetTotalCoursesByTeacherIdAsync(int teacherId)
-        {
-            var teacher = await _teacherRepository.GetByIdAsync(teacherId)
-                ?? throw new Exception("Teacher not found");
-
-            return teacher.Courses?.Count ?? 0;
-        }
-
-        public async Task<int> GetTotalLessonsByTeacherIdAsync(int teacherId)
-        {
-            var teacher = await _teacherRepository.GetByIdAsync(teacherId)
-                ?? throw new Exception("Teacher not found");
-
-            // حساب عدد الدروس الكلي بناءً على قائمة الكورسات
-            return teacher.Courses?.SelectMany(c => c.Lessons).Count() ?? 0;
-        }
-
-      
     }
 }

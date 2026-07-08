@@ -11,7 +11,6 @@ namespace SchoolLearningSystem.Infrastructure.Data
         public DbSet<Curriculum> Curriculums { get; set; }
         public DbSet<Teacher> Teachers { get; set; }
         public DbSet<Student> Students { get; set; }
-
         public DbSet<Course> Courses { get; set; }
         public DbSet<Lesson> Lessons { get; set; }
         public DbSet<Exam> Exams { get; set; }
@@ -20,10 +19,6 @@ namespace SchoolLearningSystem.Infrastructure.Data
         public DbSet<MemorizeSession> MemorizeSessions { get; set; }
         public DbSet<Exercise> Exercises { get; set; }
         public DbSet<CourseStudent> CourseStudents { get; set; }
-      
-
-
-        // الكيانات التحليلية للذكاء الاصطناعي
         public DbSet<StudentQuestionProgress> StudentQuestionProgresses { get; set; }
         public DbSet<StudentAnswerDetail> StudentAnswerDetails { get; set; }
 
@@ -31,15 +26,17 @@ namespace SchoolLearningSystem.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
-
-
-
-
-
-            // 2. السطر الذهبي: هذا السطر يبحث في المشروع الحالي عن أي كلاس يطبق IEntityTypeConfiguration وينفذه تلقائياً
+            // 🔹 السطر الذهبي: يقرأ كل كلاسات IEntityTypeConfiguration بمجلد
+            // Infrastructure/Configurations تلقائياً، ويشمل ذلك:
+            //   - تعريف المفاتيح المركّبة (CourseStudent, StudentQuestionProgress)
+            //   - فلاتر الحذف المنطقي (HasQueryFilter) الخاصة بكل كيان على حِدة
+            //
+            // ⚠️ مهم جداً: لا تضف حلقة foreach تطبّق HasQueryFilter تلقائياً هنا.
+            // كل كيان له فلتره الخاص مُعرَّف صريحاً بملف Configuration المخصص له
+            // (بعضها أدق من فلتر عام، مثل Lesson الذي يستبعد أيضاً دروس الكورسات
+            // المحذوفة: !l.IsDeleted && !l.Course.IsDeleted). فلتر عام تلقائي هنا
+            // سيستبدل (لا يدمج) هذي الفلاتر الدقيقة ويفسدها.
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-
-           
-    }
+        }
     }
 }

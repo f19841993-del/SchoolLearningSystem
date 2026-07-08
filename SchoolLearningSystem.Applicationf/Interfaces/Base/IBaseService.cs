@@ -1,10 +1,5 @@
-﻿using SchoolLearningSystem.Application.Common.Models;
-using SchoolLearningSystem.Application.Common.Parameters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using SchoolLearningSystem.Applicationf.Common.Models;
+using SchoolLearningSystem.Applicationf.Common.Parameters;
 
 namespace SchoolLearningSystem.Applicationf.Interfaces.Base
 {
@@ -15,7 +10,8 @@ namespace SchoolLearningSystem.Applicationf.Interfaces.Base
         Task<TReadDto> CreateAsync(TCreateDto dto);
         Task UpdateAsync(int id, TUpdateDto dto);
         Task DeleteAsync(int id);
-        //Task<PagedList<TReadDto>> GetPagedAsync(int pageNumber, int pageSize);
-        Task<PagedList<TReadDto>> GetPagedAsync(QueryParameters parameters); // 👈 تستقبل الكلاس
+
+        // الترقيم مع دعم الفلترة/الترتيب عبر QueryParameters
+        Task<PagedList<TReadDto>> GetPagedAsync(QueryParameters parameters);
     }
 }

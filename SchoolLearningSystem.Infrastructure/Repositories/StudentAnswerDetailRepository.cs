@@ -6,51 +6,55 @@ using SchoolLearningSystem.Infrastructure.Repositories.Base;
 
 namespace SchoolLearningSystem.Infrastructure.Repositories
 {
-    public class StudentAnswerDetailRepository : GenericRepository<StudentAnswerDetail>, IStudentAnswerDetailRepository
+    public class StudentAnswerDetailRepository
+        : GenericRepository<StudentAnswerDetail>, IStudentAnswerDetailRepository
     {
         public StudentAnswerDetailRepository(AppDbContext context) : base(context)
         {
         }
 
-        // 1. جلب تاريخ إجابات الطالب
+        // تاريخ إجابات الطالب بالكامل، الأحدث أولاً
         public async Task<IEnumerable<StudentAnswerDetail>> GetByStudentIdAsync(int studentId)
         {
             return await _context.StudentAnswerDetails
-                .AsNoTracking() // 🚀 تحسين أداء
-                .Where(s => s.StudentId == studentId)
-                .OrderByDescending(s => s.CreatedAt)
+                .AsNoTracking()
+                .Where(a => a.StudentId == studentId && !a.IsDeleted)
+                .OrderByDescending(a => a.CreatedAt)
                 .ToListAsync();
         }
 
-        // 2. جلب إجابات كل الطلاب على سؤال معين
+        // كل إجابات الطلاب على سؤال معيّن (لتحليل صعوبته الفعلية)
         public async Task<IEnumerable<StudentAnswerDetail>> GetByQuestionIdAsync(int questionId)
         {
             return await _context.StudentAnswerDetails
-                .AsNoTracking() // 🚀 تحسين أداء
-                .Where(s => s.QuestionId == questionId)
+                .AsNoTracking()
+                .Where(a => a.QuestionId == questionId && !a.IsDeleted)
                 .ToListAsync();
         }
 
-        // 3. جلب آخر N إجابة
+        // آخر N إجابة للطالب (لتتبع التطور اللحظي)
         public async Task<IEnumerable<StudentAnswerDetail>> GetRecentAnswersAsync(int studentId, int count)
         {
             return await _context.StudentAnswerDetails
-                .AsNoTracking() // 🚀 تحسين أداء
-                .Where(s => s.StudentId == studentId)
-                .OrderByDescending(s => s.CreatedAt)
+                .AsNoTracking()
+                .Where(a => a.StudentId == studentId && !a.IsDeleted)
+                .OrderByDescending(a => a.CreatedAt)
                 .Take(count)
                 .ToListAsync();
         }
 
-        // 4. جلب الإجابات الخاطئة لدرس معين (استعلام تحليلي)
+        // إجابات الطالب الخاطئة ضمن درس معيّن (لإعادة التدريب المستهدف)
+        // 💡 نستخدم a.Question.LessonId مباشرة بالفلترة (بدون Include) - EF Core
+        // يترجم هذا إلى JOIN بقاعدة البيانات تلقائياً لأنه مجرد شرط تصفية، لا نحتاج
+        // تحميل بيانات Question الكاملة بالذاكرة.
         public async Task<IEnumerable<StudentAnswerDetail>> GetIncorrectAnswersByStudentIdAsync(int studentId, int lessonId)
         {
             return await _context.StudentAnswerDetails
-                .AsNoTracking() // 🚀 تحسين أداء
-                .Include(s => s.Question) // نستخدم Include للوصول لبيانات السؤال
-                .Where(s => s.StudentId == studentId
-                          && s.Question.LessonId == lessonId
-                          && !s.IsCorrect)
+                .AsNoTracking()
+                .Where(a => a.StudentId == studentId
+                            && !a.IsCorrect
+                            && a.Question.LessonId == lessonId
+                            && !a.IsDeleted)
                 .ToListAsync();
         }
     }

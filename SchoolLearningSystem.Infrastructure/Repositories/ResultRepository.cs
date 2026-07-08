@@ -12,41 +12,60 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         {
         }
 
-        // جلب تاريخ الطالب بالكامل (للقراءة فقط -> AsNoTracking)
+        // جلب تاريخ الطالب بالكامل، الأحدث أولاً
         public async Task<IEnumerable<Result>> GetByStudentIdAsync(int studentId)
         {
             return await _context.Results
                 .AsNoTracking()
-                .Where(r => r.StudentId == studentId)
-                .OrderByDescending(r => r.CreatedAt)
+                .Where(r => r.StudentId == studentId && !r.IsDeleted)
+                .OrderByDescending(r => r.Date)
                 .ToListAsync();
         }
 
-        // جلب نتائج امتحان معين
         public async Task<IEnumerable<Result>> GetByExamIdAsync(int examId)
         {
             return await _context.Results
                 .AsNoTracking()
-                .Where(r => r.ExamId == examId)
+                .Where(r => r.ExamId == examId && !r.IsDeleted)
                 .ToListAsync();
         }
 
-        // جلب نتائج درس معين
         public async Task<IEnumerable<Result>> GetByLessonIdAsync(int lessonId)
         {
             return await _context.Results
                 .AsNoTracking()
-                .Where(r => r.LessonId == lessonId)
+                .Where(r => r.LessonId == lessonId && !r.IsDeleted)
                 .ToListAsync();
         }
 
-        // حساب متوسط درجات الطالب في كورس معين (عملية إحصائية)
-        public async Task<double> GetAverageScoreByStudentIdAsync(int studentId, int courseId)
+        // متوسط كل درجات الطالب (بكل الكورسات/الدروس/الامتحانات مجتمعة)
+        public async Task<double> GetAverageScoreByStudentIdAsync(int studentId)
         {
-            // العملية تتم في SQL، نستخدم AsNoTracking لأنها عملية حسابية للقراءة فقط
             return await _context.Results
                 .AsNoTracking()
-                .Where(r => r.StudentId == studentId && r.Exam.CourseId == courseId)
+                .Where(r => r.StudentId == studentId && !r.IsDeleted)
+                .Select(r => r.Score)
+                .DefaultIfEmpty(0)
+                .AverageAsync();
+        }
+
+        // متوسط درجات كل الطلاب بدرس معيّن (يفيد لمعرفة مدى صعوبة الدرس)
+        public async Task<double> GetAverageScoreByLessonIdAsync(int lessonId)
+        {
+            return await _context.Results
+                .AsNoTracking()
+                .Where(r => r.LessonId == lessonId && !r.IsDeleted)
+                .Select(r => r.Score)
+                .DefaultIfEmpty(0)
+                .AverageAsync();
+        }
+
+        // متوسط درجات كل الطلاب بامتحان معيّن (يفيد لمعرفة مدى صعوبة الامتحان)
+        public async Task<double> GetAverageScoreByExamIdAsync(int examId)
+        {
+            return await _context.Results
+                .AsNoTracking()
+                .Where(r => r.ExamId == examId && !r.IsDeleted)
                 .Select(r => r.Score)
                 .DefaultIfEmpty(0)
                 .AverageAsync();

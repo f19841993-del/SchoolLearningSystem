@@ -12,24 +12,38 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         {
         }
 
-        // 1. جلب الجلسة الحالية (غير المكتملة) للطالب
+        // جلب الجلسة النشطة (لم تُكمل بعد + أُنشئت اليوم بالضبط)
+        // 💡 بدون AsNoTracking عن قصد: غالباً نجلب هذي الجلسة لنعدّل عليها مباشرة
+        // (تسجيل إجابة جديدة، تحديث SuccessRate، إلخ)
         public async Task<MemorizeSession?> GetActiveSessionByStudentIdAsync(int studentId)
         {
+            var today = DateTime.UtcNow.Date;
+
             return await _context.MemorizeSessions
-                .AsNoTracking()
-                // من الأفضل دائماً جلب الـ AnswerDetails إذا كنت ستستخدمها فوراً في الـ Service
-                .Include(s => s.AnswerDetails)
-                .FirstOrDefaultAsync(s => s.StudentId == studentId && !s.IsCompleted);
+                .Where(m => m.StudentId == studentId
+                            && !m.IsCompleted
+                            && m.CreatedAt.Date == today
+                            && !m.IsDeleted)
+                .FirstOrDefaultAsync();
         }
 
-        // 2. جلب سجل جلسات الطالب (التاريخ) - مرتبة من الأحدث للأقدم
+        // سجل جلسات الطالب بالكامل، الأحدث أولاً (للقراءة فقط)
         public async Task<IEnumerable<MemorizeSession>> GetSessionHistoryByStudentIdAsync(int studentId)
         {
             return await _context.MemorizeSessions
                 .AsNoTracking()
-                .Where(s => s.StudentId == studentId)
-                .OrderByDescending(s => s.CreatedAt)
+                .Where(m => m.StudentId == studentId && !m.IsDeleted)
+                .OrderByDescending(m => m.CreatedAt)
                 .ToListAsync();
+        }
+
+        // 🆕 جلب جلسة معيّنة مع كل إجاباتها التفصيلية (للمراجعة الكاملة، للقراءة فقط)
+        public async Task<MemorizeSession?> GetSessionWithAnswersAsync(int sessionId)
+        {
+            return await _context.MemorizeSessions
+                .AsNoTracking()
+                .Include(m => m.AnswerDetails)
+                .FirstOrDefaultAsync(m => m.Id == sessionId && !m.IsDeleted);
         }
     }
 }

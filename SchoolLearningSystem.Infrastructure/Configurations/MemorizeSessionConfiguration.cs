@@ -16,22 +16,17 @@ namespace SchoolLearningSystem.Infrastructure.Configurations
             builder.HasOne(ms => ms.Student)
                    .WithMany(s => s.MemorizeSessions)
                    .HasForeignKey(ms => ms.StudentId)
-                   .OnDelete(DeleteBehavior.Restrict); // 👈 تعديل هندسي
+                   .OnDelete(DeleteBehavior.Restrict);
 
-            // العلاقة مع الدرس: منع الحذف (لحماية سجل الجلسات المرتبطة بالدرس)
-            builder.HasOne(ms => ms.Lesson)
-                   .WithMany(l => l.MemorizeSessions)
-                   .HasForeignKey(ms => ms.LessonId)
-                   .OnDelete(DeleteBehavior.Restrict); // 👈 تعديل هندسي
+            // 💡 تم حذف علاقة Lesson بالكامل من هنا (راجع ملاحظة MemorizeSession.cs)
 
             // العلاقة مع التمرين (اختيارية): تصفير الحقل إذا تم حذف التمرين
             builder.HasOne(ms => ms.Exercise)
-                   .WithMany() // بافتراض أنك لم تضف قائمة جلسات داخل كيان التمرين
+                   .WithMany()
                    .HasForeignKey(ms => ms.ExerciseId)
-                   .OnDelete(DeleteBehavior.SetNull); // 👈 تعامل صحيح مع الحقل الاختياري (int?)
+                   .OnDelete(DeleteBehavior.SetNull);
 
             // 🔹 2. العلاقة مع تفاصيل الإجابات (علاقة الكل بالجزء)
-            // هنا Cascade منطقي جداً، لأنه إذا حُذفت الجلسة (لسبب ما)، فمن الطبيعي أن تُحذف إجاباتها المرتبطة بها
             builder.HasMany(ms => ms.AnswerDetails)
                    .WithOne(ad => ad.MemorizeSession)
                    .HasForeignKey(ad => ad.MemorizeSessionId)

@@ -17,7 +17,7 @@ namespace SchoolLearningSystem.Infrastructure.Configurations
 
             // 🔹 2. إعداد العلاقات (التي يملك الدرس مفتاحها الأجنبي)
 
-            // علاقة الدرس بالكورس (الكل بالجزء): إذا انحذف الكورس، ينحذف الدرس (بشرط ألا يمتلك الدرس طلاباً)
+            // علاقة الدرس بالكورس (الكل بالجزء): إذا انحذف الكورس، ينحذف الدرس
             builder.HasOne(l => l.Course)
                    .WithMany(c => c.Lessons)
                    .HasForeignKey(l => l.CourseId)
@@ -25,17 +25,8 @@ namespace SchoolLearningSystem.Infrastructure.Configurations
 
             // 🔹 3. حماية الكيانات التابعة للدرس (تدريع البيانات) 🛡️
 
-            // حماية النتائج: يمنع حذف الدرس إذا كان له نتائج
-            builder.HasMany(l => l.Results)
-                   .WithOne(r => r.Lesson)
-                   .HasForeignKey(r => r.LessonId)
-                   .OnDelete(DeleteBehavior.Restrict);
-
-            // حماية جلسات المراجعة (AI Data): يمنع حذف الدرس إذا ذاكره الطلاب
-            builder.HasMany(l => l.MemorizeSessions)
-                   .WithOne(ms => ms.Lesson)
-                   .HasForeignKey(ms => ms.LessonId)
-                   .OnDelete(DeleteBehavior.Restrict);
+            // 💡 ملاحظة: علاقة Lesson↔Result مُعرَّفة بالكامل بـ ResultConfiguration (SetNull)
+            // 💡 ملاحظة: علاقة Lesson↔MemorizeSession تم حذفها بالكامل (راجع MemorizeSession.cs)
 
             // حماية بنك الأسئلة: يمنع حذف الدرس إذا كان يحتوي على أسئلة
             builder.HasMany(l => l.Questions)
@@ -43,14 +34,8 @@ namespace SchoolLearningSystem.Infrastructure.Configurations
                    .HasForeignKey(q => q.LessonId)
                    .OnDelete(DeleteBehavior.Restrict);
 
-            // علاقة الدرس بالتمارين اللحظية (كما كتبتها أنت، ويفضل لاحقاً نقلها لـ ExerciseConfiguration)
-            //builder.HasMany(l => l.Exercises)
-            //       .WithOne(e => e.Lesson)
-            //       .HasForeignKey(e => e.LessonId)
-            //       .OnDelete(DeleteBehavior.Cascade); // التمرين اللحظي يُحذف بحذف الدرس (منطقي جداً)
-
             // 🔹 4. الفلتر الشامل
-            builder.HasQueryFilter(l => !l.IsDeleted);
+            builder.HasQueryFilter(l => !l.IsDeleted && !l.Course.IsDeleted);
         }
     }
 }

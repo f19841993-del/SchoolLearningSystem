@@ -1,18 +1,21 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using SchoolLearningSystem.Domain.Enums;
 
-namespace SchoolLearningSystem.Applicationf.DTOs.ExamDto
+namespace SchoolLearningSystem.Applicationf.DTOs.Exam
 {
     public class ExamUpdateDto
     {
-        [StringLength(200)]
+        [StringLength(200, MinimumLength = 3)]
         public string? Title { get; set; }
 
-        public int? DurationInMinutes { get; set; }
+        public ExamType? ExamType { get; set; }
 
-        public int? PassingScore { get; set; }
+        public DifficultyLevel? Difficulty { get; set; }
 
-        public DateTime? StartDate { get; set; }
+        public int? LessonId { get; set; }
 
-        public bool? IsActive { get; set; }
+        // CourseId مستثنى عمداً - نقل امتحان بين كورسات مختلفة تصرف نادر
+        // وخطير (يكسر ربط النتائج/الأسئلة)؛ إذا لزم فعلاً، يُنفَّذ كـ
+        // Use Case صريح منفصل بدل Update عام.
     }
 }

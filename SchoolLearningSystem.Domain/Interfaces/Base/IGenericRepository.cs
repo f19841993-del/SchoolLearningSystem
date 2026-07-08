@@ -1,27 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 
 namespace SchoolLearningSystem.Domain.Interfaces.Base
 {
-    // في مجلد SchoolLearningSystem.Domain.Interfaces
     public interface IGenericRepository<T> where T : class
     {
         Task<T?> GetByIdAsync(int id);
         Task<IEnumerable<T>> GetAllAsync();
-        // 🔹 التعديل هنا: إضافة دالة الترقيم (Pagination)
-        // سنستخدم الـ Tuple لجلب البيانات والعدد الكلي معاً بشكل نظيف
-        // دالة ترقيم تقبل شرطاً (مثل: جلب طلاب كورس معين)
+
+        // 🔹 دالة الترقيم (Pagination) - الفلتر اختياري (null = بدون فلترة إضافية)
+        // 💡 Nullable ضرورية لتطابق GetPagedAsync(parameters) العامة بـ BaseService،
+        // التي تمرر null عند عدم وجود فلتر خاص - بدونها Compile Error فوري.
         Task<(IEnumerable<T> Items, int TotalCount)> GetPagedAsync(
-            Expression<Func<T, bool>> filter,
+            Expression<Func<T, bool>>? filter,
             int pageNumber,
             int pageSize);
+
         Task AddAsync(T entity);
         Task UpdateAsync(T entity);
+
+        // 🔹 حذف منطقي (Soft Delete) - الافتراضي لحماية البيانات
         Task DeleteAsync(int id);
+
+        // 🆕 استرجاع سجل تم حذفه منطقياً (Soft Delete Undo)
+        Task RestoreAsync(int id);
+
+        // 🆕 حذف فعلي نهائي من قاعدة البيانات (استخدام نادر جداً - Admin فقط)
+        Task HardDeleteAsync(int id);
+
         Task SaveChangesAsync();
     }
 }

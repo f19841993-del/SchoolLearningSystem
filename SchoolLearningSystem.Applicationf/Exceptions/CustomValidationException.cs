@@ -1,4 +1,7 @@
-﻿using FluentValidation.Results; // تأكد من إضافة هذه الـ Using
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using FluentValidation.Results;
 
 namespace SchoolLearningSystem.Applicationf.Exceptions
 {

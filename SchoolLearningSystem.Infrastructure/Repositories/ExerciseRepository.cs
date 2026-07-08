@@ -13,21 +13,19 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         {
         }
 
-        // جلب جميع التمارين المرتبطة بدرس معين مع تحسين الأداء
         public async Task<IEnumerable<Exercise>> GetByLessonIdAsync(int lessonId)
         {
             return await _context.Exercises
-                .AsNoTracking() // 👈 الأداء الأفضل للقراءة فقط
-                .Where(e => e.LessonId == lessonId)
+                .AsNoTracking()
+                .Where(e => e.LessonId == lessonId && !e.IsDeleted)
                 .ToListAsync();
         }
 
-        // جلب التمارين حسب مستوى الصعوبة
         public async Task<IEnumerable<Exercise>> GetByDifficultyAsync(DifficultyLevel difficulty)
         {
             return await _context.Exercises
-                .AsNoTracking() // 👈 الأداء الأفضل للقراءة فقط
-                .Where(e => e.Difficulty == difficulty)
+                .AsNoTracking()
+                .Where(e => e.Difficulty == difficulty && !e.IsDeleted)
                 .ToListAsync();
         }
     }

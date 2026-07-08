@@ -15,8 +15,8 @@ namespace SchoolLearningSystem.Domain.Entities
         public Exam? Exam { get; set; }
 
         // علاقة الدرس "إجبارية" (كل سؤال يتبع لدرس)
-        public int LessonId { get; set; }
-        public Lesson Lesson { get; set; }
+        public int LessonId { get; set; } 
+        public Lesson Lesson { get; set; } = null!;
 
         // 🔹 قلب الذكاء الاصطناعي: سجل أداء الطلاب في هذا السؤال
         public ICollection<StudentQuestionProgress> QuestionStats { get; set; } = new List<StudentQuestionProgress>();

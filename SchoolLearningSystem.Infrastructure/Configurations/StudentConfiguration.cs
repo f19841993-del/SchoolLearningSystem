@@ -10,7 +10,7 @@ namespace SchoolLearningSystem.Infrastructure.Configurations
         {
             builder.ToTable("Students");
 
-            // 🔹 1. إعدادات الحقول (ممتازة جداً ولا غبار عليها)
+            // 🔹 1. إعدادات الحقول
             builder.Property(s => s.Name).IsRequired().HasMaxLength(150);
             builder.Property(s => s.Username).IsRequired().HasMaxLength(100);
             builder.Property(s => s.Email).IsRequired().HasMaxLength(150);
@@ -26,22 +26,19 @@ namespace SchoolLearningSystem.Infrastructure.Configurations
             builder.HasMany(s => s.MemorizeSessions)
                    .WithOne(ms => ms.Student)
                    .HasForeignKey(ms => ms.StudentId)
-                   .OnDelete(DeleteBehavior.Restrict); // 👈 تعديل لحماية البيانات
+                   .OnDelete(DeleteBehavior.Restrict);
 
             // ب) العلاقة مع النتائج: حماية النزاهة الأكاديمية
             builder.HasMany(s => s.Results)
                    .WithOne(r => r.Student)
                    .HasForeignKey(r => r.StudentId)
-                   .OnDelete(DeleteBehavior.Restrict); // 👈 تعديل لحماية الدرجات
+                   .OnDelete(DeleteBehavior.Restrict);
 
-            // ج) العلاقة مع تقدم الطالب (SRS): حماية عقل الذكاء الاصطناعي
-            builder.HasMany(s => s.Progresses)
-                   .WithOne(p => p.Student)
-                   .HasForeignKey(p => p.StudentId)
-                   .OnDelete(DeleteBehavior.Restrict); // 👈 إضافة لمنع التضارب وضياع البيانات
+            // 💡 ملاحظة: علاقة Student↔StudentQuestionProgress تم نقلها بالكامل إلى
+            // StudentQuestionProgressConfiguration (Cascade) لتفادي تعارض تعريف نفس
+            // المفتاح الأجنبي بمكانين مختلفين. لا تُعرَّف هذي العلاقة هنا نهائياً.
 
-            // د) العلاقة مع الكورسات المشترك بها (CourseStudents)
-            // هنا Cascade منطقي، لأنه إذا حُذف الطالب نهائياً، فلا داعي لبقاء سجل تسجيله في الكورس
+            // ج) العلاقة مع الكورسات المشترك بها (CourseStudents)
             builder.HasMany(s => s.CourseStudents)
                    .WithOne(cs => cs.Student)
                    .HasForeignKey(cs => cs.StudentId)

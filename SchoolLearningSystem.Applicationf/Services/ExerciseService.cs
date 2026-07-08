@@ -1,61 +1,63 @@
 ﻿using AutoMapper;
 using SchoolLearningSystem.Applicationf.DTOs.ExerciseDto;
-using SchoolLearningSystem.Applicationf.DTOs.Lesson;
-using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
 using SchoolLearningSystem.Applicationf.Exceptions;
 using SchoolLearningSystem.Applicationf.Interfaces;
 using SchoolLearningSystem.Applicationf.Services.Base;
 using SchoolLearningSystem.Domain.Entities;
+using SchoolLearningSystem.Domain.Enums;
 using SchoolLearningSystem.Domain.Interfaces;
 
 namespace SchoolLearningSystem.Applicationf.Services
 {
-    public class ExerciseService : BaseService<Exercise, ExerciseReadDto, ExerciseCreateDto, ExerciseUpdateDto>, IExerciseService
+    // ==================================================================================
+    // 📌 دور هذا الـ Service:
+    // يدير "التمارين" (Exercise) - وهي أنشطة تدريبية غير رسمية داخل الدرس (بعكس
+    // الامتحان/Exam الذي يُحسب رسمياً بالدرجات). تُستخدم للتدريب الفوري أثناء الدرس.
+    // ==================================================================================
+    public class ExerciseService
+        : BaseService<Exercise, ExerciseReadDto, ExerciseCreateDto, ExerciseUpdateDto>, IExerciseService
     {
         private readonly IExerciseRepository _exerciseRepository;
         private readonly ILessonRepository _lessonRepository;
-        private readonly IMemorizeRepository _memorizeRepository; // 👈 لا تنسَ إضافة هذا
 
         public ExerciseService(
             IExerciseRepository exerciseRepository,
             ILessonRepository lessonRepository,
-            IMemorizeRepository memorizeRepository,
             IMapper mapper)
-            : base(exerciseRepository, mapper) // هنا يتم ربط الـ CRUD الأساسي
+            : base(exerciseRepository, mapper)
         {
             _exerciseRepository = exerciseRepository;
             _lessonRepository = lessonRepository;
-            _memorizeRepository = memorizeRepository; // 👈 لا تنسَ إضافة هذا
         }
 
-        // 🔹 ملاحظة: الـ CRUD الأساسي (GetAll, GetById, Add, Update, Delete) 
-        // لا نحتاج كتابتها لأنها موروثة من BaseService.
+        // 🔹 CRUD الأساسي موروث من BaseService
 
-        // 🔹 علاقات إضافية
+        // ============================================================================
+        // 🎯 Use Case: "الطالب يفتح درساً ويريد يتدرب فوراً بتمارين قصيرة بعد شرح
+        //              كل فكرة، قبل ما ينتقل للامتحان الرسمي على الدرس كامل"
+        //
+        // مين يستدعيها: صفحة الدرس بواجهة الطالب (Controller الخاص بـ LessonDetails).
+        // ============================================================================
         public async Task<IEnumerable<ExerciseReadDto>> GetExercisesByLessonIdAsync(int lessonId)
         {
+            var lessonExists = await _lessonRepository.GetByIdAsync(lessonId)
+                ?? throw new NotFoundException($"الدرس برقم {lessonId} غير موجود.");
+
             var exercises = await _exerciseRepository.GetByLessonIdAsync(lessonId);
             return _mapper.Map<IEnumerable<ExerciseReadDto>>(exercises);
         }
 
-        public async Task<IEnumerable<MemorizeSessionReadDto>> GetMemorizeSessionsByExerciseIdAsync(int exerciseId)
+        // ============================================================================
+        // 🎯 Use Case: "محرك الذكاء الاصطناعي يبني مسار تدريب تصاعدي: يبدأ بتمارين
+        //              سهلة، وكل ما الطالب ينجح يرفع له مستوى الصعوبة تدريجياً"
+        //
+        // مين يستدعيها: خدمة الـ AI الداخلية (نفس فكرة GetQuestionsByDifficultyAsync
+        //               بـ QuestionService، بس هنا على مستوى التمارين غير الرسمية).
+        // ============================================================================
+        public async Task<IEnumerable<ExerciseReadDto>> GetExercisesByDifficultyAsync(DifficultyLevel difficulty)
         {
-            // 1. التأكد من وجود التمرين (اختياري، يمكنك الاستغناء عنه إذا كان الـ Repository يقوم بالفحص)
-            var exercise = await _exerciseRepository.GetByIdAsync(exerciseId)
-                ?? throw new NotFoundException($"Exercise with ID {exerciseId} not found.");
-
-            // 2. جلب الجلسات مباشرة من مستودع الجلسات (يجب إضافة هذه الدالة في الـ Repository)
-            var sessions = await _memorizeRepository.GetByExerciseIdAsync(exerciseId);
-
-            return _mapper.Map<IEnumerable<MemorizeSessionReadDto>>(sessions);
-        }
-
-        public async Task<LessonReadDto?> GetLessonByExerciseIdAsync(int exerciseId)
-        {
-            var exercise = await _exerciseRepository.GetByIdAsync(exerciseId)
-                ?? throw new Exception("Exercise not found");
-
-            return _mapper.Map<LessonReadDto?>(exercise.Lesson);
+            var exercises = await _exerciseRepository.GetByDifficultyAsync(difficulty);
+            return _mapper.Map<IEnumerable<ExerciseReadDto>>(exercises);
         }
     }
 }

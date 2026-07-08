@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using SchoolLearningSystem.Domain.Entities;
+﻿using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Interfaces;
 using SchoolLearningSystem.Infrastructure.Data;
 using SchoolLearningSystem.Infrastructure.Repositories.Base;
@@ -12,14 +11,9 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         {
         }
 
-        // 🔹 تنفيذ الاستعلام المخصص لجلب الكورسات الخاصة بمعلم معين
-        public async Task<IEnumerable<Course>> GetCoursesByTeacherIdAsync(int teacherId)
-        {
-            // نستخدم AsNoTracking لتحسين الأداء لأننا نجلب بيانات للعرض فقط
-            return await _context.Courses
-                .AsNoTracking()
-                .Where(c => c.TeacherId == teacherId)
-                .ToListAsync();
-        }
+        // 💡 ملاحظة: لا تضف GetCoursesByTeacherIdAsync هنا. تم حذفها عن قصد لأن
+        // ICourseRepository.GetByTeacherIdAsync هي المصدر الوحيد لهذي البيانات
+        // (مبدأ "مصدر واحد للحقيقة" - راجع النقاش الخاص بـ ITeacherRepository).
+        // TeacherService.GetCoursesByTeacherIdAsync تستدعي ICourseRepository مباشرة.
     }
 }

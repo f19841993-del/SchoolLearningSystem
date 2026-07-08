@@ -5,6 +5,9 @@ using SchoolLearningSystem.Infrastructure.Data;
 
 namespace SchoolLearningSystem.Infrastructure.Repositories
 {
+    // 💡 لا يرث من GenericRepository<T> لأن CourseStudent له مفتاح مركّب (CourseId + StudentId)
+    // 💡 منطق الأعمال (التحقق من التكرار، وجود الكورس/الطالب) أصبح مسؤولية CourseStudentService
+    // هذا الريبو يقدّم فقط عمليات وصول بيانات بسيطة (Data Access)
     public class CourseStudentRepository : ICourseStudentRepository
     {
         private readonly AppDbContext _context;
@@ -14,7 +17,6 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
             _context = context;
         }
 
-        // 🔹 للقراءة فقط -> AsNoTracking
         public async Task<IEnumerable<CourseStudent>> GetAllAsync()
         {
             return await _context.CourseStudents.AsNoTracking().ToListAsync();
@@ -22,7 +24,6 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
 
         public async Task<CourseStudent?> GetByIdAsync(int courseId, int studentId)
         {
-            // استخدام FindAsync مع المفاتيح المركبة هو الطريقة الاحترافية للبحث
             return await _context.CourseStudents.FindAsync(courseId, studentId);
         }
 
@@ -48,29 +49,26 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
             }
         }
 
-        // 🔹 للقراءة فقط -> AsNoTracking
         public async Task<IEnumerable<CourseStudent>> GetByCourseIdAsync(int courseId)
         {
             return await _context.CourseStudents
                 .AsNoTracking()
                 .Where(cs => cs.CourseId == courseId)
-                .Include(cs => cs.Student) // لجلب بيانات الطالب مع الاشتراك
+                .Include(cs => cs.Student)
                 .ToListAsync();
         }
 
-        // 🔹 للقراءة فقط -> AsNoTracking
         public async Task<IEnumerable<CourseStudent>> GetByStudentIdAsync(int studentId)
         {
             return await _context.CourseStudents
                 .AsNoTracking()
                 .Where(cs => cs.StudentId == studentId)
-                .Include(cs => cs.Course) // لجلب بيانات الكورس مع الاشتراك
+                .Include(cs => cs.Course)
                 .ToListAsync();
         }
 
         public async Task<int> CountByCourseIdAsync(int courseId)
         {
-            // EF Core سيحول هذا الكود إلى SELECT COUNT(*) FROM ... وهو أسرع بكثير
             return await _context.CourseStudents.CountAsync(cs => cs.CourseId == courseId);
         }
 
@@ -79,34 +77,36 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
             return await _context.CourseStudents.CountAsync(cs => cs.StudentId == studentId);
         }
 
-        // 🔹 للقراءة فقط -> AsNoTracking
         public async Task<(IEnumerable<CourseStudent> Items, int TotalCount)> GetPagedByCourseIdAsync(int courseId, int pageNumber, int pageSize)
         {
             var query = _context.CourseStudents
                 .AsNoTracking()
-                .Include(cs => cs.Student) // 👈 مهم جداً لكي لا يكون الطالب null في الـ DTO
-                .Where(cs => cs.CourseId == courseId); // الفلترة أولاً
+                .Include(cs => cs.Student)
+                .Where(cs => cs.CourseId == courseId);
 
-            var totalCount = await query.CountAsync(); // الحساب في DB
+            var totalCount = await query.CountAsync();
+
             var items = await query
-                .Skip((pageNumber - 1) * pageSize) // الترقيم في DB
+                .OrderBy(cs => cs.StudentId)
+                .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
             return (items, totalCount);
         }
 
-        // 🔹 للقراءة فقط -> AsNoTracking
         public async Task<(IEnumerable<CourseStudent> Items, int TotalCount)> GetPagedByStudentIdAsync(int studentId, int pageNumber, int pageSize)
         {
             var query = _context.CourseStudents
                 .AsNoTracking()
-                .Include(cs => cs.Course) // 👈 مهم جداً لكي لا يكون الكورس null في الـ DTO
-                .Where(cs => cs.StudentId == studentId); // الفلترة أولاً
+                .Include(cs => cs.Course)
+                .Where(cs => cs.StudentId == studentId);
 
-            var totalCount = await query.CountAsync(); // الحساب في DB
+            var totalCount = await query.CountAsync();
+
             var items = await query
-                .Skip((pageNumber - 1) * pageSize) // الترقيم في DB
+                .OrderBy(cs => cs.CourseId)
+                .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 

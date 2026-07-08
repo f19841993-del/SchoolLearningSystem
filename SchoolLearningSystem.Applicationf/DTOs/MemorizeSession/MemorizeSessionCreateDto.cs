@@ -7,15 +7,15 @@ namespace SchoolLearningSystem.Applicationf.DTOs.MemorizeSession
         [Required]
         public int StudentId { get; set; }
 
-        [Required]
-        public int LessonId { get; set; }
-
+        // اختياري: الجلسة قد تكون مرتبطة بتمرين تدريبي محدد، أو جلسة SRS عامة
         public int? ExerciseId { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Attempts must be at least 1")]
-        public int Attempts { get; set; }
+        [Range(0, int.MaxValue, ErrorMessage = "Duration cannot be negative")]
+        public int DurationInSeconds { get; set; }
 
-        [Range(0.0, 100.0, ErrorMessage = "Success rate must be between 0 and 100")]
-        public double SuccessRate { get; set; }
+        // 💡 ملاحظة معمارية: لا يوجد هنا Attempts/SuccessRate/TotalAttempts —
+        // هذه حقول محسوبة (Aggregated) من AnswerDetails.Count() ومعدل النجاح،
+        // يجب أن يحسبها SrsService/MemorizeService تلقائياً بعد إضافة الإجابات،
+        // وليس أن يرسلها الـ Client جاهزة.
     }
 }

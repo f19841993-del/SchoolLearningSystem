@@ -1,24 +1,25 @@
-﻿using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
-using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
-using SchoolLearningSystem.Applicationf.DTOs.Result;
-using SchoolLearningSystem.Applicationf.DTOs.Student;
+﻿using SchoolLearningSystem.Applicationf.DTOs.Student;
 using SchoolLearningSystem.Applicationf.Interfaces.Base;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using SchoolLearningSystem.Domain.Enums;
 
 namespace SchoolLearningSystem.Applicationf.Interfaces
 {
     public interface IStudentService : IBaseService<StudentReadDto, StudentCreateDto, StudentUpdateDto>
     {
-        // 🔹 CRUD الأساسي: موروث من IBaseService، لا حاجة لكتابته هنا!
+        // 🔹 العمليات الأساسية (GetAll, GetById, Create, Update, Delete, GetPaged)
+        // موجودة مسبقاً بفضل الوراثة من IBaseService
 
-        // 🔹 علاقات إضافية (Business Logic)
-        Task<IEnumerable<CourseReadDto>> GetCoursesByStudentIdAsync(int studentId);
-        Task<IEnumerable<ResultReadDto>> GetResultsByStudentIdAsync(int studentId);
-        Task<IEnumerable<MemorizeSessionReadDto>> GetMemorizeSessionsByStudentIdAsync(int studentId);
+        // ==========================================
+        // 🔹 علاقات إضافية
+        // ==========================================
 
-        // 🔹 إحصائيات
-        Task<double> GetAverageScoreByStudentIdAsync(int studentId);
-        Task<int> GetTotalCoursesByStudentIdAsync(int studentId);
+        // جلب طلاب مرحلة دراسية معيّنة
+        Task<IEnumerable<StudentReadDto>> GetStudentsByGradeLevelAsync(GradeLevel gradeLevel);
+
+        // جلب الطالب مع كل بيانات تقدمه (لمحرك التكرار المتباعد / لوحة الأداء الشخصية)
+        Task<StudentReadDto> GetStudentWithProgressAsync(int studentId);
+
+        // 💡 ملاحظة: "طلاب كورس معيّن" موجودة بـ ICourseStudentService.GetStudentsByCourseIdAsync
+        // ولا تُكرر هنا حفاظاً على مصدر واحد للحقيقة (Single Source of Truth)
     }
 }

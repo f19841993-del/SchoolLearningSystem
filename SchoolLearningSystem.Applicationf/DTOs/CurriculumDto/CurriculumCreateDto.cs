@@ -1,17 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using SchoolLearningSystem.Domain.Enums;
 
-namespace SchoolLearningSystem.Applicationf.DTOs.CurriculumDto
+namespace SchoolLearningSystem.Applicationf.DTOs.Curriculum
 {
     public class CurriculumCreateDto
     {
-        [Required(ErrorMessage = "Title is required")]
-        [StringLength(150, ErrorMessage = "Title cannot exceed 150 characters")]
-        public string Title { get; set; } = string.Empty;
+        [Required(ErrorMessage = "GradeLevel is required")]
+        public GradeLevel GradeLevel { get; set; }
 
-        [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters")]
+        [Required(ErrorMessage = "Name is required")]
+        [StringLength(150, MinimumLength = 3)]
+        public string Name { get; set; } = string.Empty;
+
         public string? Description { get; set; }
-
-        [Required(ErrorMessage = "Education Level is required")]
-        public string Level { get; set; } = string.Empty; // مثال: "Grade 10", "Preparatory"
     }
 }

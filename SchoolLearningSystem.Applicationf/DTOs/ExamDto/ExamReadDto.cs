@@ -1,17 +1,20 @@
-﻿namespace SchoolLearningSystem.Applicationf.DTOs.ExamDto
+﻿using SchoolLearningSystem.Domain.Enums;
+
+namespace SchoolLearningSystem.Applicationf.DTOs.Exam
 {
     public class ExamReadDto
     {
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
+        public ExamType ExamType { get; set; }
+        public DifficultyLevel Difficulty { get; set; }
 
-        // بيانات الكورس المرتبط بالامتحان
         public int CourseId { get; set; }
         public string CourseTitle { get; set; } = string.Empty;
 
-        public int DurationInMinutes { get; set; }
-        public int PassingScore { get; set; }
-        public DateTime StartDate { get; set; }
-        public bool IsActive { get; set; } // لمعرفة هل الامتحان متاح الآن أم لا
+        public int? LessonId { get; set; }
+        public string? LessonTitle { get; set; }
+
+        public int QuestionsCount { get; set; }
     }
 }

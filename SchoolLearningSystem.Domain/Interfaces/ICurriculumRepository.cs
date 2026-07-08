@@ -6,7 +6,7 @@ namespace SchoolLearningSystem.Domain.Interfaces
 {
     public interface ICurriculumRepository : IGenericRepository<Curriculum>
     {
-        // استخدام الـ Enum هنا يضمن دقة البيانات (Type-Safety)
         Task<Curriculum?> GetByGradeLevelAsync(GradeLevel gradeLevel);
-    }
+    }                                                                                   // أو لو بقيت مادة وحدة بس:
+                                                                                        // Task<Curriculum?> GetByGradeAndSubjectAsync(GradeLevel gradeLevel, string subject);
 }

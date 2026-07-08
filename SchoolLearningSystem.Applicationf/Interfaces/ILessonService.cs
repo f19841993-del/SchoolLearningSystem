@@ -1,29 +1,35 @@
-﻿using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
-using SchoolLearningSystem.Applicationf.DTOs.ExerciseDto;
+﻿using SchoolLearningSystem.Applicationf.Common.Models;
+using SchoolLearningSystem.Applicationf.Common.Parameters;
 using SchoolLearningSystem.Applicationf.DTOs.Lesson;
-using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
-using SchoolLearningSystem.Applicationf.DTOs.Question;
-using SchoolLearningSystem.Applicationf.DTOs.Result;
 using SchoolLearningSystem.Applicationf.Interfaces.Base;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace SchoolLearningSystem.Applicationf.Interfaces
 {
     public interface ILessonService : IBaseService<LessonReadDto, LessonCreateDto, LessonUpdateDto>
     {
-        // 🔹 العمليات الأساسية (GetAll, GetById, Add, Update, Delete) 
-        // أصبحت الآن موروثة من IBaseService.
+        // 🔹 العمليات الأساسية (GetAll, GetById, Add, Update, Delete, GetPaged)
+        // موجودة مسبقاً بفضل الوراثة من IBaseService
 
-        // 🔹 علاقات إضافية (Business Logic)
-        Task<IEnumerable<ExamReadDto>> GetExamsByLessonIdAsync(int lessonId);
-        Task<IEnumerable<ExerciseReadDto>> GetExercisesByLessonIdAsync(int lessonId);
-        Task<IEnumerable<ResultReadDto>> GetResultsByLessonIdAsync(int lessonId);
-        Task<IEnumerable<MemorizeSessionReadDto>> GetMemorizeSessionsByLessonIdAsync(int lessonId);
-        Task<IEnumerable<QuestionReadDto>> GetQuestionsByLessonIdAsync(int lessonId);
+        // ==========================================
+        // 🔹 عمليات مخصصة للدرس (Business Logic)
+        // ==========================================
 
-        // 🔹 إحصائيات
-        Task<int> GetTotalQuestionsByLessonIdAsync(int lessonId);
-        Task<int> GetTotalExamsByLessonIdAsync(int lessonId);
+        // 🎯 Use Case: استرجاع درس تم حذفه بالخطأ (التراجع عن Soft Delete)
+        Task RestoreLessonAsync(int lessonId);
+
+        // 🎯 Use Case: تغيير حالة الدرس إلى (منشور) ليتمكن الطلاب من رؤيته
+        Task PublishLessonAsync(int lessonId);
+
+        // 🎯 Use Case: تغيير ترتيب الدرس داخل الكورس
+        Task UpdateLessonOrderAsync(int lessonId, int newOrder);
+
+        // 🎯 Use Case: جلب الدرس المرتبط بتمرين معيّن
+        Task<LessonReadDto?> GetLessonByExerciseIdAsync(int exerciseId);
+
+        // 🎯 Use Case: جلب دروس كورس معيّن (يفيد الـ Controller مباشرة بدون المرور بالريبو)
+        Task<IEnumerable<LessonReadDto>> GetLessonsByCourseIdAsync(int courseId);
+
+        // 🎯 Use Case: جلب الدرس التالي بالتسلسل (لدعم مسار التعلم بالـ AI)
+        Task<LessonReadDto?> GetNextLessonAsync(int courseId, int currentLessonOrder);
     }
 }
