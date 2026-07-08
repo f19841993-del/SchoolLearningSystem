@@ -24,5 +24,8 @@ namespace SchoolLearningSystem.Applicationf.Interfaces
 
         // إنهاء الجلسة الحالية: تحديد IsCompleted=true وتسجيل CompletedAt ونسبة النجاح
         Task CompleteSessionAsync(int sessionId, double successRate);
+
+        // IMemorizeService.cs
+        Task<MemorizeSessionStartResultDto> StartNewSessionAsync(int studentId);
     }
 }

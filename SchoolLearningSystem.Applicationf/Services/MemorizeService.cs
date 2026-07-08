@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
+using SchoolLearningSystem.Applicationf.DTOs.StudentQuestionProgress;
 using SchoolLearningSystem.Applicationf.Exceptions;
 using SchoolLearningSystem.Applicationf.Interfaces;
 using SchoolLearningSystem.Applicationf.Services.Base;
@@ -20,15 +21,19 @@ namespace SchoolLearningSystem.Applicationf.Services
     {
         private readonly IMemorizeRepository _memorizeRepository;
         private readonly IStudentRepository _studentRepository;
+        private readonly ISrsService _srsService;   // 👈 الإضافة الجديدة
+
 
         public MemorizeService(
             IMemorizeRepository memorizeRepository,
             IStudentRepository studentRepository,
+            ISrsService srsService ,
             IMapper mapper)
             : base(memorizeRepository, mapper)
         {
             _memorizeRepository = memorizeRepository;
             _studentRepository = studentRepository;
+            _srsService = srsService;
         }
 
         // 🔹 CRUD الأساسي موروث من BaseService
@@ -95,6 +100,42 @@ namespace SchoolLearningSystem.Applicationf.Services
 
             await _memorizeRepository.UpdateAsync(session);
             await _memorizeRepository.SaveChangesAsync();
+        }
+
+        public async Task<MemorizeSessionStartResultDto> StartNewSessionAsync(int studentId)
+        {
+            var studentExists = await _studentRepository.GetByIdAsync(studentId)
+                ?? throw new NotFoundException($"الطالب برقم {studentId} غير موجود.");
+            // 1️⃣ أول شي نجيب الأسئلة المستحقة من محرك SRS نفسه
+            var dueQuestions = (await _srsService
+                .GetDueQuestionsForSessionAsync(studentId, DateTime.UtcNow))
+                .ToList();
+
+            // 2️⃣ قرار منطقي: إذا ما فيه أسئلة مستحقة، لا داعي ننشئ جلسة فاضية بالداتابيس
+            if (!dueQuestions.Any())
+            {
+                return new MemorizeSessionStartResultDto
+                {
+                    Session = null,
+                    DueQuestions = new List<StudentQuestionProgressReadDto>()
+                };
+            }
+
+            // 3️⃣ ننشئ جلسة جديدة فارغة (تُملأ لاحقاً مع كل إجابة يرسلها الطالب)
+            var sessionDto = new MemorizeSessionCreateDto
+            {
+                StudentId = studentId,
+                ExerciseId = null,
+                DurationInSeconds = 0
+            };
+            var createdSession = await CreateAsync(sessionDto); // 👈 نعيد استخدام IBaseService.CreateAsync الجاهزة
+
+            // 4️⃣ نرجع الاثنين سوا
+            return new MemorizeSessionStartResultDto
+            {
+                Session = createdSession,
+                DueQuestions = dueQuestions
+            };
         }
     }
 }
