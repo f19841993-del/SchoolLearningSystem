@@ -11,8 +11,11 @@ namespace SchoolLearningSystem.Applicationf.Validators.TeacherValidator
                 .NotEmpty().WithMessage("اسم المعلم مطلوب.")
                 .MaximumLength(100).WithMessage("الاسم يجب ألا يتجاوز 100 حرف.");
 
-            // Subject لا يُفحص هنا عمداً — ثابتة على "Math" ولا تُرسل من الـ Client
-            // (dtos_review_report.md #4، رقم 1)
+            // إضافة: Bio كان ناقصاً من الفحص
+            RuleFor(x => x.Bio)
+                .MaximumLength(500).WithMessage("النبذة طويلة جداً.");
+
+            // Subject لا يُفحص عمداً - ثابتة على "Math" ولا تُرسل من الـ Client
         }
     }
 }

@@ -1,9 +1,8 @@
 ﻿// Middleware/ExceptionMiddleware.cs
-using SchoolLearningSystem.API.Responses; // ⚠️ تأكد أن ApiResponse<T> معرّفة هنا فعلاً
-                                          // وليست بـ SchoolLearningSystem.API.Models —
-                                          // لو كانت هناك، احذف هذا الـ using وأضف ذاك بدلاً عنه.
-
+using SchoolLearningSystem.API.Responses;
 using SchoolLearningSystem.Applicationf.Exceptions;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 
 namespace SchoolLearningSystem.API.Middleware
@@ -27,9 +26,8 @@ namespace SchoolLearningSystem.API.Middleware
             }
             catch (Exception ex)
             {
-                // ملاحظة: التسجيل الفعلي (بمستوياته المختلفة) صار بالكامل
-                // داخل HandleExceptionAsync، لتفادي تسجيل نفس الاستثناء مرتين
-                // وبمستوى خطأ (LogError) غير مناسب لحالات الأعمال المتوقعة.
+                // التسجيل الفعلي (بمستوياته المختلفة) يتم بالكامل داخل HandleExceptionAsync،
+                // لتفادي تسجيل نفس الاستثناء مرتين وبمستوى غير مناسب لحالات الأعمال المتوقعة.
                 await HandleExceptionAsync(context, ex);
             }
         }
@@ -37,9 +35,12 @@ namespace SchoolLearningSystem.API.Middleware
         private Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             context.Response.ContentType = "application/json";
+
             var statusCode = HttpStatusCode.InternalServerError;
             var message = "حدث خطأ غير متوقع في السيرفر.";
-            object? errorsData = null; // يحمل قائمة الأخطاء التفصيلية إن وجدت
+
+            // أخطاء التحقق التفصيلية (Field + Message) — تبقى null في أغلب الحالات
+            List<ValidationErrorItem>? errors = null;
 
             if (exception is NotFoundException)
             {
@@ -53,9 +54,11 @@ namespace SchoolLearningSystem.API.Middleware
             {
                 statusCode = HttpStatusCode.BadRequest;
                 message = customValidationEx.Message;
-                errorsData = customValidationEx.Errors; // قائمة الأخطاء التفصيلية
+                errors = customValidationEx.Errors; // قائمة (Field, Message) لكل حقل فشل تحققه
 
-                _logger.LogWarning("فشل تحقق: {Errors}", string.Join("; ", customValidationEx.Errors));
+                _logger.LogWarning(
+                    "فشل تحقق: {Errors}",
+                    string.Join("; ", customValidationEx.Errors.Select(e => $"{e.Field}: {e.Message}")));
             }
             else if (exception is BadRequestException)
             {
@@ -74,8 +77,10 @@ namespace SchoolLearningSystem.API.Middleware
 
             context.Response.StatusCode = (int)statusCode;
 
-            // استخدام ApiResponse<object> لكي يستطيع حمل الـ List<string> الخاص بالأخطاء
-            var response = new ApiResponse<object>((int)statusCode, message, errorsData);
+            // Data تبقى null دائماً بمسارات الخطأ — الأخطاء التفصيلية تُنقل حصراً عبر Errors،
+            // حفاظاً على "ثبات العقد": Data لبيانات النجاح فقط، Errors لتفاصيل الفشل فقط.
+            var response = ApiResponse<object>.Fail(message, (int)statusCode, errors);
+
             var jsonResponse = System.Text.Json.JsonSerializer.Serialize(response, new System.Text.Json.JsonSerializerOptions
             {
                 PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase

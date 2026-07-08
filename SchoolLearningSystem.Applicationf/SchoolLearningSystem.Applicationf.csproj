@@ -7,9 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="DTOs\Exercise\ExerciseReadDto\**" />
-    <EmbeddedResource Remove="DTOs\Exercise\ExerciseReadDto\**" />
-    <None Remove="DTOs\Exercise\ExerciseReadDto\**" />
+    <Compile Remove="DTOs\ExerciseDto\ExerciseReadDto\**" />
+    <EmbeddedResource Remove="DTOs\ExerciseDto\ExerciseReadDto\**" />
+    <None Remove="DTOs\ExerciseDto\ExerciseReadDto\**" />
   </ItemGroup>
 
   <ItemGroup>

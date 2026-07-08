@@ -1,5 +1,5 @@
 using FluentValidation;
-using SchoolLearningSystem.Applicationf.DTOs.Exercise;
+using SchoolLearningSystem.Applicationf.DTOs.ExerciseDto;
 
 namespace SchoolLearningSystem.Applicationf.Validators.ExerciseValidator
 {
@@ -18,6 +18,11 @@ namespace SchoolLearningSystem.Applicationf.Validators.ExerciseValidator
             RuleFor(x => x.Difficulty)
                 .IsInEnum().WithMessage("مستوى الصعوبة غير صالح.")
                 .When(x => x.Difficulty.HasValue);
+
+            // إضافة: LessonId موجود فعلاً بالـ DTO الحقيقي (nullable) وكان بدون فحص
+            RuleFor(x => x.LessonId)
+                .GreaterThan(0).WithMessage("رقم الدرس غير صالح.")
+                .When(x => x.LessonId.HasValue);
         }
     }
 }

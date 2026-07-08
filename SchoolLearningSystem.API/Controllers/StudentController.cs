@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using SchoolLearningSystem.API.Responses;
-using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
-using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
-using SchoolLearningSystem.Applicationf.DTOs.Result;
 using SchoolLearningSystem.Applicationf.DTOs.Student;
 using SchoolLearningSystem.Applicationf.Interfaces;
+using SchoolLearningSystem.Domain.Enums;
 
 namespace SchoolLearningSystem.API.Controllers
 {
@@ -31,102 +29,75 @@ namespace SchoolLearningSystem.API.Controllers
 
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(ApiResponse<StudentReadDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ApiResponse<StudentReadDto>>> GetById(int id)
         {
             var student = await _studentService.GetByIdAsync(id);
             if (student == null)
-                return NotFound(new ApiResponse<string>(404, "Student not found"));
+                return NotFound(new ApiResponse(404, "Student not found"));
 
             return Ok(new ApiResponse<StudentReadDto>(200, "Student retrieved successfully", student));
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<ApiResponse<string>>> Add(StudentCreateDto dto)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<ApiResponse>> Add([FromBody] StudentCreateDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<string>(400, "Invalid input data"));
-
+            // ⚠️ فجوة موثقة (Auth غير مبنية): StudentCreateDto بدون Password حالياً.
+            // مؤقت لحين نقله لـ POST /api/auth/register/student
             await _studentService.CreateAsync(dto);
-            return StatusCode(201, new ApiResponse<string>(201, "Student created successfully"));
+            return StatusCode(201, new ApiResponse(201, "Student created successfully"));
         }
 
         [HttpPut("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<string>>> Update(int id, StudentUpdateDto dto)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse>> Update(int id, [FromBody] StudentUpdateDto dto)
         {
-            try
-            {
-                await _studentService.UpdateAsync(id, dto);
-                return Ok(new ApiResponse<string>(200, "Student updated successfully"));
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new ApiResponse<string>(404, ex.Message));
-            }
+            await _studentService.UpdateAsync(id, dto);
+            return Ok(new ApiResponse(200, "Student updated successfully"));
         }
 
         [HttpDelete("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<string>>> Delete(int id)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse>> Delete(int id)
         {
-            try
-            {
-                await _studentService.DeleteAsync(id);
-                return Ok(new ApiResponse<string>(200, "Student deleted successfully"));
-            }
-            catch (Exception ex)
-            {
-                return NotFound(new ApiResponse<string>(404, ex.Message));
-            }
+            await _studentService.DeleteAsync(id);
+            return Ok(new ApiResponse(200, "Student deleted successfully"));
         }
 
-        // 🔹 علاقات إضافية (Custom Business Logic)
+        // 🔹 علاقات إضافية (Business Logic) — مطابقة حرفياً لـ IStudentService
 
-        [HttpGet("{id}/courses")]
-        [ProducesResponseType(typeof(ApiResponse<IEnumerable<CourseReadDto>>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse<IEnumerable<CourseReadDto>>>> GetCourses(int id)
+        /// <summary>
+        /// طلاب مرحلة دراسية معيّنة
+        /// </summary>
+        [HttpGet("grade/{gradeLevel}")]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<StudentReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<StudentReadDto>>>> GetByGradeLevel(GradeLevel gradeLevel)
         {
-            var courses = await _studentService.GetCoursesByStudentIdAsync(id);
-            return Ok(new ApiResponse<IEnumerable<CourseReadDto>>(200, "Courses retrieved successfully", courses));
+            var data = await _studentService.GetStudentsByGradeLevelAsync(gradeLevel);
+            return Ok(new ApiResponse<IEnumerable<StudentReadDto>>(200, "Students retrieved successfully", data));
         }
 
-        [HttpGet("{id}/results")]
-        [ProducesResponseType(typeof(ApiResponse<IEnumerable<ResultReadDto>>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse<IEnumerable<ResultReadDto>>>> GetResults(int id)
+        /// <summary>
+        /// الطالب مع كل بيانات تقدمه (لمحرك SRS / لوحة الأداء الشخصية)
+        /// </summary>
+        [HttpGet("{id}/progress")]
+        [ProducesResponseType(typeof(ApiResponse<StudentReadDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<StudentReadDto>>> GetWithProgress(int id)
         {
-            var results = await _studentService.GetResultsByStudentIdAsync(id);
-            return Ok(new ApiResponse<IEnumerable<ResultReadDto>>(200, "Results retrieved successfully", results));
+            var data = await _studentService.GetStudentWithProgressAsync(id);
+            return Ok(new ApiResponse<StudentReadDto>(200, "Student progress retrieved successfully", data));
         }
 
-        [HttpGet("{id}/sessions")]
-        [ProducesResponseType(typeof(ApiResponse<IEnumerable<MemorizeSessionReadDto>>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse<IEnumerable<MemorizeSessionReadDto>>>> GetSessions(int id)
-        {
-            var sessions = await _studentService.GetMemorizeSessionsByStudentIdAsync(id);
-            return Ok(new ApiResponse<IEnumerable<MemorizeSessionReadDto>>(200, "Sessions retrieved successfully", sessions));
-        }
-
-        // 🔹 إحصائيات
-
-        [HttpGet("{id}/average-score")]
-        [ProducesResponseType(typeof(ApiResponse<double>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse<double>>> GetAverageScore(int id)
-        {
-            var avg = await _studentService.GetAverageScoreByStudentIdAsync(id);
-            return Ok(new ApiResponse<double>(200, "Average score retrieved successfully", avg));
-        }
-
-        [HttpGet("{id}/total-courses")]
-        [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse<int>>> GetTotalCourses(int id)
-        {
-            var count = await _studentService.GetTotalCoursesByStudentIdAsync(id);
-            return Ok(new ApiResponse<int>(200, "Total courses count retrieved", count));
-        }
+        // ⚠️ حُذفت من هنا نهائياً (كانت تنادي دوال غير موجودة إطلاقاً بـ IStudentService،
+        // وهي أصلاً "مصدر حقيقة" بخدمات ثانية) — الفرونت يستخدم مباشرة:
+        //   كورسات الطالب  → GET /api/coursestudent/student/{studentId}/courses/paged   (ICourseStudentService)
+        //   نتائج الطالب   → GET /api/result/student/{studentId}                        (IResultService)
+        //   جلسات الطالب   → GET /api/memorizesession/student/{studentId}/history        (IMemorizeService)
+        //   متوسط الدرجات  → GET /api/result/student/{studentId}/average                  (IResultService)
+        //   عدد الكورسات   → GET /api/coursestudent/student/{studentId}/courses/count     (ICourseStudentService)
     }
 }

@@ -1,11 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using SchoolLearningSystem.Domain.Enums;
 
-namespace SchoolLearningSystem.Applicationf.DTOs.Exam
+namespace SchoolLearningSystem.Applicationf.DTOs.ExamDto
 {
     public class ExamUpdateDto
     {
-        [StringLength(200, MinimumLength = 3)]
         public string? Title { get; set; }
 
         public ExamType? ExamType { get; set; }

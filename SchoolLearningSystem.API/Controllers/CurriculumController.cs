@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using SchoolLearningSystem.API.Responses;
 using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
 using SchoolLearningSystem.Applicationf.DTOs.CurriculumDto;
@@ -30,58 +30,45 @@ namespace SchoolLearningSystem.API.Controllers
 
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(ApiResponse<CurriculumReadDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ApiResponse<CurriculumReadDto>>> GetById(int id)
         {
             var data = await _curriculumService.GetByIdAsync(id);
             if (data == null)
-                return NotFound(new ApiResponse<string>(404, "Curriculum not found"));
+                return NotFound(new ApiResponse(404, "Curriculum not found"));
 
             return Ok(new ApiResponse<CurriculumReadDto>(200, "Curriculum retrieved successfully", data));
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<ApiResponse<string>>> Add(CurriculumCreateDto dto)
+        [ProducesResponseType(typeof(ApiResponse<CurriculumReadDto>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<ApiResponse<CurriculumReadDto>>> Add([FromBody] CurriculumCreateDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<string>(400, "Invalid input data"));
-
-            await _curriculumService.CreateAsync(dto);
-            return StatusCode(201, new ApiResponse<string>(201, "Curriculum created successfully"));
+            // ⚠️ ملاحظة: عدّل الـ Service ليرجع الكيان المُنشأ (CurriculumReadDto) بدل void
+            // حتى نقدر نستخدم CreatedAtAction بشكل صحيح مع رابط الموقع (Location header)
+            var created = await _curriculumService.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id },
+                new ApiResponse<CurriculumReadDto>(201, "Curriculum created successfully", created));
         }
 
         [HttpPut("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<string>>> Update(int id, CurriculumUpdateDto dto)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse>> Update(int id, [FromBody] CurriculumUpdateDto dto)
         {
-            try
-            {
-                await _curriculumService.UpdateAsync(id, dto);
-                return Ok(new ApiResponse<string>(200, "Curriculum updated successfully"));
-            }
-            catch (Exception ex)
-            {
-                return NotFound(new ApiResponse<string>(404, ex.Message));
-            }
+            // 🗑️ حُذف try-catch: NotFoundException تُعالَج مركزياً بالـ ExceptionMiddleware
+            await _curriculumService.UpdateAsync(id, dto);
+            return Ok(new ApiResponse(200, "Curriculum updated successfully"));
         }
 
         [HttpDelete("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<string>>> Delete(int id)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse>> Delete(int id)
         {
-            try
-            {
-                await _curriculumService.DeleteAsync(id);
-                return Ok(new ApiResponse<string>(200, "Curriculum deleted successfully"));
-            }
-            catch (Exception ex)
-            {
-                return NotFound(new ApiResponse<string>(404, ex.Message));
-            }
+            await _curriculumService.DeleteAsync(id);
+            return Ok(new ApiResponse(200, "Curriculum deleted successfully"));
         }
 
         // 🔹 علاقات إضافية (Business Logic)
@@ -96,12 +83,12 @@ namespace SchoolLearningSystem.API.Controllers
 
         [HttpGet("grade/{gradeLevel}")]
         [ProducesResponseType(typeof(ApiResponse<CurriculumReadDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ApiResponse<CurriculumReadDto>>> GetByGradeLevel(GradeLevel gradeLevel)
         {
             var curriculum = await _curriculumService.GetCurriculumByGradeLevelAsync(gradeLevel);
             if (curriculum == null)
-                return NotFound(new ApiResponse<string>(404, "Curriculum not found"));
+                return NotFound(new ApiResponse(404, "Curriculum not found"));
 
             return Ok(new ApiResponse<CurriculumReadDto>(200, "Curriculum retrieved successfully", curriculum));
         }

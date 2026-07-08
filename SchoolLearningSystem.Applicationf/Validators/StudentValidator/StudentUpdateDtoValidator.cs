@@ -1,5 +1,6 @@
 using FluentValidation;
 using SchoolLearningSystem.Applicationf.DTOs.Student;
+using System;
 
 namespace SchoolLearningSystem.Applicationf.Validators.StudentValidator
 {
@@ -26,10 +27,14 @@ namespace SchoolLearningSystem.Applicationf.Validators.StudentValidator
             RuleFor(x => x.Education)
                 .MaximumLength(150).WithMessage("الحقل طويل جداً.")
                 .When(x => !string.IsNullOrEmpty(x.Education));
+
+            // إضافة: ProfileImage كان ناقصاً بالكامل من الفحص
+            RuleFor(x => x.ProfileImage)
+                .Must(url => Uri.TryCreate(url, UriKind.Absolute, out _))
+                .When(x => !string.IsNullOrEmpty(x.ProfileImage))
+                .WithMessage("رابط الصورة الشخصية غير صالح.");
         }
     }
 }
-// ملاحظة: لا يوجد StudentCreateDtoValidator منفصل هنا عمداً — التسجيل يمر عبر
-// /api/auth/register/student (StudentCreateDto + Password)، وهذا الحقل (Password)
-// غير موجود بأي Entity/DTO لحد الآن (فجوة موثقة بـ api_contract.md قسم 0، أولوية 🔴 عالية).
-// لازم يُحسم شكل DTO التسجيل الجديد أولاً قبل كتابة Validator له.
+// ملاحظة: لا يوجد StudentCreateDtoValidator عمداً — التسجيل يمر عبر /api/auth/register/student
+// وشكل الـ DTO المرتبط بالـ Password لسه غير محسوم (فجوة موثقة بـ api_contract.md).

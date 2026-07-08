@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using SchoolLearningSystem.API.Responses;
 using SchoolLearningSystem.Applicationf.DTOs.StudentAnswer;
 using SchoolLearningSystem.Applicationf.Interfaces;
@@ -16,7 +16,7 @@ namespace SchoolLearningSystem.API.Controllers
             _service = service;
         }
 
-        // 🔹 CRUD الأساسي (موروث من BaseService)
+        // 🔹 CRUD الأساسي
 
         [HttpGet]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<StudentAnswerDetailReadDto>>), StatusCodes.Status200OK)]
@@ -28,67 +28,60 @@ namespace SchoolLearningSystem.API.Controllers
 
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(ApiResponse<StudentAnswerDetailReadDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ApiResponse<StudentAnswerDetailReadDto>>> GetById(int id)
         {
             var data = await _service.GetByIdAsync(id);
             if (data == null)
-                return NotFound(new ApiResponse<string>(404, "Answer record not found"));
+                return NotFound(new ApiResponse(404, "Answer record not found"));
 
             return Ok(new ApiResponse<StudentAnswerDetailReadDto>(200, "Answer retrieved successfully", data));
         }
 
+        /// <summary>
+        /// ✅ استعادة: هذا الـ Endpoint اتحذف بمحادثة سابقة اعتماداً على ملاحظة قديمة
+        /// بـ api_contract.md تقول "لا POST مباشر هنا". لكن IStudentAnswerDetailService
+        /// الفعلية تنص صراحة: "تسجيل إجابة جديدة يتم عبر CreateAsync الموروثة مباشرة -
+        /// لا حاجة لدالة مخصصة" — يعني الـ POST مقصود ومسموح به، والملاحظة القديمة
+        /// كانت من مسودة توثيق أقدم تجاوزها القرار الفعلي بالكود. رجّعته.
+        /// </summary>
         [HttpPost]
         [ProducesResponseType(typeof(ApiResponse<StudentAnswerDetailReadDto>), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<ApiResponse<StudentAnswerDetailReadDto>>> Add(StudentAnswerDetailCreateDto dto)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<ApiResponse<StudentAnswerDetailReadDto>>> Add([FromBody] StudentAnswerDetailCreateDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<string>(400, "Invalid input data"));
-
-            var createdAnswer = await _service.CreateAsync(dto);
-            return StatusCode(201, new ApiResponse<StudentAnswerDetailReadDto>(201, "Answer recorded successfully", createdAnswer));
+            var created = await _service.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id },
+                new ApiResponse<StudentAnswerDetailReadDto>(201, "Answer recorded successfully", created));
         }
 
         [HttpPut("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<string>>> Update(int id, StudentAnswerDetailUpdateDto dto)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse>> Update(int id, [FromBody] StudentAnswerDetailUpdateDto dto)
         {
-            try
-            {
-                await _service.UpdateAsync(id, dto);
-                return Ok(new ApiResponse<string>(200, "Answer updated successfully"));
-            }
-            catch (Exception ex)
-            {
-                return NotFound(new ApiResponse<string>(404, ex.Message));
-            }
+            await _service.UpdateAsync(id, dto);
+            return Ok(new ApiResponse(200, "Answer updated successfully"));
         }
 
         [HttpDelete("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<string>>> Delete(int id)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse>> Delete(int id)
         {
-            try
-            {
-                await _service.DeleteAsync(id);
-                return Ok(new ApiResponse<string>(200, "Answer deleted successfully"));
-            }
-            catch (Exception ex)
-            {
-                return NotFound(new ApiResponse<string>(404, ex.Message));
-            }
+            await _service.DeleteAsync(id);
+            return Ok(new ApiResponse(200, "Answer deleted successfully"));
         }
 
-        // 🔹 علاقات إضافية (Custom Business Logic)
+        // 🔹 علاقات إضافية — مطابقة حرفياً لـ IStudentAnswerDetailService
+        // ⚠️ تصحيح أسماء: GetByStudentIdAsync/GetByQuestionIdAsync/GetRecentAnswersAsync
+        // غير موجودة — الأسماء الصحيحة أدناه.
 
         [HttpGet("student/{studentId}")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<StudentAnswerDetailReadDto>>), StatusCodes.Status200OK)]
         public async Task<ActionResult<ApiResponse<IEnumerable<StudentAnswerDetailReadDto>>>> GetByStudent(int studentId)
         {
-            var data = await _service.GetByStudentIdAsync(studentId);
+            var data = await _service.GetAnswersByStudentIdAsync(studentId);
             return Ok(new ApiResponse<IEnumerable<StudentAnswerDetailReadDto>>(200, "Answers by student retrieved successfully", data));
         }
 
@@ -96,7 +89,7 @@ namespace SchoolLearningSystem.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<StudentAnswerDetailReadDto>>), StatusCodes.Status200OK)]
         public async Task<ActionResult<ApiResponse<IEnumerable<StudentAnswerDetailReadDto>>>> GetByQuestion(int questionId)
         {
-            var data = await _service.GetByQuestionIdAsync(questionId);
+            var data = await _service.GetAnswersByQuestionIdAsync(questionId);
             return Ok(new ApiResponse<IEnumerable<StudentAnswerDetailReadDto>>(200, "Answers by question retrieved successfully", data));
         }
 
@@ -104,7 +97,7 @@ namespace SchoolLearningSystem.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<StudentAnswerDetailReadDto>>), StatusCodes.Status200OK)]
         public async Task<ActionResult<ApiResponse<IEnumerable<StudentAnswerDetailReadDto>>>> GetRecent(int studentId, int count)
         {
-            var data = await _service.GetRecentAnswersAsync(studentId, count);
+            var data = await _service.GetRecentAnswersByStudentIdAsync(studentId, count);
             return Ok(new ApiResponse<IEnumerable<StudentAnswerDetailReadDto>>(200, "Recent answers retrieved successfully", data));
         }
 

@@ -14,8 +14,9 @@ namespace SchoolLearningSystem.Applicationf.Validators.MemorizeSessionValidator
                 .GreaterThan(0).WithMessage("رقم التمرين غير صالح.")
                 .When(x => x.ExerciseId.HasValue);
 
-            // LessonId/Lesson لم يعودا موجودين بهذا الـ Entity إطلاقاً (قرار موثق مسبقاً) —
-            // تأكد ألا يظهرا بهذا الـ DTO أبداً.
+            // إضافة: DurationInSeconds كان ناقصاً بالكامل من الفحص
+            RuleFor(x => x.DurationInSeconds)
+                .GreaterThanOrEqualTo(0).WithMessage("مدة الجلسة لا يمكن أن تكون سالبة.");
         }
     }
 }

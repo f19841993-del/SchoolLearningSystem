@@ -1,6 +1,6 @@
 ﻿using SchoolLearningSystem.Domain.Enums;
 
-namespace SchoolLearningSystem.Applicationf.DTOs.Curriculum
+namespace SchoolLearningSystem.Applicationf.DTOs.CurriculumDto
 {
     public class CurriculumReadDto
     {

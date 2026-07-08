@@ -1,5 +1,6 @@
 using FluentValidation;
 using SchoolLearningSystem.Applicationf.DTOs.Teacher;
+using System;
 
 namespace SchoolLearningSystem.Applicationf.Validators.TeacherValidator
 {
@@ -11,8 +12,15 @@ namespace SchoolLearningSystem.Applicationf.Validators.TeacherValidator
                 .MaximumLength(100).WithMessage("الاسم يجب ألا يتجاوز 100 حرف.")
                 .When(x => !string.IsNullOrEmpty(x.Name));
 
-            // تنبيه: تأكد أن Subject غير موجود إطلاقاً بهذا الـ DTO — الـ Mapping الخاص به
-            // حُذف بالكامل في mapping_profiles_review_report.md (#3، رقم 7). لو ظهر هنا فالثغرة رجعت.
+            RuleFor(x => x.Bio)
+                .MaximumLength(500).WithMessage("النبذة طويلة جداً.")
+                .When(x => !string.IsNullOrEmpty(x.Bio));
+
+            // إضافة: ProfileImage كان ناقصاً من الفحص
+            RuleFor(x => x.ProfileImage)
+                .Must(url => Uri.TryCreate(url, UriKind.Absolute, out _))
+                .When(x => !string.IsNullOrEmpty(x.ProfileImage))
+                .WithMessage("رابط الصورة الشخصية غير صالح.");
         }
     }
 }

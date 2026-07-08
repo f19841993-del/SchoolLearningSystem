@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using SchoolLearningSystem.Applicationf.DTOs.Exercise;
+using SchoolLearningSystem.Applicationf.DTOs.ExerciseDto;
 using SchoolLearningSystem.Domain.Entities;
 
 namespace SchoolLearningSystem.Applicationf.Mappings

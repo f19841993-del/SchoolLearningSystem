@@ -1,5 +1,5 @@
 using FluentValidation;
-using SchoolLearningSystem.Applicationf.DTOs.Exam;
+using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
 
 namespace SchoolLearningSystem.Applicationf.Validators.ExamValidator
 {
@@ -14,10 +14,12 @@ namespace SchoolLearningSystem.Applicationf.Validators.ExamValidator
             RuleFor(x => x.CourseId)
                 .GreaterThan(0).WithMessage("رقم الكورس غير صالح.");
 
-            RuleFor(x => x.Difficulty)
-                .NotEmpty().WithMessage("مستوى الصعوبة مطلوب.");
+            RuleFor(x => x.ExamType)
+                .IsInEnum().WithMessage("نوع الامتحان غير صالح.");
 
-            // LessonId اختياري بتصميم — امتحان عام أو خاص بدرس (dtos_review_report.md #4.1)
+            RuleFor(x => x.Difficulty)
+                .IsInEnum().WithMessage("مستوى الصعوبة غير صالح.");
+
             RuleFor(x => x.LessonId)
                 .GreaterThan(0).WithMessage("رقم الدرس غير صالح.")
                 .When(x => x.LessonId.HasValue);

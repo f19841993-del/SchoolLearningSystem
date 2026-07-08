@@ -1,5 +1,5 @@
 using FluentValidation;
-using SchoolLearningSystem.Applicationf.DTOs.Exercise;
+using SchoolLearningSystem.Applicationf.DTOs.ExerciseDto;
 
 namespace SchoolLearningSystem.Applicationf.Validators.ExerciseValidator
 {
@@ -19,8 +19,6 @@ namespace SchoolLearningSystem.Applicationf.Validators.ExerciseValidator
 
             RuleFor(x => x.LessonId)
                 .GreaterThan(0).WithMessage("رقم الدرس غير صالح.");
-
-            // تأكد ألا يوجد حقل Title هنا — كان بقايا نسخ-لصق من DTO قديم وحُذف فعلياً (dtos_review_report.md #3.2)
         }
     }
 }

@@ -1,5 +1,6 @@
 using FluentValidation;
-using SchoolLearningSystem.Applicationf.DTOs.Course;
+using SchoolLearningSystem.Applicationf.DTOs.CourseDto;
+using System;
 
 namespace SchoolLearningSystem.Applicationf.Validators.CourseValidator
 {
@@ -20,7 +21,11 @@ namespace SchoolLearningSystem.Applicationf.Validators.CourseValidator
             RuleFor(x => x.CurriculumId)
                 .GreaterThan(0).WithMessage("رقم المنهج غير صالح.");
 
-            // Order مستثنى عمداً — يُحسب بالـ Service (dtos_review_report.md #4.1)
+            // إضافة: Image كان ناقصاً من الفحص
+            RuleFor(x => x.Image)
+                .Must(url => Uri.TryCreate(url, UriKind.Absolute, out _))
+                .When(x => !string.IsNullOrEmpty(x.Image))
+                .WithMessage("رابط صورة الكورس غير صالح.");
         }
     }
 }

@@ -20,9 +20,12 @@ namespace SchoolLearningSystem.Applicationf.Validators.SrsValidator
             RuleFor(x => x.Quality)
                 .InclusiveBetween(0, 5).WithMessage("تقييم جودة الإجابة يجب أن يكون بين 0 و 5 فقط.");
 
+            // TimeTakenInSeconds فعلاً int? بالـ DTO الحقيقي (اختياري) — FluentValidation
+            // يتجاوز الفحص تلقائياً لو null، لكن .When موضّح هنا للقراءة فقط
             RuleFor(x => x.TimeTakenInSeconds)
                 .GreaterThanOrEqualTo(0).WithMessage("الوقت المستغرق لا يمكن أن يكون بالسالب.")
-                .LessThan(3600).WithMessage("الوقت المستغرق غير منطقي (أكثر من ساعة!).");
+                .LessThan(3600).WithMessage("الوقت المستغرق غير منطقي (أكثر من ساعة!).")
+                .When(x => x.TimeTakenInSeconds.HasValue);
         }
     }
 }

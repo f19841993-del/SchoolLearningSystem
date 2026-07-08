@@ -12,6 +12,10 @@ namespace SchoolLearningSystem.Applicationf.Validators.LessonValidator
                 .NotEmpty().WithMessage("عنوان الدرس مطلوب.")
                 .MaximumLength(150).WithMessage("العنوان يجب ألا يتجاوز 150 حرف.");
 
+            // إضافة: Content كان ناقصاً بالكامل رغم كونه إجباري بالـ DTO الفعلي
+            RuleFor(x => x.Content)
+                .NotEmpty().WithMessage("محتوى الدرس مطلوب.");
+
             RuleFor(x => x.CourseId)
                 .GreaterThan(0).WithMessage("رقم الكورس غير صالح.");
 
@@ -19,9 +23,6 @@ namespace SchoolLearningSystem.Applicationf.Validators.LessonValidator
                 .Must(url => Uri.TryCreate(url, UriKind.Absolute, out _))
                 .When(x => !string.IsNullOrEmpty(x.VideoUrl))
                 .WithMessage("رابط الفيديو غير صالح.");
-
-            // Order و IsPublished مستثنيان عمداً — يُديرهما الـ Service حصراً
-            // (PublishLessonAsync ومنطق ترتيب تلقائي، dtos_review_report.md #3.4)
         }
     }
 }

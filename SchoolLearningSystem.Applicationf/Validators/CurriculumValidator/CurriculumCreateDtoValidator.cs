@@ -1,5 +1,5 @@
 using FluentValidation;
-using SchoolLearningSystem.Applicationf.DTOs.Curriculum;
+using SchoolLearningSystem.Applicationf.DTOs.CurriculumDto;
 
 namespace SchoolLearningSystem.Applicationf.Validators.CurriculumValidator
 {

@@ -16,8 +16,12 @@ namespace SchoolLearningSystem.Applicationf.Validators.ResultValidator
             RuleFor(x => x.ResultType)
                 .NotEmpty().WithMessage("نوع النتيجة مطلوب.");
 
-            // القاعدة التجارية المفتوحة (dtos_review_report.md #4.2) ولم تُطبّق بعد بأي Service:
-            // يجب توفر LessonId أو ExamId على الأقل. هذا أنسب مكان لفرضها فعلياً الآن.
+            // إضافة: DurationInSeconds كان ناقصاً بالكامل من الفحص
+            RuleFor(x => x.DurationInSeconds)
+                .GreaterThanOrEqualTo(0).WithMessage("المدة المستغرقة لا يمكن أن تكون سالبة.");
+
+            // ملاحظة تصحيح: هذه القاعدة موجودة فعلاً بمنطق ResultService.CreateAsync حسب
+            // تعليق الـ DTO نفسه - إضافتها هنا طبقة حماية إضافية (Defense in Depth) لا تكرار ضار
             RuleFor(x => x)
                 .Must(x => x.LessonId.HasValue || x.ExamId.HasValue)
                 .WithMessage("يجب ربط النتيجة بدرس أو بامتحان على الأقل.")

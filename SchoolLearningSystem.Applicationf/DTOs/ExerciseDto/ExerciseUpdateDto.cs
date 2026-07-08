@@ -1,11 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using SchoolLearningSystem.Domain.Enums;
 
-namespace SchoolLearningSystem.Applicationf.DTOs.Exercise
+namespace SchoolLearningSystem.Applicationf.DTOs.ExerciseDto
 {
     public class ExerciseUpdateDto
     {
-        [StringLength(500)]
         public string? Question { get; set; }
 
         public string? Answer { get; set; }

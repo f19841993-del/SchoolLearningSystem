@@ -1,4 +1,4 @@
-﻿namespace SchoolLearningSystem.Applicationf.DTOs.CorseDto
+﻿namespace SchoolLearningSystem.Applicationf.DTOs.CourseDto
 {
     public class CourseReadDto
     {

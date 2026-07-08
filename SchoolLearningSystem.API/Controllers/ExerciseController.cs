@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using SchoolLearningSystem.API.Responses;
 using SchoolLearningSystem.Applicationf.DTOs.ExerciseDto;
-using SchoolLearningSystem.Applicationf.DTOs.Lesson;
-using SchoolLearningSystem.Applicationf.DTOs.MemorizeSession;
 using SchoolLearningSystem.Applicationf.Interfaces;
+using SchoolLearningSystem.Domain.Enums;
 
 namespace SchoolLearningSystem.API.Controllers
 {
@@ -18,7 +17,7 @@ namespace SchoolLearningSystem.API.Controllers
             _exerciseService = exerciseService;
         }
 
-        // 🔹 CRUD الأساسي (موروث من BaseService)
+        // 🔹 CRUD الأساسي
 
         [HttpGet]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<ExerciseReadDto>>), StatusCodes.Status200OK)]
@@ -30,61 +29,49 @@ namespace SchoolLearningSystem.API.Controllers
 
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(ApiResponse<ExerciseReadDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ApiResponse<ExerciseReadDto>>> GetById(int id)
         {
             var data = await _exerciseService.GetByIdAsync(id);
             if (data == null)
-                return NotFound(new ApiResponse<string>(404, "Exercise not found"));
+                return NotFound(new ApiResponse(404, "Exercise not found"));
 
             return Ok(new ApiResponse<ExerciseReadDto>(200, "Exercise retrieved successfully", data));
         }
 
         [HttpPost]
         [ProducesResponseType(typeof(ApiResponse<ExerciseReadDto>), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<ApiResponse<ExerciseReadDto>>> Add(ExerciseCreateDto dto)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<ApiResponse<ExerciseReadDto>>> Add([FromBody] ExerciseCreateDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<string>(400, "Invalid input data"));
-
             var createdExercise = await _exerciseService.CreateAsync(dto);
-            return StatusCode(201, new ApiResponse<ExerciseReadDto>(201, "Exercise created successfully", createdExercise));
+            return CreatedAtAction(nameof(GetById), new { id = createdExercise.Id },
+                new ApiResponse<ExerciseReadDto>(201, "Exercise created successfully", createdExercise));
         }
 
         [HttpPut("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<string>>> Update(int id, ExerciseUpdateDto dto)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse>> Update(int id, [FromBody] ExerciseUpdateDto dto)
         {
-            try
-            {
-                await _exerciseService.UpdateAsync(id, dto);
-                return Ok(new ApiResponse<string>(200, "Exercise updated successfully"));
-            }
-            catch (Exception ex)
-            {
-                return NotFound(new ApiResponse<string>(404, ex.Message));
-            }
+            await _exerciseService.UpdateAsync(id, dto);
+            return Ok(new ApiResponse(200, "Exercise updated successfully"));
         }
 
         [HttpDelete("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<string>>> Delete(int id)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse>> Delete(int id)
         {
-            try
-            {
-                await _exerciseService.DeleteAsync(id);
-                return Ok(new ApiResponse<string>(200, "Exercise deleted successfully"));
-            }
-            catch (Exception ex)
-            {
-                return NotFound(new ApiResponse<string>(404, ex.Message));
-            }
+            await _exerciseService.DeleteAsync(id);
+            return Ok(new ApiResponse(200, "Exercise deleted successfully"));
         }
 
-        // 🔹 علاقات إضافية (Custom Logic)
+        // 🔹 علاقات إضافية — مطابقة حرفياً لـ IExerciseService
+        // ⚠️ حُذفت: GetSessionsByExerciseId / GetLessonByExerciseId — كانتا تنادي دوال
+        // (GetMemorizeSessionsByExerciseIdAsync, GetLessonByExerciseIdAsync) غير موجودة
+        // إطلاقاً بـ IExerciseService. "الدرس المرتبط بتمرين" موجود فعلاً وبمكانه الصحيح
+        // بـ LessonController.GetByExerciseId (عبر ILessonService.GetLessonByExerciseIdAsync).
 
         [HttpGet("lesson/{lessonId}")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<ExerciseReadDto>>), StatusCodes.Status200OK)]
@@ -94,20 +81,15 @@ namespace SchoolLearningSystem.API.Controllers
             return Ok(new ApiResponse<IEnumerable<ExerciseReadDto>>(200, "Exercises retrieved successfully", exercises));
         }
 
-        [HttpGet("{id}/sessions")]
-        [ProducesResponseType(typeof(ApiResponse<IEnumerable<MemorizeSessionReadDto>>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse<IEnumerable<MemorizeSessionReadDto>>>> GetSessionsByExerciseId(int id)
+        /// <summary>
+        /// تمارين حسب مستوى صعوبة معيّن — لبناء مسار تعليمي تصاعدي (سهل ← متوسط ← صعب)
+        /// </summary>
+        [HttpGet("difficulty/{difficulty}")]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<ExerciseReadDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<ExerciseReadDto>>>> GetByDifficulty(DifficultyLevel difficulty)
         {
-            var sessions = await _exerciseService.GetMemorizeSessionsByExerciseIdAsync(id);
-            return Ok(new ApiResponse<IEnumerable<MemorizeSessionReadDto>>(200, "Sessions retrieved successfully", sessions));
-        }
-
-        [HttpGet("{id}/lesson")]
-        [ProducesResponseType(typeof(ApiResponse<LessonReadDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse<LessonReadDto>>> GetLessonByExerciseId(int id)
-        {
-            var lesson = await _exerciseService.GetLessonByExerciseIdAsync(id);
-            return Ok(new ApiResponse<LessonReadDto>(200, "Lesson retrieved successfully", lesson));
+            var data = await _exerciseService.GetExercisesByDifficultyAsync(difficulty);
+            return Ok(new ApiResponse<IEnumerable<ExerciseReadDto>>(200, "Exercises retrieved successfully", data));
         }
     }
 }

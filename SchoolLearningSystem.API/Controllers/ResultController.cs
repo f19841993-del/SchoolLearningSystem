@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using SchoolLearningSystem.API.Responses;
 using SchoolLearningSystem.Applicationf.DTOs.Result;
 using SchoolLearningSystem.Applicationf.Interfaces;
@@ -16,7 +16,7 @@ namespace SchoolLearningSystem.API.Controllers
             _resultService = resultService;
         }
 
-        // 🔹 CRUD الأساسي (موروث من BaseService)
+        // 🔹 CRUD الأساسي
 
         [HttpGet]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<ResultReadDto>>), StatusCodes.Status200OK)]
@@ -28,58 +28,44 @@ namespace SchoolLearningSystem.API.Controllers
 
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(ApiResponse<ResultReadDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ApiResponse<ResultReadDto>>> GetById(int id)
         {
             var data = await _resultService.GetByIdAsync(id);
             if (data == null)
-                return NotFound(new ApiResponse<string>(404, "Result not found"));
+                return NotFound(new ApiResponse(404, "Result not found"));
 
             return Ok(new ApiResponse<ResultReadDto>(200, "Result retrieved successfully", data));
         }
 
         [HttpPost]
         [ProducesResponseType(typeof(ApiResponse<ResultReadDto>), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<ApiResponse<ResultReadDto>>> Add(ResultCreateDto dto)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<ApiResponse<ResultReadDto>>> Add([FromBody] ResultCreateDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<string>(400, "Invalid input data"));
-
+            // ⚠️ تذكير: قاعدة "لازم Lesson أو Exam واحد على الأقل" يجب أن تُفرض
+            // داخل ResultService.CreateAsync (وترمي CustomValidationException عند خرقها)
             var createdResult = await _resultService.CreateAsync(dto);
-            return StatusCode(201, new ApiResponse<ResultReadDto>(201, "Result created successfully", createdResult));
+            return CreatedAtAction(nameof(GetById), new { id = createdResult.Id },
+                new ApiResponse<ResultReadDto>(201, "Result created successfully", createdResult));
         }
 
         [HttpPut("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<string>>> Update(int id, ResultUpdateDto dto)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse>> Update(int id, [FromBody] ResultUpdateDto dto)
         {
-            try
-            {
-                await _resultService.UpdateAsync(id, dto);
-                return Ok(new ApiResponse<string>(200, "Result updated successfully"));
-            }
-            catch (Exception ex)
-            {
-                return NotFound(new ApiResponse<string>(404, ex.Message));
-            }
+            await _resultService.UpdateAsync(id, dto);
+            return Ok(new ApiResponse(200, "Result updated successfully"));
         }
 
         [HttpDelete("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<string>>> Delete(int id)
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse>> Delete(int id)
         {
-            try
-            {
-                await _resultService.DeleteAsync(id);
-                return Ok(new ApiResponse<string>(200, "Result deleted successfully"));
-            }
-            catch (Exception ex)
-            {
-                return NotFound(new ApiResponse<string>(404, ex.Message));
-            }
+            await _resultService.DeleteAsync(id);
+            return Ok(new ApiResponse(200, "Result deleted successfully"));
         }
 
         // 🔹 علاقات إضافية (Custom Business Logic)

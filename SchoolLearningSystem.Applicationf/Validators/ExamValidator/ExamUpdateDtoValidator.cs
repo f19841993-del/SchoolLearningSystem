@@ -1,5 +1,5 @@
 using FluentValidation;
-using SchoolLearningSystem.Applicationf.DTOs.Exam;
+using SchoolLearningSystem.Applicationf.DTOs.ExamDto;
 
 namespace SchoolLearningSystem.Applicationf.Validators.ExamValidator
 {
@@ -11,12 +11,19 @@ namespace SchoolLearningSystem.Applicationf.Validators.ExamValidator
                 .MaximumLength(150).WithMessage("العنوان يجب ألا يتجاوز 150 حرف.")
                 .When(x => !string.IsNullOrEmpty(x.Title));
 
+            RuleFor(x => x.ExamType)
+                .IsInEnum().WithMessage("نوع الامتحان غير صالح.")
+                .When(x => x.ExamType.HasValue);
+
+            RuleFor(x => x.Difficulty)
+                .IsInEnum().WithMessage("مستوى الصعوبة غير صالح.")
+                .When(x => x.Difficulty.HasValue);
+
             RuleFor(x => x.LessonId)
                 .GreaterThan(0).WithMessage("رقم الدرس غير صالح.")
                 .When(x => x.LessonId.HasValue);
 
-            // تنبيه: CourseId مستثنى عمداً من هذا الـ DTO — نقل امتحان بين كورسات تصرف خطير
-            // يستحق Use Case منفصل (dtos_review_report.md #4.1). تأكد أنه غير موجود بالـ DTO أصلاً.
+            // CourseId مستثنى عمداً - غير موجود بالـ DTO الفعلي (نفس القرار الموثق سابقاً)
         }
     }
 }
