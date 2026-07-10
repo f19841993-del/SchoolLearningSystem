@@ -241,6 +241,9 @@ namespace SchoolLearningSystem.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("LastModifiedAt")
                         .HasColumnType("datetime2");
 
@@ -272,6 +275,9 @@ namespace SchoolLearningSystem.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -281,14 +287,14 @@ namespace SchoolLearningSystem.Infrastructure.Migrations
                     b.Property<int?>("ExerciseId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("LastModifiedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<int>("LessonId")
-                        .HasColumnType("int");
 
                     b.Property<int>("StudentId")
                         .HasColumnType("int");
@@ -302,8 +308,6 @@ namespace SchoolLearningSystem.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ExerciseId");
-
-                    b.HasIndex("LessonId");
 
                     b.HasIndex("StudentId");
 
@@ -683,12 +687,6 @@ namespace SchoolLearningSystem.Infrastructure.Migrations
                         .HasForeignKey("ExerciseId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("SchoolLearningSystem.Domain.Entities.Lesson", "Lesson")
-                        .WithMany("MemorizeSessions")
-                        .HasForeignKey("LessonId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("SchoolLearningSystem.Domain.Entities.Student", "Student")
                         .WithMany("MemorizeSessions")
                         .HasForeignKey("StudentId")
@@ -696,8 +694,6 @@ namespace SchoolLearningSystem.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Exercise");
-
-                    b.Navigation("Lesson");
 
                     b.Navigation("Student");
                 });
@@ -817,8 +813,6 @@ namespace SchoolLearningSystem.Infrastructure.Migrations
                     b.Navigation("Exams");
 
                     b.Navigation("Exercises");
-
-                    b.Navigation("MemorizeSessions");
 
                     b.Navigation("Questions");
 

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SchoolLearningSystem.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate_WithAI_V1 : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -143,6 +143,7 @@ namespace SchoolLearningSystem.Infrastructure.Migrations
                     Content = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: false),
                     Order = table.Column<int>(type: "int", nullable: false),
                     VideoUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    IsPublished = table.Column<bool>(type: "bit", nullable: false),
                     CourseId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -294,11 +295,12 @@ namespace SchoolLearningSystem.Infrastructure.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     StudentId = table.Column<int>(type: "int", nullable: false),
-                    LessonId = table.Column<int>(type: "int", nullable: false),
                     ExerciseId = table.Column<int>(type: "int", nullable: true),
                     TotalAttempts = table.Column<int>(type: "int", nullable: false),
                     SuccessRate = table.Column<double>(type: "float", nullable: false),
                     DurationInSeconds = table.Column<int>(type: "int", nullable: false),
+                    IsCompleted = table.Column<bool>(type: "bit", nullable: false),
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
@@ -312,12 +314,6 @@ namespace SchoolLearningSystem.Infrastructure.Migrations
                         principalTable: "Exercises",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_MemorizeSessions_Lessons_LessonId",
-                        column: x => x.LessonId,
-                        principalTable: "Lessons",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_MemorizeSessions_Students_StudentId",
                         column: x => x.StudentId,
@@ -436,11 +432,6 @@ namespace SchoolLearningSystem.Infrastructure.Migrations
                 name: "IX_MemorizeSessions_ExerciseId",
                 table: "MemorizeSessions",
                 column: "ExerciseId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_MemorizeSessions_LessonId",
-                table: "MemorizeSessions",
-                column: "LessonId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MemorizeSessions_StudentId",
