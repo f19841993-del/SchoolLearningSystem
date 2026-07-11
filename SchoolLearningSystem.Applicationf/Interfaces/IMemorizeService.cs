@@ -23,7 +23,7 @@ namespace SchoolLearningSystem.Applicationf.Interfaces
         Task<MemorizeSessionReadDto> GetSessionWithAnswersAsync(int sessionId);
 
         // إنهاء الجلسة الحالية: تحديد IsCompleted=true وتسجيل CompletedAt ونسبة النجاح
-        Task CompleteSessionAsync(int sessionId, double successRate);
+        Task CompleteSessionAsync(int sessionId);
 
         // IMemorizeService.cs
         Task<MemorizeSessionStartResultDto> StartNewSessionAsync(int studentId);

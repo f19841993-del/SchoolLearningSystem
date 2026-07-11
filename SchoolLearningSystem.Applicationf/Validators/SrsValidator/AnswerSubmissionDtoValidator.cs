@@ -26,6 +26,8 @@ namespace SchoolLearningSystem.Applicationf.Validators.SrsValidator
                 .GreaterThanOrEqualTo(0).WithMessage("الوقت المستغرق لا يمكن أن يكون بالسالب.")
                 .LessThan(3600).WithMessage("الوقت المستغرق غير منطقي (أكثر من ساعة!).")
                 .When(x => x.TimeTakenInSeconds.HasValue);
+            RuleFor(x => x.SelectedAnswer)
+             .NotEmpty().WithMessage("يجب اختيار إجابة قبل الإرسال.");
         }
     }
 }

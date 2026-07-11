@@ -89,17 +89,6 @@ namespace SchoolLearningSystem.Applicationf.Services
             return _mapper.Map<LessonReadDto?>(lesson);
         }
 
-        // ============================================================================
-        // 🎯 Use Case: "الطالب يفتح صفحة الكورس ليرى قائمة الدروس المتاحة للتعلم،
-        //              مرتبة بتسلسلها الصحيح (Order)"
-        // ============================================================================
-        public async Task<IEnumerable<LessonReadDto>> GetLessonsByCourseIdAsync(int courseId)
-        {
-            var lessons = await _lessonRepository.GetByCourseIdAsync(courseId);
-            return _mapper.Map<IEnumerable<LessonReadDto>>(lessons);
-        }
-
-        // ============================================================================
         // 🎯 Use Case: "الطالب ينهي الدرس الحالي، فيضغط (التالي) والنظام يوجهه
         //              تلقائياً لأقرب درس تالٍ بالتسلسل ضمن نفس الكورس"
         //

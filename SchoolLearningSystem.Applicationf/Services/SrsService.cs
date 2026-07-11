@@ -8,15 +8,13 @@ using SchoolLearningSystem.Domain.Interfaces;
 
 namespace SchoolLearningSystem.Applicationf.Services
 {
-    // ==================================================================================
-    // 📌 المصدر الوحيد بكل المشروع لتطبيق خوارزمية SM-2 (Spaced Repetition System).
-    // يستبدل StudentQuestionProgressService القديمة بالكامل - احذفها من مشروعك.
-    // ==================================================================================
     public class SrsService : ISrsService
     {
         private readonly IStudentQuestionProgressRepository _progressRepository;
         private readonly IStudentRepository _studentRepository;
         private readonly IQuestionRepository _questionRepository;
+        private readonly IStudentAnswerDetailRepository _answerRepository;   // 🆕
+        private readonly IMemorizeRepository _memorizeRepository;             // 🆕
         private readonly IMapper _mapper;
 
         private const double MinimumEaseFactor = 1.3;
@@ -25,17 +23,21 @@ namespace SchoolLearningSystem.Applicationf.Services
             IStudentQuestionProgressRepository progressRepository,
             IStudentRepository studentRepository,
             IQuestionRepository questionRepository,
+            IStudentAnswerDetailRepository answerRepository,   // 🆕
+            IMemorizeRepository memorizeRepository,             // 🆕
             IMapper mapper)
         {
             _progressRepository = progressRepository;
             _studentRepository = studentRepository;
             _questionRepository = questionRepository;
+            _answerRepository = answerRepository;
+            _memorizeRepository = memorizeRepository;
             _mapper = mapper;
         }
 
         // ============================================================================
-        // 🎯 Use Case: الطالب يجاوب على سؤال بجلسة المراجعة، والنظام يحسب تلقائياً
-        //              موعد مراجعته القادم حسب خوارزمية SM-2
+        // 🎯 Use Case: الطالب يجاوب على سؤال بجلسة المراجعة - الآن ينشئ StudentAnswerDetail
+        //              + يحدّث SM-2 + يحدّث إحصائيات الجلسة، كل هذا بنداء واحد.
         // ============================================================================
         public async Task ProcessAnswerAsync(AnswerSubmissionDto dto)
         {
@@ -48,6 +50,13 @@ namespace SchoolLearningSystem.Applicationf.Services
             var questionExists = await _questionRepository.GetByIdAsync(dto.QuestionId)
                 ?? throw new NotFoundException($"السؤال برقم {dto.QuestionId} غير موجود.");
 
+            // 🆕 تحقق كان مفقوداً بالكامل من قبل
+            var session = await _memorizeRepository.GetByIdAsync(dto.MemorizeSessionId)
+                ?? throw new NotFoundException($"جلسة المراجعة برقم {dto.MemorizeSessionId} غير موجودة.");
+
+            bool isCorrect = dto.Quality >= 3;   // 🆕 محسوبة من السيرفر، مو من الفرونت
+
+            // --- 1) SM-2 (نفس المنطق الأصلي حرفياً، بدون أي تغيير) ---
             var progress = await _progressRepository.GetByStudentAndQuestionAsync(dto.StudentId, dto.QuestionId);
             var isNewProgress = progress == null;
 
@@ -83,13 +92,37 @@ namespace SchoolLearningSystem.Applicationf.Services
             progress.NextReviewDate = DateTime.UtcNow.AddDays(progress.Interval);
             progress.LastReviewedAt = DateTime.UtcNow;
             progress.TotalAttempts++;
-            if (dto.Quality >= 3)
+            if (isCorrect)
                 progress.CorrectAttempts++;
 
             if (isNewProgress)
-                await _progressRepository.AddAsync(progress);
+                await _progressRepository.AddAsync(progress);   // ⚠️ يحفظ فوراً بذاته (سلوك الريبو المخصص هذا)
             else
-                await _progressRepository.UpdateAsync(progress);
+                await _progressRepository.UpdateAsync(progress); // ⚠️ نفس الملاحظة
+
+            // --- 2) 🆕 إنشاء سجل الإجابة التفصيلية ---
+            var answerDetail = new StudentAnswerDetail
+            {
+                StudentId = dto.StudentId,
+                QuestionId = dto.QuestionId,
+                MemorizeSessionId = dto.MemorizeSessionId,
+                SelectedAnswer = dto.SelectedAnswer,
+                IsCorrect = isCorrect,
+                Quality = dto.Quality,
+                TimeTakenInSeconds = dto.TimeTakenInSeconds ?? 0
+            };
+            await _answerRepository.AddAsync(answerDetail);   // 💡 لا يحفظ فوراً (GenericRepository)
+
+            // --- 3) 🆕 تحديث إحصائيات الجلسة تراكمياً ---
+            session.TotalAttempts++;
+            var correctSoFar = (int)Math.Round(session.SuccessRate * (session.TotalAttempts - 1) / 100.0)
+                + (isCorrect ? 1 : 0);
+            session.SuccessRate = (double)correctSoFar / session.TotalAttempts * 100;
+
+            await _memorizeRepository.UpdateAsync(session);   // 💡 لا يحفظ فوراً (GenericRepository)
+
+            // ✅ حفظ وحيد يغطي answerDetail + session سوا (نفس الـ DbContext الـ Scoped)
+            await _memorizeRepository.SaveChangesAsync();
         }
 
         // ============================================================================

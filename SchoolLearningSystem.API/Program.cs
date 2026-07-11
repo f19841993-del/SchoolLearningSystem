@@ -26,6 +26,20 @@ namespace SchoolLearningSystem.API
             builder.Services.AddApplicationServices();
             builder.Services.AddInfrastructureServices(builder.Configuration);
 
+            // 🆕 تسجيل سياسة CORS: تسمح للفرونت (Origin مختلف) يستدعي الـ API من المتصفح.
+            // بدونها، المتصفح يمنع كل الطلبات تلقائياً (CORS Policy Error) حتى لو الـ API شغال صح.
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend", policy =>
+                {
+                    policy.WithOrigins(
+                            "http://localhost:3000",   // 👈 عدّل هذا لبورت الفرونت الفعلي عندك
+                            "http://localhost:5173")    // (مثال: Vite افتراضياً يشتغل على 5173)
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
+
             // 2. تسجيل Swagger
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
@@ -55,6 +69,7 @@ namespace SchoolLearningSystem.API
             }
 
             app.UseHttpsRedirection();
+            app.UseCors("AllowFrontend");
             app.UseAuthorization();
             app.MapControllers();
 

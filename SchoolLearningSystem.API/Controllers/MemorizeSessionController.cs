@@ -38,27 +38,27 @@ namespace SchoolLearningSystem.API.Controllers
             return Ok(new ApiResponse<MemorizeSessionReadDto>(200, "Session retrieved successfully", data));
         }
 
-        [HttpPost]
-        [ProducesResponseType(typeof(ApiResponse<MemorizeSessionReadDto>), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<ApiResponse<MemorizeSessionReadDto>>> Add([FromBody] MemorizeSessionCreateDto dto)
-        {
-            // 🔴 فجوة حرجة موثقة: هذا ما زال إنشاءً "أعمى"، غير مربوط بـ
-            // ISrsService.GetDueQuestionsForSessionAsync. الـ Use Case الموثق
-            // (StartNewSessionAsync) غير مبني بعد بـ IMemorizeService — أضفه هناك أولاً.
-            var created = await _memorizeService.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id },
-                new ApiResponse<MemorizeSessionReadDto>(201, "Session created successfully", created));
-        }
+        //[HttpPost]
+        //[ProducesResponseType(typeof(ApiResponse<MemorizeSessionReadDto>), StatusCodes.Status201Created)]
+        //[ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        //public async Task<ActionResult<ApiResponse<MemorizeSessionReadDto>>> Add([FromBody] MemorizeSessionCreateDto dto)
+        //{
+        //    // ⚠️ إنشاء "خام" غير مرتبط بفحص الجلسة النشطة أو الأسئلة المستحقة (SRS).
+        //        // الطريق الرسمي المفضّل للفرونت هو POST /api/students/{studentId}/memorize-sessions/start
+        //        // (StartNewSessionAsync أسفل هذا الملف) — هذا الـ Endpoint هنا بس للإدارة/الاختبار المباشر..
+        //                var created = await _memorizeService.CreateAsync(dto);
+        //    return CreatedAtAction(nameof(GetById), new { id = created.Id },
+        //        new ApiResponse<MemorizeSessionReadDto>(201, "Session created successfully", created));
+        //}
 
-        [HttpPut("{id}")]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse>> Update(int id, [FromBody] MemorizeSessionUpdateDto dto)
-        {
-            await _memorizeService.UpdateAsync(id, dto);
-            return Ok(new ApiResponse(200, "Session updated successfully"));
-        }
+        //[HttpPut("{id}")]
+        //[ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        //[ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        //public async Task<ActionResult<ApiResponse>> Update(int id, [FromBody] MemorizeSessionUpdateDto dto)
+        //{
+        //    await _memorizeService.UpdateAsync(id, dto);
+        //    return Ok(new ApiResponse(200, "Session updated successfully"));
+        //}
 
         [HttpDelete("{id}")]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
@@ -114,9 +114,9 @@ namespace SchoolLearningSystem.API.Controllers
         [HttpPatch("{id}/complete")]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse>> CompleteSession(int id, [FromQuery] double successRate)
+        public async Task<ActionResult<ApiResponse>> CompleteSession(int id)
         {
-            await _memorizeService.CompleteSessionAsync(id, successRate);
+            await _memorizeService.CompleteSessionAsync(id);
             return Ok(new ApiResponse(200, "Session completed successfully"));
         }
 

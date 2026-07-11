@@ -26,9 +26,6 @@ namespace SchoolLearningSystem.Applicationf.Interfaces
         // 🎯 Use Case: جلب الدرس المرتبط بتمرين معيّن
         Task<LessonReadDto?> GetLessonByExerciseIdAsync(int exerciseId);
 
-        // 🎯 Use Case: جلب دروس كورس معيّن (يفيد الـ Controller مباشرة بدون المرور بالريبو)
-        Task<IEnumerable<LessonReadDto>> GetLessonsByCourseIdAsync(int courseId);
-
         // 🎯 Use Case: جلب الدرس التالي بالتسلسل (لدعم مسار التعلم بالـ AI)
         Task<LessonReadDto?> GetNextLessonAsync(int courseId, int currentLessonOrder);
     }

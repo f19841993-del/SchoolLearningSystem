@@ -133,22 +133,6 @@ namespace SchoolLearningSystem.API.Controllers
             return Ok(new ApiResponse<LessonReadDto>(200, "Lesson retrieved successfully", data));
         }
 
-        /// <summary>
-        /// جلب دروس كورس معيّن
-        /// </summary>
-        [HttpGet("course/{courseId}")]
-        [ProducesResponseType(typeof(ApiResponse<IEnumerable<LessonReadDto>>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse<IEnumerable<LessonReadDto>>>> GetByCourseId(int courseId)
-        {
-            // ⚠️ تعارض "مصدر الحقيقة" محتمل: CourseController عنده GET {id}/lessons
-            // يستدعي ICourseService.GetLessonsByCourseIdAsync، وهذا هنا يستدعي
-            // ILessonService.GetLessonsByCourseIdAsync — نفس البيانات، نفس المعنى،
-            // بخدمتين مختلفتين. لازم تحسم مين "المالك" وتحذف الثاني (الأنسب منطقياً:
-            // تبقى بـ CourseController لأن المسار /api/courses/{id}/lessons أوضح للفرونت،
-            // وتحذف هذا الـ Endpoint من هنا، أو العكس — بس مو الاثنين مع بعض).
-            var data = await _lessonService.GetLessonsByCourseIdAsync(courseId);
-            return Ok(new ApiResponse<IEnumerable<LessonReadDto>>(200, "Lessons retrieved successfully", data));
-        }
 
         /// <summary>
         /// جلب الدرس التالي بالتسلسل داخل نفس الكورس (لدعم مسار التعلم بالـ AI)

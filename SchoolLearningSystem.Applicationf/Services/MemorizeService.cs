@@ -89,13 +89,14 @@ namespace SchoolLearningSystem.Applicationf.Services
         //
         // مين يستدعيها: النظام تلقائياً (Backend) بعد آخر إجابة، مو الطالب يدوياً.
         // ============================================================================
-        public async Task CompleteSessionAsync(int sessionId, double successRate)
+        public async Task CompleteSessionAsync(int sessionId)
         {
             var session = await _memorizeRepository.GetByIdAsync(sessionId)
                 ?? throw new NotFoundException($"جلسة المراجعة برقم {sessionId} غير موجودة.");
 
             session.IsCompleted = true;
-            session.SuccessRate = successRate;
+            // SuccessRate لا تُلمس هنا - محسوبة أصلاً وبدقة تراكمياً داخل
+           // SrsService.ProcessAnswerAsync مع كل إجابة، القيمة الحالية هي الصحيحة.
             session.CompletedAt = DateTime.UtcNow;
 
             await _memorizeRepository.UpdateAsync(session);
