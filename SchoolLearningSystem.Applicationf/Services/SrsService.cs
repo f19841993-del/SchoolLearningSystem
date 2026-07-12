@@ -159,5 +159,24 @@ namespace SchoolLearningSystem.Applicationf.Services
             var progress = await _progressRepository.GetByStudentAndQuestionAsync(studentId, questionId);
             return _mapper.Map<StudentQuestionProgressReadDto?>(progress);
         }
+
+        // ============================================================================
+        // 🎯 Use Case: "النظام يبني جلسة تدريب مكثف لدرس تعثّر فيه الطالب — يحتاج يعرف
+        //              بالضبط أي أسئلة أخطأ فيها سابقاً بهذا الدرس تحديداً"
+        // ============================================================================
+        public async Task<IEnumerable<StudentQuestionProgressReadDto>> GetWeakQuestionsForLessonAsync(int studentId, int lessonId)
+        {
+            var studentExists = await _studentRepository.GetByIdAsync(studentId)
+                ?? throw new NotFoundException($"الطالب برقم {studentId} غير موجود.");
+
+            var incorrectAnswers = await _answerRepository.GetIncorrectAnswersByStudentIdAsync(studentId, lessonId);
+            var weakQuestionIds = incorrectAnswers.Select(a => a.QuestionId).Distinct().ToList();
+
+            if (!weakQuestionIds.Any())
+                return Enumerable.Empty<StudentQuestionProgressReadDto>();
+
+            var progress = await _progressRepository.GetByStudentAndQuestionIdsAsync(studentId, weakQuestionIds);
+            return _mapper.Map<IEnumerable<StudentQuestionProgressReadDto>>(progress);
+        }
     }
 }

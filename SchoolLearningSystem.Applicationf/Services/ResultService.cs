@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Logging;
 using SchoolLearningSystem.Applicationf.DTOs.Result;
 using SchoolLearningSystem.Applicationf.Exceptions;
 using SchoolLearningSystem.Applicationf.Interfaces;
@@ -21,12 +22,16 @@ namespace SchoolLearningSystem.Applicationf.Services
         private readonly IStudentRepository _studentRepository;
         private readonly ILessonRepository _lessonRepository;
         private readonly IExamRepository _examRepository;
+        private readonly ICourseStudentService _courseStudentService;
+        private readonly ILogger<ResultService> _logger;
 
         public ResultService(
             IResultRepository resultRepository,
             IStudentRepository studentRepository,
             ILessonRepository lessonRepository,
             IExamRepository examRepository,
+            ICourseStudentService courseStudentService,
+            ILogger<ResultService> logger,
             IMapper mapper)
             : base(resultRepository, mapper)
         {
@@ -34,6 +39,9 @@ namespace SchoolLearningSystem.Applicationf.Services
             _studentRepository = studentRepository;
             _lessonRepository = lessonRepository;
             _examRepository = examRepository;
+            _courseStudentService = courseStudentService;
+            _logger = logger;
+
         }
 
         // ============================================================================
@@ -68,8 +76,28 @@ namespace SchoolLearningSystem.Applicationf.Services
                     ?? throw new NotFoundException($"الامتحان برقم {dto.ExamId.Value} غير موجود.");
             }
 
-            // 5. التفيذ
-            return await base.CreateAsync(dto);
+            // 5. التنفيذ
+            var created = await base.CreateAsync(dto);
+
+            // 6. لو النتيجة مرتبطة بدرس، حدّث تقدّم الطالب — عملية ثانوية مشتقة (Derived)
+            //    لا يجوز تفشيل حفظ الدرجة الأساسية بسببها. لو صار خطأ هنا، التقدّم يبقى
+            //    "متأخر شوي" مؤقتاً ويتصحح تلقائياً بأول Result جاي لنفس الكورس
+            //    (لأن الحساب يُعاد من الصفر كل مرة، مو تراكمي).
+            if (dto.LessonId.HasValue)
+            {
+                try
+                {
+                    var lesson = await _lessonRepository.GetByIdAsync(dto.LessonId.Value);
+                    if (lesson != null)
+                        await _courseStudentService.UpdateProgressAsync(dto.StudentId, lesson.CourseId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "فشل تحديث تقدّم الطالب {StudentId} بالكورس بعد تسجيل نتيجة الدرس {LessonId}", dto.StudentId, dto.LessonId);
+                }
+            }
+
+            return created;
         }
 
         // ============================================================================

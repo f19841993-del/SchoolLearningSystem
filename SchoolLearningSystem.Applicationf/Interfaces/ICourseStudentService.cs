@@ -28,6 +28,9 @@ namespace SchoolLearningSystem.Applicationf.Interfaces
         // (تم حذفها من ICourseService لتفادي التكرار)
         Task<IEnumerable<StudentReadDto>> GetStudentsByCourseIdAsync(int courseId);
         Task<IEnumerable<CourseReadDto>> GetCoursesByStudentIdAsync(int studentId);
+        // 💡 يُستدعى بعد أي حدث "تفاعل حقيقي" مع محتوى الكورس (تسجيل نتيجة درس حالياً)
+        // يعيد حساب ProgressPercentage من جدول Result، ويحدّث LastAccessedAt = الآن
+        Task UpdateProgressAsync(int studentId, int courseId);
 
         // ==========================================
         // 🔹 عمليات التسجيل والإزالة (Business Rules)

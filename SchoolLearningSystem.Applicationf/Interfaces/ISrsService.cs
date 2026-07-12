@@ -28,5 +28,9 @@ namespace SchoolLearningSystem.Applicationf.Interfaces
 
         // جلب تقدم طالب بسؤال معيّن بالتحديد
         Task<StudentQuestionProgressReadDto?> GetProgressByStudentAndQuestionAsync(int studentId, int questionId);
+       
+        // يبني قائمة "نقاط الضعف" لدرس معيّن: الأسئلة اللي أخطأ فيها الطالب سابقاً، مع حالتها الحالية بـ SM-2
+        Task<IEnumerable<StudentQuestionProgressReadDto>> GetWeakQuestionsForLessonAsync(int studentId, int lessonId);
+
     }
 }

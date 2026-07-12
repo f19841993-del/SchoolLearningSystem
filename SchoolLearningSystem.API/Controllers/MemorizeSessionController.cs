@@ -128,5 +128,12 @@ namespace SchoolLearningSystem.API.Controllers
             var result = await _memorizeService.StartNewSessionAsync(studentId);
             return Ok(ApiResponse<MemorizeSessionStartResultDto>.Success(result));
         }
+
+        [HttpPost("/api/students/{studentId}/memorize-sessions/remedial/{lessonId}")]
+        public async Task<ActionResult<ApiResponse<MemorizeSessionStartResultDto>>> StartRemedialSession(int studentId, int lessonId)
+        {
+            var result = await _memorizeService.StartRemedialSessionAsync(studentId, lessonId);
+            return Ok(ApiResponse<MemorizeSessionStartResultDto>.Success(result));
+        }
     }
 }

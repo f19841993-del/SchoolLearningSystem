@@ -35,6 +35,16 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        // نفس فكرة GetDueQuestionsAsync، بس الفلترة على قائمة أسئلة محددة مسبقاً بدل NextReviewDate
+        public async Task<IEnumerable<StudentQuestionProgress>> GetByStudentAndQuestionIdsAsync(int studentId, IEnumerable<int> questionIds)
+        {
+            return await _context.StudentQuestionProgresses
+                .AsNoTracking()
+                .Include(p => p.Question) // نفس سبب GetDueQuestionsAsync: نحتاج QuestionText بالـ DTO
+                .Where(p => p.StudentId == studentId && questionIds.Contains(p.QuestionId))
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<StudentQuestionProgress>> GetByStudentIdAsync(int studentId)
         {
             return await _context.StudentQuestionProgresses

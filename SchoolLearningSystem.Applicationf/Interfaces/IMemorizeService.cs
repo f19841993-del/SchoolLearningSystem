@@ -27,5 +27,10 @@ namespace SchoolLearningSystem.Applicationf.Interfaces
 
         // IMemorizeService.cs
         Task<MemorizeSessionStartResultDto> StartNewSessionAsync(int studentId);
+
+        // بناء جلسة "تدريب مكثف" مركّزة على نقاط ضعف الطالب بدرس معيّن (بدل الأسئلة المستحقة بالتاريخ)
+        Task<MemorizeSessionStartResultDto> StartRemedialSessionAsync(int studentId, int lessonId);
+
+
     }
 }

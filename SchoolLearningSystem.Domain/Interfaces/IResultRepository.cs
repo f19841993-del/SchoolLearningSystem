@@ -20,5 +20,8 @@ namespace SchoolLearningSystem.Domain.Interfaces
         Task<double> GetAverageScoreByStudentIdAsync(int studentId);
         Task<double> GetAverageScoreByLessonIdAsync(int lessonId);
         Task<double> GetAverageScoreByExamIdAsync(int examId);
+        // عدد الدروس المميزة (Distinct) اللي عند الطالب نتيجة عليها ضمن كورس معيّن — يُستخدم لحساب نسبة التقدم
+        Task<int> CountDistinctCompletedLessonsAsync(int studentId, int courseId);
+
     }
 }

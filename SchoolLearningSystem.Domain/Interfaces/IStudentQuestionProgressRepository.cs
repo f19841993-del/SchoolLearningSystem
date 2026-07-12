@@ -17,5 +17,7 @@ namespace SchoolLearningSystem.Domain.Interfaces
         // 4. العمليات الأساسية (CRUD) معرفة يدوياً لتناسب المفاتيح المركبة
         Task AddAsync(StudentQuestionProgress progress);
         Task UpdateAsync(StudentQuestionProgress progress);
+        // 5. جلب سجلات تقدم عدة أسئلة دفعة وحدة (يُستخدم لبناء جلسة تدريب مكثف من أسئلة ضعيفة محددة)
+        Task<IEnumerable<StudentQuestionProgress>> GetByStudentAndQuestionIdsAsync(int studentId, IEnumerable<int> questionIds);
     }
 }

@@ -37,6 +37,20 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
                 .Where(r => r.LessonId == lessonId && !r.IsDeleted)
                 .ToListAsync();
         }
+        // يحسب عدد الدروس المميزة اللي عند الطالب نتيجة (Result) عليها ضمن كورس معيّن
+        // نستخدم r.Lesson.CourseId مباشرة بالفلترة (JOIN تلقائي) بدون Include كامل
+        public async Task<int> CountDistinctCompletedLessonsAsync(int studentId, int courseId)
+        {
+            return await _context.Results
+                .AsNoTracking()
+                .Where(r => r.StudentId == studentId
+                            && r.LessonId != null
+                            && r.Lesson!.CourseId == courseId
+                            && !r.IsDeleted)
+                .Select(r => r.LessonId)
+                .Distinct()
+                .CountAsync();
+        }
 
         // متوسط كل درجات الطالب (بكل الكورسات/الدروس/الامتحانات مجتمعة)
         public async Task<double> GetAverageScoreByStudentIdAsync(int studentId)

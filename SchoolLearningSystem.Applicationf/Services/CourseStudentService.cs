@@ -24,17 +24,22 @@ namespace SchoolLearningSystem.Applicationf.Services
         private readonly ICourseRepository _courseRepository;               // للتأكد أن الكورس موجود فعلاً
         private readonly IStudentRepository _studentRepository;             // للتأكد أن الطالب موجود فعلاً
         private readonly IMapper _mapper;                                   // لتحويل Entity <-> DTO
-
+        private readonly ILessonRepository _lessonRepository;
+        private readonly IResultRepository _resultRepository;
         public CourseStudentService(
             ICourseStudentRepository courseStudentRepository,
             ICourseRepository courseRepository,
             IStudentRepository studentRepository,
+            ILessonRepository lessonRepository,
+            IResultRepository resultRepository,
             IMapper mapper)
         {
             _courseStudentRepository = courseStudentRepository;
             _courseRepository = courseRepository;
             _studentRepository = studentRepository;
             _mapper = mapper;
+            _lessonRepository = lessonRepository;
+            _resultRepository = resultRepository;
         }
 
         #region 1. العمليات الأساسية والتسجيل (Business Rules & CRUD)
@@ -119,6 +124,31 @@ namespace SchoolLearningSystem.Applicationf.Services
 
             // AutoMapper ينسخ فقط القيم الموجودة بالـ dto إلى الـ entity المتتبَّع (Tracked)
             _mapper.Map(dto, entity);
+            await _courseStudentRepository.UpdateAsync(entity);
+        }
+
+        // ============================================================================
+        // 🎯 Use Case: "الطالب يسجّل نتيجة على درس (اختبار/واجب)، فيحتاج النظام يحدّث
+        //              تلقائياً: كم % من الكورس أنهى، ومتى آخر مرة تفاعل معه"
+        //
+        // مين يستدعيها: ResultService.CreateAsync بعد ما يتأكد النتيجة مرتبطة بدرس صحيح.
+        // ============================================================================
+        public async Task UpdateProgressAsync(int studentId, int courseId)
+        {
+            var entity = await _courseStudentRepository.GetByIdAsync(courseId, studentId);
+            if (entity == null)
+                return; // الطالب مو مسجّل بهذا الكورس أصلاً — لا شيء نحدّثه
+
+            var totalPublishedLessons = (await _lessonRepository.GetByCourseIdAsync(courseId))
+                .Count(l => l.IsPublished);
+
+            if (totalPublishedLessons > 0)
+            {
+                var completedLessons = await _resultRepository.CountDistinctCompletedLessonsAsync(studentId, courseId);
+                entity.ProgressPercentage = Math.Min(100.0, (double)completedLessons / totalPublishedLessons * 100.0);
+            }
+
+            entity.LastAccessedAt = DateTime.UtcNow;
             await _courseStudentRepository.UpdateAsync(entity);
         }
 

@@ -151,6 +151,7 @@ namespace SchoolLearningSystem.Applicationf.Services
                 };
             }
 
+
             // 📌 من هنا وطالع: نفس منطقك الأصلي بدون أي تغيير —
             // وصلنا هنا فقط لو تأكدنا إنه ما عنده جلسة نشطة مسبقاً
 
@@ -184,6 +185,55 @@ namespace SchoolLearningSystem.Applicationf.Services
             {
                 Session = createdSession,
                 DueQuestions = dueQuestions
+            };
+        }
+
+        // ============================================================================
+        // 🎯 Use Case: "الطالب يضغط (تدريب مكثف) بعد ما شاف تقريره لدرس معيّن يتعثر فيه"
+        // نفس الحالات الثلاث بالضبط اللي بـ StartNewSessionAsync، بس مصدر الأسئلة مختلف:
+        // هنا "أسئلة أخطأ فيها بهذا الدرس تحديداً"، مو "أسئلة مستحقة اليوم حسب SM-2"
+        // ============================================================================
+        public async Task<MemorizeSessionStartResultDto> StartRemedialSessionAsync(int studentId, int lessonId)
+        {
+            var studentExists = await _studentRepository.GetByIdAsync(studentId)
+                ?? throw new NotFoundException($"الطالب برقم {studentId} غير موجود.");
+
+            var activeSession = await _memorizeRepository.GetActiveSessionByStudentIdAsync(studentId);
+            var weakQuestions = (await _srsService.GetWeakQuestionsForLessonAsync(studentId, lessonId)).ToList();
+
+            // الحالة 1: عنده جلسة مفتوحة أصلاً — نكمّلها بنفس منطق StartNewSessionAsync
+            if (activeSession != null)
+            {
+                return new MemorizeSessionStartResultDto
+                {
+                    Session = _mapper.Map<MemorizeSessionReadDto>(activeSession),
+                    DueQuestions = weakQuestions
+                };
+            }
+
+            // الحالة 2: ما فيه ولا سؤال أخطأ فيه بهذا الدرس — لا داعي جلسة فاضية
+            if (!weakQuestions.Any())
+            {
+                return new MemorizeSessionStartResultDto
+                {
+                    Session = null,
+                    DueQuestions = new List<StudentQuestionProgressReadDto>()
+                };
+            }
+
+            // الحالة 3: ننشئ جلسة جديدة (نفس CreateDto بالضبط المستخدم بـ StartNewSessionAsync)
+            var sessionDto = new MemorizeSessionCreateDto
+            {
+                StudentId = studentId,
+                ExerciseId = null,
+                DurationInSeconds = 0
+            };
+            var createdSession = await CreateAsync(sessionDto);
+
+            return new MemorizeSessionStartResultDto
+            {
+                Session = createdSession,
+                DueQuestions = weakQuestions
             };
         }
     }
