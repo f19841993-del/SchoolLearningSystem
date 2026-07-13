@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Interfaces;
+using SchoolLearningSystem.Domain.Models;
 using SchoolLearningSystem.Infrastructure.Data;
 using SchoolLearningSystem.Infrastructure.Repositories.Base;
 
@@ -55,6 +56,31 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
                             && !a.IsCorrect
                             && a.Question.LessonId == lessonId
                             && !a.IsDeleted)
+                .ToListAsync();
+        }
+
+
+        public async Task<IEnumerable<QuestionDifficultyStats>> GetQuestionDifficultyStatsAsync(int? lessonId, int topN)
+        {
+            var query = _context.StudentAnswerDetails.AsNoTracking().Where(a => !a.IsDeleted);
+
+            if (lessonId.HasValue)
+                query = query.Where(a => a.Question.LessonId == lessonId.Value);
+
+            return await query
+                .GroupBy(a => new { a.QuestionId, a.Question.Text, a.Question.LessonId, a.Question.Lesson.Title })
+                .Select(g => new
+                {
+                    g.Key.QuestionId,
+                    g.Key.Text,
+                    g.Key.LessonId,
+                    g.Key.Title,
+                    TotalAttempts = g.Count(),
+                    IncorrectCount = g.Count(a => !a.IsCorrect)
+                })
+                .OrderByDescending(x => x.TotalAttempts == 0 ? 0 : (double)x.IncorrectCount / x.TotalAttempts)
+                .Take(topN)   // 👈 الآن الـ SQL نفسه يجيب topN صف بس، مو كل الأسئلة
+                .Select(x => new QuestionDifficultyStats(x.QuestionId, x.Text, x.LessonId, x.Title, x.TotalAttempts, x.IncorrectCount))
                 .ToListAsync();
         }
     }

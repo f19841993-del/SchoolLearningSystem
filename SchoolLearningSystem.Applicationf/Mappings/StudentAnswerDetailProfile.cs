@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using SchoolLearningSystem.Applicationf.DTOs.Analytics;
 using SchoolLearningSystem.Applicationf.DTOs.StudentAnswer;
 using SchoolLearningSystem.Domain.Entities;
+using SchoolLearningSystem.Domain.Models;
 
 namespace SchoolLearningSystem.Applicationf.Mappings
 {
@@ -52,6 +54,10 @@ namespace SchoolLearningSystem.Applicationf.Mappings
                 .ForMember(dest => dest.Question, opt => opt.Ignore())
                 // MemorizeSessionId غير قابل للتعديل عمداً - راجع StudentAnswerDetailUpdateDto
                 .ForMember(dest => dest.MemorizeSession, opt => opt.Ignore());
+
+            // 4. 🆕 لوحة تحكم المعلم — تجميع صعوبة الأسئلة (Read-only، بدون Create/Update)
+            // كل الأسماء متطابقة بين الـ record والـ DTO، فما يحتاج ForMember إطلاقاً
+            CreateMap<QuestionDifficultyStats, QuestionDifficultyStatsDto>();
         }
     }
 }

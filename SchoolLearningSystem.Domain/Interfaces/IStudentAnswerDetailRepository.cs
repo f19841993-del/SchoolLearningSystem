@@ -1,5 +1,6 @@
 ﻿using SchoolLearningSystem.Domain.Entities;
 using SchoolLearningSystem.Domain.Interfaces.Base;
+using SchoolLearningSystem.Domain.Models;
 
 namespace SchoolLearningSystem.Domain.Interfaces
 {
@@ -16,5 +17,9 @@ namespace SchoolLearningSystem.Domain.Interfaces
 
         // 4. استعلام ذكي: جلب إجابات الطالب الخاطئة في موضوع معين (لإعادة التدريب)
         Task<IEnumerable<StudentAnswerDetail>> GetIncorrectAnswersByStudentIdAsync(int studentId, int lessonId);
+
+        // 5. إحصائية صعوبة الأسئلة مجمّعة عبر كل الطلاب — لوحة تحكم المعلم (فلترة اختيارية بدرس)
+        Task<IEnumerable<QuestionDifficultyStats>> GetQuestionDifficultyStatsAsync(int? lessonId, int topN);
+
     }
 }

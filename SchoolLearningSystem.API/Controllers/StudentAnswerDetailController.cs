@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SchoolLearningSystem.API.Responses;
+using SchoolLearningSystem.Applicationf.DTOs.Analytics;
 using SchoolLearningSystem.Applicationf.DTOs.StudentAnswer;
 using SchoolLearningSystem.Applicationf.Interfaces;
 
@@ -107,6 +108,15 @@ namespace SchoolLearningSystem.API.Controllers
         {
             var data = await _service.GetIncorrectAnswersByStudentIdAsync(studentId, lessonId);
             return Ok(new ApiResponse<IEnumerable<StudentAnswerDetailReadDto>>(200, "Incorrect answers retrieved successfully", data));
+        }
+
+        [HttpGet("hardest-questions")]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<QuestionDifficultyStatsDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<QuestionDifficultyStatsDto>>>> GetHardestQuestions(
+    [FromQuery] int? lessonId, [FromQuery] int topN = 10)
+        {
+            var data = await _service.GetHardestQuestionsAsync(lessonId, topN);
+            return Ok(new ApiResponse<IEnumerable<QuestionDifficultyStatsDto>>(200, "تم جلب الأسئلة الأصعب بنجاح.", data));
         }
     }
 }

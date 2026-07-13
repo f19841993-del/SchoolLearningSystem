@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using SchoolLearningSystem.Applicationf.DTOs.Analytics;
 using SchoolLearningSystem.Applicationf.DTOs.StudentAnswer;
 using SchoolLearningSystem.Applicationf.Exceptions;
 using SchoolLearningSystem.Applicationf.Interfaces;
@@ -91,6 +92,15 @@ namespace SchoolLearningSystem.Applicationf.Services
 
             var answers = await _answerRepository.GetIncorrectAnswersByStudentIdAsync(studentId, lessonId);
             return _mapper.Map<IEnumerable<StudentAnswerDetailReadDto>>(answers);
+        }
+
+
+        // 🎯 Use Case: "المعلم يفتح لوحة تحكم يشوف فيها أصعب N سؤال (أو أصعب أسئلة درس معيّن)
+        //              حسب نسبة خطأ كل الطلاب فيه، عشان يعرف وين يركّز شرحه"
+        public async Task<IEnumerable<QuestionDifficultyStatsDto>> GetHardestQuestionsAsync(int? lessonId, int topN)
+        {
+            var stats = await _answerRepository.GetQuestionDifficultyStatsAsync(lessonId, topN);
+            return _mapper.Map<IEnumerable<QuestionDifficultyStatsDto>>(stats);
         }
     }
 }

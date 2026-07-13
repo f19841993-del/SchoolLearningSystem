@@ -1,4 +1,5 @@
-﻿using SchoolLearningSystem.Applicationf.DTOs.StudentAnswer;
+﻿using SchoolLearningSystem.Applicationf.DTOs.Analytics;
+using SchoolLearningSystem.Applicationf.DTOs.StudentAnswer;
 
 using SchoolLearningSystem.Applicationf.Interfaces.Base;
 
@@ -26,5 +27,8 @@ namespace SchoolLearningSystem.Applicationf.Interfaces
 
         // إجابات الطالب الخاطئة ضمن درس معيّن - لإعادة التدريب المستهدف
         Task<IEnumerable<StudentAnswerDetailReadDto>> GetIncorrectAnswersByStudentIdAsync(int studentId, int lessonId);
+
+        Task<IEnumerable<QuestionDifficultyStatsDto>> GetHardestQuestionsAsync(int? lessonId, int topN);
+
     }
 }
