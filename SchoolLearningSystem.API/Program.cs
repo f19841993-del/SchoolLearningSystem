@@ -1,6 +1,7 @@
 ﻿using SchoolLearningSystem.API.Authentication;
 using SchoolLearningSystem.API.Extensions;
 using SchoolLearningSystem.API.Middleware;
+using SchoolLearningSystem.API.UploadHandling;
 using SchoolLearningSystem.Applicationf;
 using SchoolLearningSystem.Applicationf.Interfaces;
 using SchoolLearningSystem.Infrastructure;
@@ -31,6 +32,8 @@ namespace SchoolLearningSystem.API
             builder.Services.AddInfrastructureServices(builder.Configuration);
             builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
             builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<IFileStorageService, FileStorageService>();
             var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()!;
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -120,6 +123,7 @@ namespace SchoolLearningSystem.API
             }
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles(); // 🆕 يخدم wwwroot/uploads (صور البروفايل/الكورس) كملفات ثابتة
             app.UseCors("AllowFrontend");
             app.UseAuthentication();
             app.UseAuthorization();
