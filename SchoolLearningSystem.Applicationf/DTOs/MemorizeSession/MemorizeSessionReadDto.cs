@@ -3,6 +3,7 @@
     public class MemorizeSessionReadDto
     {
         public int Id { get; set; }
+        public int StudentId { get; set; }
         public string StudentName { get; set; } = string.Empty;
 
         // اختياري لأن ExerciseId نفسه اختياري بالـ Entity

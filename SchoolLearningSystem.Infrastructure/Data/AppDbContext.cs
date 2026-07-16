@@ -21,7 +21,7 @@ namespace SchoolLearningSystem.Infrastructure.Data
         public DbSet<CourseStudent> CourseStudents { get; set; }
         public DbSet<StudentQuestionProgress> StudentQuestionProgresses { get; set; }
         public DbSet<StudentAnswerDetail> StudentAnswerDetails { get; set; }
-
+        public DbSet<User> Users { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

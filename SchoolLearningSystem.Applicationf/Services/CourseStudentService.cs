@@ -88,6 +88,7 @@ namespace SchoolLearningSystem.Applicationf.Services
             };
 
             await _courseStudentRepository.AddAsync(relation);
+            await _courseStudentRepository.SaveChangesAsync();
         }
 
         // ============================================================================
@@ -106,6 +107,7 @@ namespace SchoolLearningSystem.Applicationf.Services
                 throw new NotFoundException("لا يوجد سجل اشتراك لهذا الطالب في هذا الكورس.");
 
             await _courseStudentRepository.DeleteAsync(courseId, studentId);
+            await _courseStudentRepository.SaveChangesAsync();
         }
 
         // ============================================================================
@@ -125,6 +127,7 @@ namespace SchoolLearningSystem.Applicationf.Services
             // AutoMapper ينسخ فقط القيم الموجودة بالـ dto إلى الـ entity المتتبَّع (Tracked)
             _mapper.Map(dto, entity);
             await _courseStudentRepository.UpdateAsync(entity);
+            await _courseStudentRepository.SaveChangesAsync();
         }
 
         // ============================================================================
@@ -150,6 +153,7 @@ namespace SchoolLearningSystem.Applicationf.Services
 
             entity.LastAccessedAt = DateTime.UtcNow;
             await _courseStudentRepository.UpdateAsync(entity);
+            await _courseStudentRepository.SaveChangesAsync();
         }
 
         // ============================================================================

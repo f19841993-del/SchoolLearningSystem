@@ -36,6 +36,7 @@ namespace SchoolLearningSystem.Infrastructure
             services.AddScoped<IStudentQuestionProgressRepository, StudentQuestionProgressRepository>();
             services.AddScoped<IStudentRepository, StudentRepository>();
             services.AddScoped<ITeacherRepository, TeacherRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
             return services;
         }
     }

@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<title>School Learning System — Graduation Presentation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<style>
+  /* ============ Tokens ============ */
+  :root{
+    --ink-950:#0b0e14;
+    --ink-900:#131824;
+    --ink-850:#171d2a;
+    --ink-800:#1c2330;
+    --hair:rgba(232,229,222,0.10);
+    --hair-strong:rgba(232,229,222,0.18);
+    --text:#eae7de;
+    --text-muted:#98a1b3;
+    --text-faint:#5c6478;
+    --accent:#d9a441;
+    --accent-soft:rgba(217,164,65,0.14);
+    --accent-ink:#241a05;
+    --accent-2:#5a8c88;
+    --shadow:0 30px 70px -20px rgba(0,0,0,0.55);
+    --radius:3px;
+    --serif:Georgia,"Iowan Old Style","Palatino Linotype","Book Antiqua",serif;
+    --arabic:"Sakkal Majalla","Segoe UI",Tahoma,Arial,sans-serif;
+    --sans:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    --mono:Consolas,"SFMono-Regular",Menlo,monospace;
+    --bg:var(--ink-950);
+    --panel:var(--ink-900);
+    --panel-2:var(--ink-850);
+    --border:var(--hair);
+    --border-strong:var(--hair-strong);
+    color-scheme:dark;
+  }
+  @media (prefers-color-scheme:light){
+    :root{
+      --bg:#eef0e8;
+      --panel:#f8f8f3;
+      --panel-2:#ffffff;
+      --border:rgba(20,24,18,0.10);
+      --border-strong:rgba(20,24,18,0.20);
+      --text:#191c16;
+      --text-muted:#535c4d;
+      --text-faint:#8a927f;
+      --accent:#a1691c;
+      --accent-soft:rgba(161,105,28,0.12);
+      --accent-ink:#fff7ea;
+      --accent-2:#3e6c67;
+      --shadow:0 24px 50px -20px rgba(30,30,20,0.25);
+      color-scheme:light;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:var(--ink-950); --panel:var(--ink-900); --panel-2:var(--ink-850);
+    --border:var(--hair); --border-strong:var(--hair-strong);
+    --text:#eae7de; --text-muted:#98a1b3; --text-faint:#5c6478;
+    --accent:#d9a441; --accent-soft:rgba(217,164,65,0.14); --accent-ink:#241a05; --accent-2:#5a8c88;
+    color-scheme:dark;
+  }
+  :root[data-theme="light"]{
+    --bg:#eef0e8; --panel:#f8f8f3; --panel-2:#ffffff;
+    --border:rgba(20,24,18,0.10); --border-strong:rgba(20,24,18,0.20);
+    --text:#191c16; --text-muted:#535c4d; --text-faint:#8a927f;
+    --accent:#a1691c; --accent-soft:rgba(161,105,28,0.12); --accent-ink:#fff7ea; --accent-2:#3e6c67;
+    color-scheme:light;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:var(--sans); overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  :root[dir="rtl"] body{font-family:var(--arabic);}
+  h1,h2,h3{margin:0; text-wrap:balance;}
+  p{margin:0;}
+  ul{margin:0; padding:0; list-style:none;}
+  button{font:inherit; color:inherit;}
+  [data-num]{font-variant-numeric:tabular-nums;}
+
+  .num-ltr{direction:ltr; unicode-bidi:isolate; font-variant-numeric:tabular-nums;}
+
+  /* ============ Deck shell ============ */
+  .deck{position:relative; height:100vh; width:100vw; display:flex; flex-direction:column; isolation:isolate;}
+
+  .bg-fx{position:absolute; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(120% 90% at 50% -10%, var(--panel) 0%, transparent 55%),
+      repeating-linear-gradient(0deg, transparent 0 39px, var(--border) 39px 40px),
+      repeating-linear-gradient(90deg, transparent 0 39px, var(--border) 39px 40px);
+    -webkit-mask-image:radial-gradient(85% 85% at 50% 45%, black 40%, transparent 92%);
+            mask-image:radial-gradient(85% 85% at 50% 45%, black 40%, transparent 92%);
+    opacity:.55;
+  }
+
+  .chrome{position:relative; z-index:2; display:flex; align-items:center; gap:1rem; padding:1.1rem clamp(1.2rem,3vw,2.4rem);}
+  .chrome--top{justify-content:space-between;}
+  .brand{font-family:var(--mono); letter-spacing:.08em; font-size:.95rem; color:var(--text-muted);}
+  .brand b{color:var(--accent); font-weight:700;}
+  .chrome-actions{display:flex; gap:.5rem;}
+
+  .chip-btn{
+    background:var(--panel); border:1px solid var(--border-strong); color:var(--text);
+    border-radius:var(--radius); padding:.5rem .85rem; font-size:.85rem; cursor:pointer;
+    font-family:var(--mono); letter-spacing:.04em;
+    transition:border-color .15s ease, color .15s ease, transform .15s ease;
+  }
+  .chip-btn:hover{border-color:var(--accent); color:var(--accent);}
+  .chip-btn:focus-visible, .nav-arrow:focus-visible, .dot:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+  .stage{position:relative; z-index:1; flex:1 1 auto; min-height:0; display:flex; align-items:stretch;}
+  .slide-wrap{flex:1; min-width:0; overflow:hidden; position:relative;}
+  .slide{
+    position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; gap:clamp(1rem,2.4vh,1.7rem);
+    max-width:1040px; margin-inline:auto; padding-inline:clamp(1.4rem,6vw,3rem); padding-block:1rem;
+    opacity:0; transform:translateY(14px); transition:opacity .5s ease, transform .5s ease;
+  }
+  .slide.active{opacity:1; transform:translateY(0); position:relative;}
+  @media (prefers-reduced-motion:reduce){
+    .slide{transition:none; transform:none;}
+  }
+
+  .eyebrow, .kicker{
+    font-family:var(--mono); text-transform:uppercase; letter-spacing:.16em;
+    font-size:clamp(.8rem,1vw,.95rem); color:var(--accent); font-weight:600;
+  }
+  .kicker-row{display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;}
+  .badge-new{
+    font-family:var(--mono); font-size:.72rem; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--accent-ink); background:var(--accent); border-radius:100px; padding:.2rem .65rem;
+  }
+  .slide-index{position:absolute; inset-inline-end:clamp(1rem,4vw,2.4rem); top:clamp(.5rem,2vh,1rem);
+    font-family:var(--mono); font-size:clamp(2.4rem,7vw,4.2rem); color:var(--text); opacity:.06; font-weight:700;}
+
+  h1.title, h2.title{
+    font-family:var(--serif); font-weight:400; letter-spacing:-.01em;
+    font-size:clamp(2.1rem,4.6vw,3.6rem); line-height:1.12; color:var(--text);
+  }
+  :root[dir="rtl"] h1.title, :root[dir="rtl"] h2.title{font-family:var(--arabic); font-weight:700; letter-spacing:0;}
+
+  .lede{font-size:clamp(1.2rem,1.9vw,1.55rem); line-height:1.65; color:var(--text-muted); max-width:46ch;}
+
+  /* ---- hero ---- */
+  .slide--hero{justify-content:center; gap:clamp(.9rem,2vh,1.4rem);}
+  .hero-title{
+    font-family:var(--serif); font-weight:400; letter-spacing:-.015em;
+    font-size:clamp(3rem,8vw,5.6rem); line-height:1.02; color:var(--text);
+  }
+  :root[dir="rtl"] .hero-title{font-family:var(--arabic); font-weight:700;}
+  .hero-title b{color:var(--accent); font-style:normal;}
+  .hero-tagline{font-size:clamp(1.25rem,2.2vw,1.7rem); color:var(--text); font-weight:600; max-width:52ch; line-height:1.4;}
+  .hero-sub{font-size:clamp(1.05rem,1.6vw,1.3rem); color:var(--text-muted); max-width:56ch; line-height:1.6;}
+  .hero-authors{font-size:clamp(1rem,1.4vw,1.15rem); color:var(--text-muted); font-family:var(--mono); margin-top:.2rem;}
+  .hero-authors b{color:var(--text); font-weight:700;}
+  .tag-row{display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.4rem;}
+  .tag-row li{
+    border:1px solid var(--border-strong); border-radius:100px; padding:.4rem .95rem;
+    font-family:var(--mono); font-size:.85rem; color:var(--text-muted); direction:ltr; unicode-bidi:isolate;
+  }
+  .tag-row li:first-child{border-color:var(--accent); color:var(--accent);}
+
+  /* ---- bullets ---- */
+  .bullets{display:flex; flex-direction:column; gap:clamp(.8rem,1.8vh,1.15rem); margin-top:.2rem;}
+  .bullets li{
+    display:flex; gap:.9rem; align-items:flex-start;
+    font-size:clamp(1.05rem,1.6vw,1.35rem); line-height:1.55; color:var(--text); max-width:70ch;
+  }
+  .bullets li::before{content:"—"; color:var(--accent); font-weight:700; flex:none;}
+
+  /* ---- cards ---- */
+  .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1rem; margin-top:.3rem;}
+  .card{
+    border:1px solid var(--border); background:var(--panel); border-radius:var(--radius);
+    padding:1.2rem 1.3rem; display:flex; flex-direction:column; gap:.55rem;
+  }
+  .card .card-num{font-family:var(--mono); color:var(--accent); font-size:.95rem; direction:ltr; unicode-bidi:isolate;}
+  .card .card-tag{font-family:var(--mono); color:var(--accent-2); font-size:.78rem; text-transform:uppercase; letter-spacing:.1em; direction:ltr; unicode-bidi:isolate;}
+  .card h3{font-family:var(--sans); font-size:clamp(1.05rem,1.4vw,1.25rem); font-weight:700; color:var(--text);}
+  :root[dir="rtl"] .card h3{font-family:var(--arabic);}
+  .card p{font-size:clamp(.95rem,1.2vw,1.08rem); line-height:1.55; color:var(--text-muted);}
+
+  /* ---- chain ---- */
+  .chain{display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin-top:.2rem;}
+  .chain .link{
+    border:1px solid var(--border-strong); border-radius:100px; padding:.55rem 1.1rem;
+    font-family:var(--mono); font-size:.95rem; color:var(--text); background:var(--panel);
+  }
+  .chain .arrow{color:var(--accent); font-size:1.1rem;}
+  :root[dir="rtl"] .chain .arrow{transform:scaleX(-1); display:inline-block;}
+
+  /* ---- steps ---- */
+  .steps{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:1.2rem; margin-top:.3rem; counter-reset:step;}
+  .step{border-inline-start:2px solid var(--border-strong); padding-inline-start:1rem; display:flex; flex-direction:column; gap:.4rem;}
+  .step .step-n{font-family:var(--mono); color:var(--accent); font-size:1.05rem; font-weight:700; direction:ltr; unicode-bidi:isolate;}
+  .step h3{font-size:clamp(1.02rem,1.3vw,1.18rem); font-weight:700;}
+  :root[dir="rtl"] .step h3{font-family:var(--arabic);}
+  .step p{font-size:clamp(.92rem,1.15vw,1.03rem); line-height:1.55; color:var(--text-muted);}
+
+  /* ---- closing ---- */
+  .slide--closing{justify-content:center; align-items:flex-start;}
+
+  /* ============ Footer / nav ============ */
+  .chrome--bottom{justify-content:center; gap:clamp(.8rem,2vw,1.6rem);}
+  .nav-arrow{
+    background:none; border:1px solid var(--border-strong); width:2.4rem; height:2.4rem; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:1.2rem; cursor:pointer;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .nav-arrow:hover{border-color:var(--accent); color:var(--accent);}
+  .nav-arrow:disabled{opacity:.25; cursor:default;}
+  :root[dir="rtl"] .nav-arrow.prev svg, :root[dir="rtl"] .nav-arrow.next svg{transform:scaleX(-1);}
+
+  .ruler{display:flex; align-items:center; gap:6px; padding:.4rem .2rem;}
+  .dot{
+    appearance:none; border:none; background:var(--border-strong); border-radius:50%; cursor:pointer; padding:0;
+    width:var(--d,7px); height:var(--d,7px); transition:background .2s ease, transform .2s ease, box-shadow .2s ease;
+  }
+  .dot:hover{background:var(--text-muted);}
+  .dot.active{background:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); transform:scale(1.15);}
+
+  .counter{font-family:var(--mono); font-size:.9rem; color:var(--text-muted); min-width:5.2ch; text-align:center; direction:ltr; unicode-bidi:isolate;}
+
+  .progress{position:absolute; top:0; inset-inline:0; height:2px; background:var(--border); z-index:3;}
+  .progress i{display:block; height:100%; background:var(--accent); width:0%; transition:width .4s ease;}
+  @media (prefers-reduced-motion:reduce){ .progress i{transition:none;} }
+
+  @media (max-width:640px){
+    .chrome{padding:.8rem 1rem;}
+    .brand-sub{display:none;}
+    .steps, .cards{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck" data-theme="">
+  <div class="progress"><i id="progressBar"></i></div>
+  <div class="bg-fx" aria-hidden="true"></div>
+
+  <header class="chrome chrome--top">
+    <div class="brand"><b>SLS</b> <span class="brand-sub">· School Learning System</span></div>
+    <div class="chrome-actions">
+      <button class="chip-btn" id="langToggle" type="button" title="Toggle language / تبديل اللغة">AR</button>
+      <button class="chip-btn" id="themeToggle" type="button" title="Toggle theme">◐</button>
+      <button class="chip-btn" id="fsToggle" type="button" title="Fullscreen (F)">⤢</button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="slide-wrap" id="stage"></div>
+  </main>
+
+  <footer class="chrome chrome--bottom">
+    <button class="nav-arrow prev" id="prevBtn" type="button" aria-label="Previous slide">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <nav class="ruler" id="ruler" aria-label="Slide navigation"></nav>
+    <div class="counter" id="counter">01 / 16</div>
+    <button class="nav-arrow next" id="nextBtn" type="button" aria-label="Next slide">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const SLIDES = [
+    { layout:"hero",
+      eyebrow:{en:"University of Kufa · College of Computer Science", ar:"جامعة الكوفة · كلية علوم الحاسوب"},
+      brand:"School Learning System",
+      tagline:{en:"Adaptive learning, built around one question at a time.", ar:"تعلّم تكيّفي، مبني حول سؤال واحد في كل مرة."},
+      subtitle:{en:"A curriculum platform paired with a spaced-repetition engine that remembers exactly what each student forgets.",
+                 ar:"منصة مناهج دراسية مقترنة بمحرك تكرار متباعد يتذكّر بالضبط ما ينساه كل طالب."},
+      authors:"فلاح  ·  غيث  ·  التفات",
+      supervisor:"د. أمير",
+      tags:[".NET 8", "ASP.NET Core Web API", "EF Core 8 · SQL Server", "Clean Architecture", "SM-2 Algorithm", "2026"]
+    },
+    { layout:"statement",
+      kicker:{en:"The Problem", ar:"المشكلة"},
+      title:{en:"Every student forgets at a different speed", ar:"كل طالب ينسى بسرعة مختلفة عن غيره"},
+      body:{en:"Traditional course platforms show every student the same lesson, the same exercises and the same review schedule — regardless of what they've already mastered or already forgotten. Weak points stay invisible until exam day.",
+            ar:"منصات الدروس التقليدية تعرض لكل الطلبة نفس الدرس ونفس التمارين ونفس جدول المراجعة، بصرف النظر عمّا أتقنوه فعلاً أو نسوه فعلاً. نقاط الضعف تبقى غير مرئية إلى يوم الامتحان."}
+    },
+    { layout:"statement",
+      kicker:{en:"The Idea", ar:"الفكرة"},
+      title:{en:"Track every question, per student, over time", ar:"تتبّع كل سؤال، لكل طالب، عبر الزمن"},
+      body:{en:"School Learning System pairs a full curriculum manager with an adaptive review engine. Every (student, question) pair carries its own memory curve — the system decides exactly when that student should see that question again.",
+            ar:"يجمع School Learning System بين إدارة كاملة للمنهج ومحرك مراجعة تكيّفي. كل زوج (طالب، سؤال) له منحنى تذكّر خاص به — والنظام يقرر بالضبط متى يجب أن يرى هذا الطالب هذا السؤال مرة أخرى."}
+    },
+    { layout:"cards", ordered:true,
+      kicker:{en:"Architecture", ar:"المعمارية"},
+      title:{en:"Four layers, one direction of dependency", ar:"أربع طبقات، باتجاه اعتمادية واحد"},
+      items:[
+        { name:{en:"Domain", ar:"Domain"}, body:{en:"Entities and contracts — Student, Course, Question, StudentQuestionProgress — with zero dependency on anything else.",
+                                                    ar:"الكيانات والعقود — Student وCourse وQuestion وStudentQuestionProgress — بدون أي اعتمادية على أي طبقة أخرى."} },
+        { name:{en:"Application", ar:"Application"}, body:{en:"Services, DTOs and business rules — SrsService, MemorizeService — orchestrating the domain.",
+                                                             ar:"الخدمات وDTOs وقواعد العمل — SrsService وMemorizeService — تنسّق منطق المجال."} },
+        { name:{en:"Infrastructure", ar:"Infrastructure"}, body:{en:"EF Core 8 repositories over SQL Server, with composite keys for bridge tables like StudentQuestionProgress.",
+                                                                  ar:"مستودعات EF Core 8 فوق SQL Server، ومفاتيح مركبة لجداول الربط مثل StudentQuestionProgress."} },
+        { name:{en:"API", ar:"API"}, body:{en:"Thirteen RESTful controllers, a uniform ApiResponse envelope, Swagger docs, Serilog structured logging.",
+                                            ar:"ثلاثة عشر كونترولر RESTful، وغلاف استجابة موحّد ApiResponse، وتوثيق Swagger، وتسجيل Serilog البنيوي."} }
+      ]
+    },
+    { layout:"chain",
+      kicker:{en:"Domain Model", ar:"نموذج البيانات"},
+      title:{en:"From a curriculum down to a single answer", ar:"من المنهج وصولاً إلى إجابة واحدة"},
+      chain:[ {en:"Curriculum",ar:"المنهج"}, {en:"Course",ar:"الفصل"}, {en:"Lesson",ar:"الدرس"}, {en:"Exercise / Exam",ar:"تمرين / امتحان"}, {en:"Question",ar:"سؤال"} ],
+      bullets:[
+        {en:"CourseStudent bridges students to courses — enrollment, not ownership.",
+         ar:"CourseStudent يربط الطالب بالفصل — تسجيل، وليس ملكية."},
+        {en:"StudentQuestionProgress is the important bridge: no Id of its own, only a composite (StudentId, QuestionId) key holding the SM-2 state.",
+         ar:"StudentQuestionProgress هو الربط الأهم: بدون Id خاص به، فقط مفتاح مركب (StudentId, QuestionId) يحمل حالة خوارزمية SM-2."}
+      ]
+    },
+    { layout:"bullets",
+      kicker:{en:"Feature — Curriculum & Assessment", ar:"ميزة — المنهج والتقييم"},
+      title:{en:"A full teaching structure before any AI runs", ar:"هيكل تدريسي كامل قبل أي تشغيل للذكاء الاصطناعي"},
+      bullets:[
+        {en:"Curricula are organized by grade level, each holding an ordered list of courses.", ar:"المناهج مرتّبة حسب المرحلة الدراسية، وكل واحد يحوي قائمة مرتّبة من الفصول."},
+        {en:"Every course belongs to a teacher and carries an explicit Order for chapter sequencing.", ar:"كل فصل يتبع مدرّساً معيّناً ويحمل ترتيباً صريحاً (Order) لتسلسل الفصول."},
+        {en:"Exercises are tagged by difficulty level so a lesson can ramp from easy to hard.", ar:"التمارين مصنّفة حسب مستوى الصعوبة ليتدرّج الدرس من السهل إلى الصعب."},
+        {en:"Exams can target one lesson (a quiz) or an entire course, and keep their results even if the exam itself changes.", ar:"الامتحانات يمكن أن تستهدف درساً واحداً (كويز) أو فصلاً كاملاً، وتحتفظ بنتائجها حتى لو تغيّر الامتحان نفسه."}
+      ]
+    },
+    { layout:"bullets",
+      kicker:{en:"Feature — The SRS Engine", ar:"ميزة — محرك التكرار المتباعد"},
+      title:{en:"The SM-2 algorithm decides what to show next", ar:"خوارزمية SM-2 تقرر ماذا يُعرض بعد ذلك"},
+      bullets:[
+        {en:"Each (student, question) pair carries an EaseFactor, RepetitionLevel, Interval and NextReviewDate.",
+         ar:"كل زوج (طالب، سؤال) يحمل EaseFactor وRepetitionLevel وInterval وNextReviewDate."},
+        {en:"POST /api/srs/submit-answer scores the answer and reschedules that question automatically — nothing edits this state by hand.",
+         ar:"POST /api/srs/submit-answer يقيّم الإجابة ويعيد جدولة ذلك السؤال تلقائياً — لا شيء يعدّل هذه الحالة يدوياً."},
+        {en:"GET /api/srs/due-questions/{studentId} returns exactly what's due right now, with an optional currentDate override for time-travel testing of the algorithm.",
+         ar:"GET /api/srs/due-questions/{studentId} يُرجع بالضبط الأسئلة المستحقة الآن، مع إمكانية تمرير currentDate لاختبار الخوارزمية عبر «السفر الزمني»."}
+      ]
+    },
+    { layout:"bullets",
+      kicker:{en:"Feature — Memorize Sessions", ar:"ميزة — جلسات المراجعة"},
+      title:{en:"One session, questions from many lessons", ar:"جلسة واحدة، أسئلة من دروس متعددة"},
+      bullets:[
+        {en:"A memorize session is deliberately not tied to a single lesson — it collects whatever is due across the student's whole path.",
+         ar:"جلسة المراجعة عمداً غير مرتبطة بدرس واحد — تجمع كل ما هو مستحق عبر مسار الطالب كاملاً."},
+        {en:"Every session tracks total attempts, success rate and duration for later analysis.",
+         ar:"كل جلسة تسجّل عدد المحاولات ونسبة النجاح والمدة الزمنية لتحليلها لاحقاً."},
+        {en:"Students can resume an active session, browse full history, or reopen any past session with every answer attached.",
+         ar:"يقدر الطالب يكمل جلسة نشطة، يستعرض كامل التاريخ، أو يفتح أي جلسة سابقة مع كل إجابة فيها."}
+      ]
+    },
+    { layout:"bullets", highlight:true,
+      kicker:{en:"Feature — Remedial Training", ar:"ميزة — التدريب المكثّف"},
+      title:{en:"A focused session for one weak lesson", ar:"جلسة مركّزة على درس واحد فيه ضعف"},
+      bullets:[
+        {en:"POST /students/{studentId}/memorize-sessions/remedial/{lessonId} is the newest endpoint on this system.",
+         ar:"POST /students/{studentId}/memorize-sessions/remedial/{lessonId} هو أحدث Endpoint أُضيف للنظام."},
+        {en:"It builds a session from that student's weak points inside one specific lesson — not the whole curriculum.",
+         ar:"يبني جلسة من نقاط ضعف ذلك الطالب داخل درس واحد بالتحديد — وليس المنهج كاملاً."},
+        {en:"Same session model, same tracking — just a narrower, more urgent scope for catching up before an exam.",
+         ar:"نفس نموذج الجلسة، نفس التتبّع — لكن بنطاق أضيق وأكثر إلحاحاً للحاق بالمستوى قبل الامتحان."}
+      ]
+    },
+    { layout:"bullets",
+      kicker:{en:"API Design", ar:"تصميم الـ API"},
+      title:{en:"Thirteen controllers, one response shape", ar:"ثلاثة عشر كونترولر، وشكل استجابة واحد"},
+      bullets:[
+        {en:"Curriculum, Course, Lesson, Exercise, Exam, Question, Student, Teacher, CourseStudent, Result, StudentAnswerDetail, Srs, MemorizeSession.",
+         ar:"Curriculum وCourse وLesson وExercise وExam وQuestion وStudent وTeacher وCourseStudent وResult وStudentAnswerDetail وSrs وMemorizeSession."},
+        {en:"Every endpoint replies inside the same ApiResponse envelope — status code, message, and typed data.",
+         ar:"كل Endpoint يرد ضمن نفس غلاف ApiResponse — رمز الحالة، والرسالة، والبيانات المحدّدة النوع."},
+        {en:"Fully documented with Swashbuckle/Swagger, including XML doc comments compiled straight from the code.",
+         ar:"موثّق بالكامل عبر Swashbuckle/Swagger، متضمناً تعليقات XML مُجمّعة مباشرة من الكود."}
+      ]
+    },
+    { layout:"cards", ordered:false,
+      kicker:{en:"Tech Stack", ar:"التقنيات المستخدمة"},
+      title:{en:"A boring, reliable foundation — on purpose", ar:"أساس ممل وموثوق، عن قصد"},
+      items:[
+        { tag:{en:"Runtime", ar:"بيئة التشغيل"}, name:{en:".NET 8 / ASP.NET Core", ar:".NET 8 / ASP.NET Core"},
+          body:{en:"Long-term-support runtime, minimal hosting model, controller-based Web API.", ar:"بيئة تشغيل بدعم طويل الأمد، ونموذج استضافة مبسّط، وWeb API معتمد على الكونترولرز."} },
+        { tag:{en:"Data", ar:"البيانات"}, name:{en:"EF Core 8 + SQL Server", ar:"EF Core 8 + SQL Server"},
+          body:{en:"Code-first migrations, composite keys for bridge entities, relational integrity enforced at the database.", ar:"ترحيلات Code-first، ومفاتيح مركبة لكيانات الربط، وسلامة علائقية مفروضة على مستوى قاعدة البيانات."} },
+        { tag:{en:"Structure", ar:"البنية"}, name:{en:"Clean Architecture", ar:"Clean Architecture"},
+          body:{en:"Domain → Application → Infrastructure → API, dependencies always pointing inward.", ar:"Domain ← Application ← Infrastructure ← API، والاعتماديات دائماً تتجه إلى الداخل."} },
+        { tag:{en:"Observability & Docs", ar:"المراقبة والتوثيق"}, name:{en:"Serilog + Swagger", ar:"Serilog + Swagger"},
+          body:{en:"Structured, file-based logging in production; interactive, always-current API docs in development.", ar:"تسجيل بنيوي عبر ملفات في الإنتاج؛ وتوثيق تفاعلي دائم التحديث للـ API في التطوير."} }
+      ]
+    },
+    { layout:"steps",
+      kicker:{en:"Algorithm Spotlight", ar:"تركيز على الخوارزمية"},
+      title:{en:"SM-2 — grow the gap every time you're right", ar:"SM-2: كبّر الفجوة كل مرة تكون فيها مصيباً"},
+      items:[
+        { n:"01", title:{en:"Answer scored", ar:"تقييم الإجابة"}, body:{en:"The student's recall quality feeds straight into the ease factor.", ar:"جودة استرجاع الطالب تُغذّي مباشرة عامل السهولة."} },
+        { n:"02", title:{en:"Ease factor adjusts", ar:"تعديل عامل السهولة"}, body:{en:"Correct → EaseFactor holds or rises. Wrong → it drops and RepetitionLevel resets to zero.", ar:"صحيحة ← EaseFactor يبقى أو يرتفع. خاطئة ← ينخفض ويعود RepetitionLevel إلى صفر."} },
+        { n:"03", title:{en:"Interval grows", ar:"الفاصل الزمني يكبر"}, body:{en:"Interval is multiplied by EaseFactor — the better the student knows it, the longer the wait.", ar:"يُضرب Interval بـ EaseFactor — كلما عرف الطالب السؤال أكثر، طالت فترة الانتظار."} },
+        { n:"04", title:{en:"Next review scheduled", ar:"جدولة المراجعة القادمة"}, body:{en:"NextReviewDate = today + Interval — the exact date this question resurfaces.", ar:"NextReviewDate = اليوم + Interval — التاريخ المحدد الذي يعود فيه هذا السؤال."} }
+      ]
+    },
+    { layout:"steps",
+      kicker:{en:"End-to-End", ar:"من البداية إلى النهاية"},
+      title:{en:"From one wrong answer to a remedial session", ar:"من إجابة خاطئة واحدة إلى جلسة تدريب مكثّف"},
+      items:[
+        { n:"01", title:{en:"Answer submitted", ar:"إرسال إجابة"}, body:{en:"The student answers a due question inside an active memorize session.", ar:"يجيب الطالب على سؤال مستحق داخل جلسة مراجعة نشطة."} },
+        { n:"02", title:{en:"Progress updated", ar:"تحديث التقدّم"}, body:{en:"SrsService scores it and updates that question's SM-2 state.", ar:"يقيّم SrsService الإجابة ويحدّث حالة SM-2 لذلك السؤال."} },
+        { n:"03", title:{en:"Weak point flagged", ar:"رصد نقطة ضعف"}, body:{en:"Enough wrong answers in one lesson mark it as a weak point.", ar:"تراكم إجابات خاطئة كافية بدرس واحد يجعله نقطة ضعف."} },
+        { n:"04", title:{en:"Remedial session starts", ar:"بدء التدريب المكثّف"}, body:{en:"A remedial session is started, scoped to that exact lesson.", ar:"تبدأ جلسة تدريب مكثّف تخص ذلك الدرس بالتحديد."} }
+      ]
+    },
+    { layout:"bullets",
+      kicker:{en:"Engineering Discipline", ar:"الانضباط الهندسي"},
+      title:{en:"Details that don't show up in a demo", ar:"تفاصيل لا تظهر في العرض التجريبي"},
+      bullets:[
+        {en:"Bridge tables with no surrogate Id — StudentQuestionProgress and CourseStudent use composite keys on purpose.",
+         ar:"جداول ربط بدون Id بديل — StudentQuestionProgress وCourseStudent تستخدم مفاتيح مركبة عن قصد."},
+        {en:"Business rules protect data: an exam with recorded results can't be deleted outright.",
+         ar:"قواعد عمل تحمي البيانات: الامتحان الذي له نتائج مسجّلة لا يُحذف مباشرة."},
+        {en:"Repository interfaces live in Domain; implementations live in Infrastructure — Application never touches EF Core directly.",
+         ar:"واجهات المستودعات موجودة في Domain، وتطبيقاتها في Infrastructure — Application لا يلمس EF Core مباشرة أبداً."},
+        {en:"Delivered in phases across commits, each one a working, reviewable slice.",
+         ar:"أُنجز على مراحل عبر Commits متتابعة، كل واحدة شريحة عمل قابلة للمراجعة."}
+      ]
+    },
+    { layout:"bullets",
+      kicker:{en:"What's Next", ar:"الخطوة القادمة"},
+      title:{en:"Beyond the graduation milestone", ar:"بعد محطة التخرج"},
+      bullets:[
+        {en:"Authentication and role-based access for students, teachers and admins.", ar:"مصادقة وصلاحيات حسب الدور للطلبة والمدرّسين والإداريين."},
+        {en:"A teacher-facing analytics dashboard surfacing class-wide weak lessons.", ar:"لوحة تحليلات للمدرّس تُظهر نقاط الضعف على مستوى الصف بأكمله."},
+        {en:"Push or email reminders the moment a review becomes due.", ar:"تنبيهات فورية (Push/Email) لحظة استحقاق أي مراجعة."},
+        {en:"A lightweight mobile client for daily review sessions.", ar:"تطبيق موبايل خفيف لجلسات المراجعة اليومية."}
+      ]
+    },
+    { layout:"closing",
+      kicker:{en:"Thank You", ar:"شكراً لكم"},
+      title:{en:"Questions?", ar:"هل من أسئلة؟"},
+      body:{en:"School Learning System — University of Kufa, College of Computer Science, 2026.",
+            ar:"نظام School Learning System — جامعة الكوفة، كلية علوم الحاسوب، 2026."},
+      authors:"فلاح  ·  غيث  ·  التفات",
+      supervisor:"د. أمير"
+    }
+  ];
+
+  let lang = "ar";
+  let index = 0;
+
+  const stage = document.getElementById("stage");
+  const ruler = document.getElementById("ruler");
+  const counter = document.getElementById("counter");
+  const progressBar = document.getElementById("progressBar");
+  const deck = document.getElementById("deck");
+  const langBtn = document.getElementById("langToggle");
+  const themeBtn = document.getElementById("themeToggle");
+  const fsBtn = document.getElementById("fsToggle");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+
+  function pad(n){ return String(n).padStart(2,"0"); }
+  function tr(field){ return field[lang]; }
+
+  function renderBullets(list){
+    return `<ul class="bullets">${list.map(b=>`<li>${tr(b)}</li>`).join("")}</ul>`;
+  }
+
+  function renderSlide(s, i){
+    const idxTag = `<div class="slide-index num-ltr">${pad(i+1)}</div>`;
+
+    if(s.layout === "hero"){
+      return `
+        <div class="slide slide--hero">
+          <p class="eyebrow">${tr(s.eyebrow)}</p>
+          <h1 class="hero-title">${s.brand}</h1>
+          <p class="hero-tagline">${tr(s.tagline)}</p>
+          <p class="hero-sub">${tr(s.subtitle)}</p>
+          <p class="hero-authors"><b>${lang === "ar" ? "الطلبة" : "Team"}:</b> ${s.authors}</p>
+          ${s.supervisor ? `<p class="hero-authors"><b>${lang === "ar" ? "المشرف" : "Supervisor"}:</b> ${s.supervisor}</p>` : ""}
+          <ul class="tag-row">${s.tags.map(t=>`<li>${t}</li>`).join("")}</ul>
+        </div>`;
+    }
+
+    if(s.layout === "statement"){
+      return `
+        <div class="slide">
+          ${idxTag}
+          <p class="kicker">${tr(s.kicker)}</p>
+          <h2 class="title">${tr(s.title)}</h2>
+          <p class="lede">${tr(s.body)}</p>
+        </div>`;
+    }
+
+    if(s.layout === "bullets"){
+      return `
+        <div class="slide">
+          ${idxTag}
+          <div class="kicker-row">
+            <p class="kicker">${tr(s.kicker)}</p>
+            ${s.highlight ? `<span class="badge-new">${lang === "ar" ? "جديد" : "New"}</span>` : ""}
+          </div>
+          <h2 class="title">${tr(s.title)}</h2>
+          ${renderBullets(s.bullets)}
+        </div>`;
+    }
+
+    if(s.layout === "cards"){
+      const items = s.items.map((it,n)=>`
+        <div class="card">
+          ${s.ordered ? `<span class="card-num">${pad(n+1)}</span>` : `<span class="card-tag">${tr(it.tag)}</span>`}
+          <h3>${tr(it.name)}</h3>
+          <p>${tr(it.body)}</p>
+        </div>`).join("");
+      return `
+        <div class="slide">
+          ${idxTag}
+          <p class="kicker">${tr(s.kicker)}</p>
+          <h2 class="title">${tr(s.title)}</h2>
+          <div class="cards">${items}</div>
+        </div>`;
+    }
+
+    if(s.layout === "chain"){
+      const arrow = `<span class="arrow">→</span>`;
+      const chain = s.chain.map((c,n)=>`<span class="link">${tr(c)}</span>${n < s.chain.length-1 ? arrow : ""}`).join("");
+      return `
+        <div class="slide">
+          ${idxTag}
+          <p class="kicker">${tr(s.kicker)}</p>
+          <h2 class="title">${tr(s.title)}</h2>
+          <div class="chain">${chain}</div>
+          ${renderBullets(s.bullets)}
+        </div>`;
+    }
+
+    if(s.layout === "steps"){
+      const items = s.items.map(it=>`
+        <div class="step">
+          <span class="step-n">${it.n}</span>
+          <h3>${tr(it.title)}</h3>
+          <p>${tr(it.body)}</p>
+        </div>`).join("");
+      return `
+        <div class="slide">
+          ${idxTag}
+          <p class="kicker">${tr(s.kicker)}</p>
+          <h2 class="title">${tr(s.title)}</h2>
+          <div class="steps">${items}</div>
+        </div>`;
+    }
+
+    if(s.layout === "closing"){
+      return `
+        <div class="slide slide--closing">
+          <p class="kicker">${tr(s.kicker)}</p>
+          <h2 class="title" style="font-family:var(--serif); font-size:clamp(2.6rem,6vw,4.4rem);">${tr(s.title)}</h2>
+          <p class="lede">${tr(s.body)}</p>
+          <p class="hero-authors"><b>${lang === "ar" ? "الطلبة" : "Team"}:</b> ${s.authors}</p>
+          ${s.supervisor ? `<p class="hero-authors"><b>${lang === "ar" ? "المشرف" : "Supervisor"}:</b> ${s.supervisor}</p>` : ""}
+        </div>`;
+    }
+
+    return "";
+  }
+
+  function buildRuler(){
+    ruler.innerHTML = "";
+    const cycle = [7,9,12,16];
+    SLIDES.forEach((_,i)=>{
+      const b = document.createElement("button");
+      b.className = "dot";
+      b.type = "button";
+      b.setAttribute("aria-label", (lang==="ar" ? "اذهب إلى الشريحة " : "Go to slide ") + (i+1));
+      const d = cycle[i % cycle.length];
+      b.style.setProperty("--d", d + "px");
+      b.addEventListener("click", ()=> goTo(i));
+      ruler.appendChild(b);
+    });
+  }
+
+  function update(){
+    const s = SLIDES[index];
+    stage.innerHTML = `<div class="slide active">${renderSlide(s, index)}</div>`;
+    requestAnimationFrame(()=>{
+      const el = stage.querySelector(".slide");
+      if(el){ el.classList.add("active"); }
+    });
+
+    [...ruler.children].forEach((d,i)=> d.classList.toggle("active", i === index));
+    counter.textContent = `${pad(index+1)} / ${pad(SLIDES.length)}`;
+    progressBar.style.width = ((index+1) / SLIDES.length * 100) + "%";
+    prevBtn.disabled = index === 0;
+    nextBtn.disabled = index === SLIDES.length - 1;
+  }
+
+  function goTo(i){
+    index = Math.max(0, Math.min(SLIDES.length - 1, i));
+    update();
+  }
+  function next(){ goTo(index + 1); }
+  function prev(){ goTo(index - 1); }
+
+  function setLang(l){
+    lang = l;
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
+    langBtn.textContent = l === "ar" ? "EN" : "AR";
+    buildRuler();
+    update();
+  }
+
+  function setTheme(t){
+    deck.setAttribute("data-theme", t);
+    themeBtn.textContent = t === "light" ? "☀" : "☾";
+  }
+
+  langBtn.addEventListener("click", ()=> setLang(lang === "ar" ? "en" : "ar"));
+
+  let currentTheme = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  themeBtn.addEventListener("click", ()=>{
+    currentTheme = currentTheme === "dark" ? "light" : "dark";
+    setTheme(currentTheme);
+  });
+
+  fsBtn.addEventListener("click", ()=>{
+    if(!document.fullscreenElement){ deck.requestFullscreen && deck.requestFullscreen(); }
+    else{ document.exitFullscreen && document.exitFullscreen(); }
+  });
+
+  prevBtn.addEventListener("click", prev);
+  nextBtn.addEventListener("click", next);
+
+  window.addEventListener("keydown", (e)=>{
+    if(["ArrowRight","ArrowDown","PageDown"," ","Spacebar"].includes(e.key)){ e.preventDefault(); next(); }
+    else if(["ArrowLeft","ArrowUp","PageUp","Backspace"].includes(e.key)){ e.preventDefault(); prev(); }
+    else if(e.key === "Home"){ goTo(0); }
+    else if(e.key === "End"){ goTo(SLIDES.length - 1); }
+    else if(e.key.toLowerCase() === "f"){ fsBtn.click(); }
+  });
+
+  let touchX = null;
+  window.addEventListener("touchstart", (e)=>{ touchX = e.touches[0].clientX; }, {passive:true});
+  window.addEventListener("touchend", (e)=>{
+    if(touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if(Math.abs(dx) > 60){ dx < 0 ? next() : prev(); }
+    touchX = null;
+  }, {passive:true});
+
+  setTheme(currentTheme);
+  setLang(lang);
+})();
+</script>
+</body>
+</html>

@@ -1,11 +1,15 @@
-﻿using SchoolLearningSystem.API.Extensions;
+﻿using SchoolLearningSystem.API.Authentication;
+using SchoolLearningSystem.API.Extensions;
 using SchoolLearningSystem.API.Middleware;
 using SchoolLearningSystem.Applicationf;
+using SchoolLearningSystem.Applicationf.Interfaces;
 using SchoolLearningSystem.Infrastructure;
 using SchoolLearningSystem.Infrastructure.Data;
 using SchoolLearningSystem.Infrastructure.Seeding;
 using Serilog;
-
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 namespace SchoolLearningSystem.API
 {
     public class Program
@@ -25,6 +29,25 @@ namespace SchoolLearningSystem.API
             builder.Services.AddControllers();
             builder.Services.AddApplicationServices();
             builder.Services.AddInfrastructureServices(builder.Configuration);
+            builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+            builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+            var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()!;
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = jwtSettings.Issuer,
+                        ValidateAudience = true,
+                        ValidAudience = jwtSettings.Audience,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key)),
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.Zero
+                    };
+                });
 
             // 🆕 تسجيل سياسة CORS: تسمح للفرونت (Origin مختلف) يستدعي الـ API من المتصفح.
             // بدونها، المتصفح يمنع كل الطلبات تلقائياً (CORS Policy Error) حتى لو الـ API شغال صح.
@@ -47,6 +70,33 @@ namespace SchoolLearningSystem.API
                 var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
+
+                // 🆕 زر "Authorize" بواجهة Swagger: يخلي تختبر الـ Endpoints المحمية
+                // مباشرة من المتصفح بلصق التوكن الراجع من /api/auth/login
+                c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                    Description = "ألصق التوكن هنا بدون كلمة \"Bearer\" - سويجر يضيفها تلقائياً."
+                });
+
+                c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+                {
+                    {
+                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                        {
+                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                            {
+                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
             });
 
             var app = builder.Build();
@@ -55,6 +105,7 @@ namespace SchoolLearningSystem.API
             {
                 var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 await DbSeeder.SeedTestDataAsync(context);
+                await DbSeeder.SeedAdminUserAsync(context);   // 🆕
             }
             // 3. تهيئة الـ Pipeline (الترتيب هنا حيوي جداً)
 
@@ -70,6 +121,7 @@ namespace SchoolLearningSystem.API
 
             app.UseHttpsRedirection();
             app.UseCors("AllowFrontend");
+            app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
 

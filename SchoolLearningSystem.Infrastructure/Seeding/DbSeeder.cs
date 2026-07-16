@@ -7,6 +7,28 @@ namespace SchoolLearningSystem.Infrastructure.Seeding
 {
     public static class DbSeeder
     {
+        public static async Task SeedAdminUserAsync(AppDbContext context)
+        {
+            if (await context.Users.AnyAsync(u => u.Role == UserRole.Admin))
+            {
+                Console.WriteLine("⏭️ حساب Admin موجود أصلاً — تم التخطي.");
+                return;
+            }
+
+            var admin = new User
+            {
+                Username = "admin",
+                Email = "admin@schoollearning.local",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@12345"),
+                Role = UserRole.Admin,
+                IsActive = true
+            };
+
+            context.Users.Add(admin);
+            await context.SaveChangesAsync();
+
+            Console.WriteLine("✅ حساب Admin الافتراضي جاهز — Username: admin / Password: Admin@12345");
+        }
         public static async Task SeedTestDataAsync(AppDbContext context)
         {
             // 🛡️ حماية: لو الطالب التجريبي موجود أصلاً، لا تكرر البيانات
@@ -15,6 +37,8 @@ namespace SchoolLearningSystem.Infrastructure.Seeding
                 Console.WriteLine("⏭️ Seed Data موجودة أصلاً — تم التخطي.");
                 return;
             }
+
+
 
             // 1️⃣ المستوى 0: Teacher + Curriculum
             var teacher = new Teacher { Name = "أ. أحمد الرياضي", Subject = "Math" };

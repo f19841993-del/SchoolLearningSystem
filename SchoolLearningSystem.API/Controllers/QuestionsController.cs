@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolLearningSystem.API.Responses;
 using SchoolLearningSystem.Applicationf.DTOs.Question;
@@ -8,6 +9,9 @@ namespace SchoolLearningSystem.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    // ⚠️ QuestionReadDto يحتوي حقل Answer مباشرة بكل استجابة - الكونترولر كامل مقيّد
+    // لـ Admin/Teacher فقط، ولا حتى الطالب المسجّل يوصله (يكشف إجابات الأسئلة)
+    [Authorize(Roles = "Admin,Teacher")]
     public class QuestionController : ControllerBase
     {
         private readonly IQuestionService _questionService;
@@ -19,6 +23,9 @@ namespace SchoolLearningSystem.API.Controllers
 
         // 🔹 CRUD الأساسي
 
+        /// <summary>كل الأسئلة (بالإجابات الكاملة)</summary>
+        /// <remarks>الصلاحيات: Admin, Teacher فقط - يكشف حقل Answer، لا يُفتح للطالب ولا للعامة.</remarks>
+        [Tags("Question - الأساسيات (CRUD)")]
         [HttpGet]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<QuestionReadDto>>), StatusCodes.Status200OK)]
         public async Task<ActionResult<ApiResponse<IEnumerable<QuestionReadDto>>>> GetAll()
@@ -27,6 +34,10 @@ namespace SchoolLearningSystem.API.Controllers
             return Ok(new ApiResponse<IEnumerable<QuestionReadDto>>(200, "Questions retrieved successfully", data));
         }
 
+        /// <summary>سؤال واحد بالتفصيل (بالإجابة الكاملة)</summary>
+        /// <remarks>الصلاحيات: Admin, Teacher فقط.</remarks>
+        /// <response code="404">السؤال غير موجود</response>
+        [Tags("Question - الأساسيات (CRUD)")]
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(ApiResponse<QuestionReadDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
@@ -39,9 +50,28 @@ namespace SchoolLearningSystem.API.Controllers
             return Ok(new ApiResponse<QuestionReadDto>(200, "Question retrieved successfully", data));
         }
 
+        /// <summary>إنشاء سؤال جديد</summary>
+        /// <remarks>
+        /// الصلاحيات: Admin, Teacher فقط.
+        ///
+        /// مثال Request:
+        /// {
+        ///   "text": "كم ناتج 2 + 2؟",
+        ///   "answer": "4",
+        ///   "difficultyLevel": 1,
+        ///   "lessonId": 1,
+        ///   "examId": null
+        /// }
+        /// </remarks>
+        /// <response code="400">بيانات غير صالحة</response>
+        /// <response code="401">لم يتم تسجيل الدخول</response>
+        /// <response code="403">الدور الحالي غير مسموح له</response>
+        [Tags("Question - الأساسيات (CRUD)")]
         [HttpPost]
         [ProducesResponseType(typeof(ApiResponse<QuestionReadDto>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<ApiResponse<QuestionReadDto>>> Add([FromBody] QuestionCreateDto dto)
         {
             var createdQuestion = await _questionService.CreateAsync(dto);
@@ -49,18 +79,39 @@ namespace SchoolLearningSystem.API.Controllers
                 new ApiResponse<QuestionReadDto>(201, "Question created successfully", createdQuestion));
         }
 
+        /// <summary>تعديل سؤال موجود</summary>
+        /// <remarks>
+        /// الصلاحيات: Admin, Teacher فقط. كل الحقول اختيارية.
+        ///
+        /// مثال Request:
+        /// { "answer": "4 (محدّث)" }
+        /// </remarks>
+        /// <response code="404">السؤال غير موجود</response>
+        /// <response code="401">لم يتم تسجيل الدخول</response>
+        /// <response code="403">الدور الحالي غير مسموح له</response>
+        [Tags("Question - الأساسيات (CRUD)")]
         [HttpPut("{id}")]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<ApiResponse>> Update(int id, [FromBody] QuestionUpdateDto dto)
         {
             await _questionService.UpdateAsync(id, dto);
             return Ok(new ApiResponse(200, "Question updated successfully"));
         }
 
+        /// <summary>حذف سؤال (Soft Delete)</summary>
+        /// <remarks>الصلاحيات: Admin, Teacher فقط.</remarks>
+        /// <response code="404">السؤال غير موجود</response>
+        /// <response code="401">لم يتم تسجيل الدخول</response>
+        /// <response code="403">الدور الحالي غير مسموح له</response>
+        [Tags("Question - الأساسيات (CRUD)")]
         [HttpDelete("{id}")]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<ApiResponse>> Delete(int id)
         {
             await _questionService.DeleteAsync(id);
@@ -69,6 +120,9 @@ namespace SchoolLearningSystem.API.Controllers
 
         // 🔹 علاقات إضافية — مطابقة حرفياً لـ IQuestionService
 
+        /// <summary>أسئلة امتحان معيّن</summary>
+        /// <remarks>الصلاحيات: Admin, Teacher فقط.</remarks>
+        [Tags("Question - الاستعلام والعلاقات (Queries)")]
         [HttpGet("exam/{examId}")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<QuestionReadDto>>), StatusCodes.Status200OK)]
         public async Task<ActionResult<ApiResponse<IEnumerable<QuestionReadDto>>>> GetByExamId(int examId)
@@ -77,6 +131,9 @@ namespace SchoolLearningSystem.API.Controllers
             return Ok(new ApiResponse<IEnumerable<QuestionReadDto>>(200, "Questions retrieved successfully", data));
         }
 
+        /// <summary>أسئلة درس معيّن</summary>
+        /// <remarks>الصلاحيات: Admin, Teacher فقط.</remarks>
+        [Tags("Question - الاستعلام والعلاقات (Queries)")]
         [HttpGet("lesson/{lessonId}")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<QuestionReadDto>>), StatusCodes.Status200OK)]
         public async Task<ActionResult<ApiResponse<IEnumerable<QuestionReadDto>>>> GetByLessonId(int lessonId)
@@ -85,9 +142,9 @@ namespace SchoolLearningSystem.API.Controllers
             return Ok(new ApiResponse<IEnumerable<QuestionReadDto>>(200, "Questions retrieved successfully", data));
         }
 
-        /// <summary>
-        /// أسئلة حسب مستوى صعوبة معيّن — يستخدمها محرك الـ AI لبناء اختبار تكيّفي
-        /// </summary>
+        /// <summary>أسئلة حسب مستوى صعوبة معيّن — يستخدمها محرك الـ AI لبناء اختبار تكيّفي</summary>
+        /// <remarks>الصلاحيات: Admin, Teacher فقط.</remarks>
+        [Tags("Question - الاستعلام والعلاقات (Queries)")]
         [HttpGet("difficulty/{difficulty}")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<QuestionReadDto>>), StatusCodes.Status200OK)]
         public async Task<ActionResult<ApiResponse<IEnumerable<QuestionReadDto>>>> GetByDifficulty(DifficultyLevel difficulty)
@@ -100,6 +157,9 @@ namespace SchoolLearningSystem.API.Controllers
         // ⚠️ تصحيح أسماء الدوال: كانت GetQuestionCountByExamIdAsync/GetQuestionCountByDifficultyAsync
         // (غير موجودتين) — الاسم الصحيح بالـ Interface هو CountByExamIdAsync/CountByDifficultyAsync
 
+        /// <summary>عدد أسئلة امتحان معيّن</summary>
+        /// <remarks>الصلاحيات: Admin, Teacher فقط.</remarks>
+        [Tags("Question - الإحصائيات (Statistics)")]
         [HttpGet("exam/{examId}/count")]
         [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
         public async Task<ActionResult<ApiResponse<int>>> GetCountByExamId(int examId)
@@ -108,6 +168,9 @@ namespace SchoolLearningSystem.API.Controllers
             return Ok(new ApiResponse<int>(200, "Question count retrieved successfully", count));
         }
 
+        /// <summary>عدد الأسئلة حسب مستوى صعوبة معيّن</summary>
+        /// <remarks>الصلاحيات: Admin, Teacher فقط.</remarks>
+        [Tags("Question - الإحصائيات (Statistics)")]
         [HttpGet("difficulty/{difficulty}/count")]
         [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
         public async Task<ActionResult<ApiResponse<int>>> GetCountByDifficulty(DifficultyLevel difficulty)
@@ -116,6 +179,9 @@ namespace SchoolLearningSystem.API.Controllers
             return Ok(new ApiResponse<int>(200, "Question count by difficulty retrieved successfully", count));
         }
 
+        /// <summary>عدد أسئلة درس معيّن</summary>
+        /// <remarks>الصلاحيات: Admin, Teacher فقط.</remarks>
+        [Tags("Question - الإحصائيات (Statistics)")]
         [HttpGet("lesson/{lessonId}/count")]
         [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
         public async Task<ActionResult<ApiResponse<int>>> GetTotalQuestionsByLessonId(int lessonId)

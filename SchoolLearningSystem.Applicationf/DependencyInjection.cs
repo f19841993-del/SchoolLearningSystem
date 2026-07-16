@@ -35,7 +35,7 @@ namespace SchoolLearningSystem.Applicationf
             // (راجع توثيق_مشروع_SchoolLearningSystem.md §4). كانا مسجّلين هنا رغم حذفهما
             // فعلياً من الكود — هذا كان سيمنع المشروع من البناء (Compile Error).
             services.AddScoped<ISrsService, SrsService>();
-
+            services.AddScoped<IAuthService, AuthService>();
             return services;
         }
     }

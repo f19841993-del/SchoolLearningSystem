@@ -96,9 +96,9 @@ namespace SchoolLearningSystem.Applicationf.Services
                 progress.CorrectAttempts++;
 
             if (isNewProgress)
-                await _progressRepository.AddAsync(progress);   // ⚠️ يحفظ فوراً بذاته (سلوك الريبو المخصص هذا)
+                await _progressRepository.AddAsync(progress);   // 💡 لا يحفظ فوراً (نفس نمط GenericRepository)
             else
-                await _progressRepository.UpdateAsync(progress); // ⚠️ نفس الملاحظة
+                await _progressRepository.UpdateAsync(progress);
 
             // --- 2) 🆕 إنشاء سجل الإجابة التفصيلية ---
             var answerDetail = new StudentAnswerDetail
@@ -121,8 +121,8 @@ namespace SchoolLearningSystem.Applicationf.Services
 
             await _memorizeRepository.UpdateAsync(session);   // 💡 لا يحفظ فوراً (GenericRepository)
 
-            // ✅ حفظ وحيد يغطي answerDetail + session سوا (نفس الـ DbContext الـ Scoped)
-            await _memorizeRepository.SaveChangesAsync();
+            // ✅ حفظ وحيد يغطي progress + answerDetail + session سوا (نفس الـ DbContext الـ Scoped = معاملة واحدة ذرية)
+            await _progressRepository.SaveChangesAsync();
         }
 
         // ============================================================================

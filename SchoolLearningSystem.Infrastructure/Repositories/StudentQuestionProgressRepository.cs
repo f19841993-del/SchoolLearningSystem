@@ -56,12 +56,16 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         public async Task AddAsync(StudentQuestionProgress progress)
         {
             await _context.StudentQuestionProgresses.AddAsync(progress);
-            await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(StudentQuestionProgress progress)
+        public Task UpdateAsync(StudentQuestionProgress progress)
         {
             _context.StudentQuestionProgresses.Update(progress);
+            return Task.CompletedTask;
+        }
+
+        public async Task SaveChangesAsync()
+        {
             await _context.SaveChangesAsync();
         }
     }

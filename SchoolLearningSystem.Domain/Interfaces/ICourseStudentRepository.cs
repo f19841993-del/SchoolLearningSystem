@@ -12,6 +12,7 @@ namespace SchoolLearningSystem.Domain.Interfaces
         Task AddAsync(CourseStudent courseStudent);
         Task UpdateAsync(CourseStudent courseStudent);
         Task DeleteAsync(int courseId, int studentId);
+        Task SaveChangesAsync(); // 🆕
 
         Task<IEnumerable<CourseStudent>> GetByCourseIdAsync(int courseId);
         Task<IEnumerable<CourseStudent>> GetByStudentIdAsync(int studentId);

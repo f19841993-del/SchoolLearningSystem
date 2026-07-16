@@ -30,13 +30,13 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
         public async Task AddAsync(CourseStudent courseStudent)
         {
             await _context.CourseStudents.AddAsync(courseStudent);
-            await _context.SaveChangesAsync();
+            
         }
 
         public async Task UpdateAsync(CourseStudent courseStudent)
         {
             _context.CourseStudents.Update(courseStudent);
-            await _context.SaveChangesAsync();
+            
         }
 
         public async Task DeleteAsync(int courseId, int studentId)
@@ -45,7 +45,7 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
             if (entity != null)
             {
                 _context.CourseStudents.Remove(entity);
-                await _context.SaveChangesAsync();
+               
             }
         }
 
@@ -112,5 +112,11 @@ namespace SchoolLearningSystem.Infrastructure.Repositories
 
             return (items, totalCount);
         }
+
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
+
     }
 }

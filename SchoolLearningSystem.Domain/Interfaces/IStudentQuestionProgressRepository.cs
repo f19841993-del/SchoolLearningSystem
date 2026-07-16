@@ -19,5 +19,7 @@ namespace SchoolLearningSystem.Domain.Interfaces
         Task UpdateAsync(StudentQuestionProgress progress);
         // 5. جلب سجلات تقدم عدة أسئلة دفعة وحدة (يُستخدم لبناء جلسة تدريب مكثف من أسئلة ضعيفة محددة)
         Task<IEnumerable<StudentQuestionProgress>> GetByStudentAndQuestionIdsAsync(int studentId, IEnumerable<int> questionIds);
+        // 6. الحفظ مؤجّل للـ Service (نفس نمط IGenericRepository<T>) - Unit of Work واحد
+        Task SaveChangesAsync();
     }
 }
